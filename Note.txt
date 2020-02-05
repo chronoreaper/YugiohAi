@@ -1,0 +1,10 @@
+GameAi
+	public void OnJoinGame gets the database does not work
+	GameBehavior.cs has the result of who wins
+english database is in koishipro locales en-us
+
+Run Main Function First
+
+Main Game runner can also run alone
+
+Update cards in Koishipro_Sakura/update-koishipro

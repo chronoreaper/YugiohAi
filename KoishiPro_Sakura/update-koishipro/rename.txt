@@ -1,0 +1,3 @@
+﻿# Rename List (Codepage is UTF-8, please use TAB to seperate entries, Use Relative Address.)
+# An example of renaming a file from 123456.jpg to 456789.jpg
+# pics/123456.jpg	pics/456789.jpg

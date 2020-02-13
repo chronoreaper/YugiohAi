@@ -1,6 +1,8 @@
 # Yugioh Ai
 This is a Yugioh Ai Simulator.
 The final build will have Ai find the best deck as well as play optimally.
+### Breakdownbe made
+There are 2 Ais that need to made. A deck building Ai which is written in python. And a game Ai written in c#.
 
 ### Using 
 * Windbot: https://github.com/IceYGO/windbot

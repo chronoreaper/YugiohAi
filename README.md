@@ -1,4 +1,4 @@
-# README
+# Yugioh Ai
 This is a Yugioh Ai Simulator.
 The final build will have Ai find the best deck as well as play optimally.
 

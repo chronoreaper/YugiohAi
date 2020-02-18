@@ -7,7 +7,7 @@ c = conn.cursor()
 
 cardList = {}
 
-for row in c.execute('SELECT id FROM datas where type=17 AND ot=3'):
+for row in c.execute('SELECT id FROM datas where type=17 AND ot=3 AND level=4'):
     cardList[row[0]] = 0
 
 for key in cardList:

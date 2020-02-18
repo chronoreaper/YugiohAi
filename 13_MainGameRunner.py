@@ -1,5 +1,6 @@
 import sys, string, os, time
 import subprocess
+import shutil
 
 def writeDict(d, filename, sep):
     with open(filename, "w") as f:
@@ -20,9 +21,11 @@ def readDict(filename, sep):
 def hostGame(): 
     time.sleep(2.5)
     
+    print("click lan button")
     subprocess.run([os.getcwd() + "/131_ClickImage.py","LanBut.png"],shell=True)
     time.sleep(0.3)
     
+    print("click host button")
     subprocess.run([os.getcwd() + "/131_ClickImage.py","HostBut.png"],shell=True)
     time.sleep(1)
     
@@ -41,8 +44,13 @@ deck2 = 'AI_Random2.ydk'
 winWeight = 0
 gameCount = 0
 
+generation = sys.argv[1]
+subGen = sys.argv[2]
+
+result = 0
+    
 #how many games to play with this deck
-while gameCount < 10:  
+while gameCount < 1:  
     print("running game " + str(gameCount))
     #subprocess.Popen - does not wait to finish
     #subprocess.run - waits to finish
@@ -50,7 +58,6 @@ while gameCount < 10:
                  shell=True, stdin=None, stdout=None,
                  stderr=None, close_fds=True)
     check = 0
-    result = 0
     
     hostGame()
     
@@ -93,6 +100,18 @@ while gameCount < 10:
         winWeight += result 
     gameCount += 1
 
+# Save the deck list
+
+newDeckname = str(generation) + "_"+ str(subGen) + "_"+ str(result)+ deck1 
+src_dir=os.getcwd()+"/windbot_master/bin/Debug/Decks/"+ deck1
+dst_dir=os.getcwd()+"/KoishiPro_Sakura/deck/"+ newDeckname
+shutil.copy(src_dir,dst_dir)
+
+newDeckname = str(generation) + "_"+ str(subGen) + "_"+ str(result * -1)+ deck2
+src_dir=os.getcwd()+"/windbot_master/bin/Debug/Decks/"+ deck2
+dst_dir=os.getcwd()+"/KoishiPro_Sakura/deck/"+ newDeckname
+shutil.copy(src_dir,dst_dir)
+
 card_list = {}
 card_list = readDict(os.getcwd() +"/cardData.txt",':')
 cardListSize = len(card_list)
@@ -105,16 +124,15 @@ deckListOther = open(os.getcwd()
 
 if abs(winWeight) < gameCount/2:
     winWeight = winWeight - gameCount
-
 for l in deckList:
     if len(l)>3:
         if l[0] !='#' and l[0] != '!':
             card_list[l.strip()] += winWeight
-        
 for l in deckListOther:
     if len(l)>3:
         if l[0] !='#' and l[0] != '!':
             card_list[l.strip()] -= winWeight
+            
 deckList.close()
 deckListOther.close()
 

@@ -74,12 +74,11 @@ while gameCount < 10:
     count = 0
     
     #make sure the game does not run longer than 50 sec
+	#ends the ygopro program as soon as the ais are done. Ais play faster than what you see.
     while (p1.poll() == None or p2.poll() == None) and count < 50:
         time.sleep(1)
         count += 1
-    
-    #turn off to watch game
-    
+      
     os.system("TASKKILL /F /IM ygopro.exe")    
     
     output, stderr = p1.communicate()
@@ -93,6 +92,7 @@ while gameCount < 10:
         winWeight += result 
     gameCount += 1
 
+# calculate updated weights.
 card_list = {}
 card_list = readDict(os.getcwd() +"/cardData.txt",':')
 cardListSize = len(card_list)

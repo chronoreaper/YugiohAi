@@ -1,4 +1,3 @@
-from difflib import SequenceMatcher
 import sqlite3, os
 
 conn = sqlite3.connect(os.getcwd() +'/windbot_master/bin/Debug/cards.cdb')

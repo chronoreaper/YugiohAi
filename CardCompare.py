@@ -4,19 +4,23 @@ from difflib import SequenceMatcher
 def similar(a, b):
     return SequenceMatcher(None, a, b).ratio()
 
+cardName = "Called by the Grave"
+
 conn = sqlite3.connect(os.getcwd() +'/windbot_master/bin/Debug/cards.cdb')
 
 c = conn.cursor()
 text = ""
 
-for row in c.execute('SELECT name, desc FROM texts where name="Monster Reborn"'):
-    print(row)
+for row in c.execute('SELECT name, desc FROM texts where name = "'+ cardName +'"'):
+    print(row[0] + ":" + row[1])
+    print("_____")
     text = row[1]
+    cardName = row[0]
 
 related = {}
 relatedText = {}
 
-for row in c.execute('SELECT name, desc FROM texts where name!="Monster Reborn"'):
+for row in c.execute('SELECT name, desc FROM texts where name != "'+ cardName +'"'):
     related[row[0]] = similar(text,row[1])
     relatedText[row[0]] = row[1]
 

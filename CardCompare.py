@@ -1,12 +1,33 @@
 import sqlite3, os
+from difflib import SequenceMatcher
+
+def similar(a, b):
+    return SequenceMatcher(None, a, b).ratio()
 
 conn = sqlite3.connect(os.getcwd() +'/windbot_master/bin/Debug/cards.cdb')
 
 c = conn.cursor()
 text = ""
-for row in c.execute('SELECT * FROM texts where name="Monster Reborn"'):
+
+for row in c.execute('SELECT name, desc FROM texts where name="Monster Reborn"'):
     print(row)
-    text = row[2]
+    text = row[1]
+
+related = {}
+relatedText = {}
+
+for row in c.execute('SELECT name, desc FROM texts where name!="Monster Reborn"'):
+    related[row[0]] = similar(text,row[1])
+    relatedText[row[0]] = row[1]
+
+related = {k: v for k, v in sorted(related.items(), key=lambda item: item[1], reverse=True)}
+
+i = 10
+for key in related:
+    if i > 0:
+        i -= 1
+        print(key + ":" + str(related[key]) + ":" + relatedText[key])
+        print("_____")
 
 # card_select = c.execute('SELECT desc FROM texts where id=10000')
 # cardList =  {}# id to text

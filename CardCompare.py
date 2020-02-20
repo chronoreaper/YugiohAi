@@ -2,6 +2,10 @@ import sqlite3, os
 from difflib import SequenceMatcher
 
 def similar(a, b):
+    '''
+    Takes two string a, b
+    returns a double from 0 - 1 that is how similar they are
+    '''
     return SequenceMatcher(None, a, b).ratio()
 
 cardName = "Called by the Grave"

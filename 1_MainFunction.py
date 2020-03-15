@@ -11,7 +11,7 @@ file.write("")
 file.close()
 print("getting cards from database")
 #gets all the cards from the database
-subprocess.run([os.getcwd() + "/11_SqlReader.py"],shell=True)
+#subprocess.run([os.getcwd() + "/11_SqlReader.py"],shell=True)
 
 print("deleting old deck files from ygopro")
 files = glob.glob(os.getcwd() +"/KoishiPro_Sakura/deck/*")

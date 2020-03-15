@@ -1,6 +1,7 @@
 import sys, string, os, time
 import subprocess
 import shutil
+import sqlite3
 
 def writeDict(d, filename, sep):
     with open(filename, "w") as f:
@@ -75,9 +76,10 @@ while gameCount < 1:
 	
     time.sleep(0.5)
     
+    print("click start")
     subprocess.run([os.getcwd() + "/131_ClickImage.py","startBut.png"],shell=True)
     
-    if ((p1.poll() == None or p2.poll() == None)) and check == 0:
+    if (not (p1.poll() == None or p2.poll() == None)) and check == 0:
         print("WARNING! ai is not running")
         check = 1
       
@@ -85,7 +87,7 @@ while gameCount < 1:
     
     #make sure the game does not run longer than 50 sec
 	#ends the ygopro program as soon as the ais are done. Ais play faster than what you see.
-    while (p1.poll() == None or p2.poll() == None) and count < 50:
+    while count < 50 and (p1.poll() == None or p2.poll() == None):
         time.sleep(1)
         count += 1
       
@@ -103,6 +105,9 @@ while gameCount < 1:
     gameCount += 1
 
 # Save the deck list
+
+conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
+c = conn.cursor()
 
 newDeckname = str(generation) + "_"+ str(subGen) + "_"+ str(result)+ deck1 
 src_dir=os.getcwd()+"/windbot_master/bin/Debug/Decks/"+ deck1
@@ -129,13 +134,25 @@ if abs(winWeight) < gameCount/2:
 for l in deckList:
     if len(l)>3:
         if l[0] !='#' and l[0] != '!':
+            c.execute('SELECT weight FROM cardList where id = (?)', (int(l.strip()),))
+            currentWeight = int(c.fetchone()[0])
+            currentWeight += winWeight
+            c.execute('UPDATE cardList SET weight = (?) WHERE id = (?)', (currentWeight, int(l.strip())))
+            conn.commit()
             card_list[l.strip()] += winWeight
+	    
 for l in deckListOther:
     if len(l)>3:
         if l[0] !='#' and l[0] != '!':
+            c.execute('SELECT weight FROM cardList where id = (?)', (int(l.strip()),))
+            currentWeight = int(c.fetchone()[0])
+            currentWeight -= winWeight
+            c.execute('UPDATE cardList SET weight = (?) WHERE id = (?)', (currentWeight, int(l.strip())))
+            conn.commit()	    
             card_list[l.strip()] -= winWeight
             
 deckList.close()
 deckListOther.close()
+c.close()
 
 writeDict(card_list, os.getcwd() +"/cardData.txt",':') 

@@ -2,6 +2,7 @@ import sys, os
 import random
 from random import randrange
 from collections import OrderedDict
+import sqlite3
 
 
 def readDict(filename, sep):
@@ -15,6 +16,8 @@ def readDict(filename, sep):
         return(d)
 
 cardList = open("cardData.txt","r")
+conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
+c = conn.cursor()
 
 card_weight = {}
 card_list = []
@@ -34,22 +37,31 @@ card_weight_sorted = sorted(card_weight, key=card_weight.get, reverse=True)
 deck_list_main = []
 
 deckSize = 20
-topCards = 15
+topCards = 1
 topCardsRange = max(topCards, 40)
 
 #adds random card to main 
-i = 0
-while (i < topCards):
-    card = card_weight_sorted[randrange(topCardsRange)]
-    if deck_list_main.count(card)<3:
-        deck_list_main.append(card) 
-        i += 1
-i = 0
-while (i < deckSize - topCards):
-    card = card_list[randrange(len(card_list))]
-    if deck_list_main.count(card)<3:
-        deck_list_main.append(card) 
-        i += 1
+
+c.execute('SELECT id,name from cardList ORDER BY weight DESC LIMIT (?)', (topCards,))
+for row in c.fetchall():
+    deck_list_main.append(str(row[0])) 
+
+#i = 0
+#while (i < topCards):
+    #card = card_weight_sorted[randrange(topCardsRange)]
+    #if deck_list_main.count(card)<1:#3:
+        #deck_list_main.append(card) 
+        #i += 1
+c.execute('SELECT id,name from cardList ORDER BY RANDOM()')
+lst = c.fetchall()
+count = 0
+index = 0
+while (count < deckSize - topCards):
+    card = lst[index][0]#card_list[randrange(len(card_list))]
+    index += 1
+    if deck_list_main.count(card)<1:#3:
+        deck_list_main.append(str(card)) 
+        count += 1
 
 #f = open(os.getcwd() + '/windbot_master/bin/Debug/Decks/AI_Random.ydk' ,"w+")
 f = open(os.getcwd() + '/windbot_master/bin/Debug/Decks/'+ sys.argv[1] ,"w+")    
@@ -58,8 +70,9 @@ f.write("#created by deck_maker_ai\n")
 
 f.write("#main\n")
 cardcount=0
-
+#print("----")
 for i in deck_list_main:
+    #print(i)
     f.write(i +'\n')
 f.write("#extra\n")
 f.write("!side\n")

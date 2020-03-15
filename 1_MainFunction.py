@@ -14,14 +14,14 @@ print("getting cards from database")
 subprocess.run([os.getcwd() + "/11_SqlReader.py"],shell=True)
 
 print("deleting old deck files from ygopro")
-files = glob.glob(os.getcwd()+"/KoishiPro_Sakura/deck/*")
+files = glob.glob(os.getcwd() +"/KoishiPro_Sakura/deck/*")
 for f in files:
     os.remove(f)
 
 print("done set up")
 #makes the two random decks
 count = 1
-while ((count <= 20) and (error == 0) and (warning < 3)):
+while ((count <= 1) and (error == 0) and (warning < 3)):
     file = open("log.txt","a")
     print("Game:"+str(count))
     file.write("Game:"+str(count)+"\n")

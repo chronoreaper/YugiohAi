@@ -4,7 +4,7 @@ os.chdir(os.getcwd()+'/windbot_master/bin/Debug')
 
 recordDeck = sys.argv[3]
 
-result = 0;
+result = 0
 
 p = subprocess.Popen(["WindBot.exe","Deck="+sys.argv[1],"Name="+sys.argv[2]],
                shell=True, stdout=subprocess.PIPE, stderr = subprocess.PIPE)

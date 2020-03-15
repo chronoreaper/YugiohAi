@@ -19,6 +19,7 @@ def readDict(filename, sep):
         return(d)
     
 def hostGame(): 
+    print("hosting game")
     time.sleep(2.5)
     
     print("click lan button")
@@ -69,12 +70,14 @@ while gameCount < 1:
     p2 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI2,'bot2','0'],
                           shell=True)
     
-    if not (p1.poll() == None or p2.poll() == None):
+    if (p1.poll() == None or p2.poll() == None):
         time.sleep(2)
+	
     time.sleep(0.5)
     
     subprocess.run([os.getcwd() + "/131_ClickImage.py","startBut.png"],shell=True)
-    if (not (p1.poll() == None or p2.poll() == None)) and check == 0:
+    
+    if ((p1.poll() == None or p2.poll() == None)) and check == 0:
         print("WARNING! ai is not running")
         check = 1
       

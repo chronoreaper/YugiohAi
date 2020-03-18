@@ -36,13 +36,13 @@ card_weight_sorted = sorted(card_weight, key=card_weight.get, reverse=True)
 
 deck_list_main = []
 
-deckSize = 20
+deckSize = 40
 topCards = 1
 topCardsRange = max(topCards, 40)
 
 #adds random card to main 
 
-c.execute('SELECT id,name from cardList ORDER BY weight DESC LIMIT (?)', (topCards,))
+c.execute('SELECT id,name from cardList ORDER BY percentage DESC LIMIT (?)', (topCards,))
 for row in c.fetchall():
     deck_list_main.append(str(row[0])) 
 

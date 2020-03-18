@@ -12,11 +12,13 @@ c2.execute('DELETE FROM cardList')
 
 cardList = {}
 
-for row in c.execute('SELECT texts.id, texts.name From texts '+ 
+c.execute('SELECT texts.id, texts.name From texts '+ 
                      'Inner JOIN datas ON texts.id = datas.id '+
-                     'WHERE ot=3 AND level=4 AND type=17'):
-    value = (row[0], row[1],0)
-    c2.execute('INSERT INTO cardList VALUES (?,?,?)', value)
+                     'WHERE ot=3 AND level=4 AND type=17')
+					 
+for row in c.fetchall():
+    value = (row[0], row[1],0,0,0)
+    c2.execute('INSERT INTO cardList VALUES (?,?,?,?,?)', value)
     conn2.commit()
     
     cardList[row[0]] = 0

@@ -21,21 +21,21 @@ def readDict(filename, sep):
     
 def hostGame(): 
     print("hosting game")
-    time.sleep(2.5)
+    #time.sleep(2.5)
     
-    print("click lan button")
-    subprocess.run([os.getcwd() + "/131_ClickImage.py","LanBut.png"],shell=True)
-    time.sleep(0.3)
+    #print("click lan button")
+    #subprocess.run([os.getcwd() + "/131_ClickImage.py","LanBut.png"],shell=True)
+    #time.sleep(0.3)
     
-    print("click host button")
-    subprocess.run([os.getcwd() + "/131_ClickImage.py","HostBut.png"],shell=True)
-    time.sleep(1)
+    #print("click host button")
+    #subprocess.run([os.getcwd() + "/131_ClickImage.py","HostBut.png"],shell=True)
+    #time.sleep(1)
     
-    subprocess.run([os.getcwd() + "/131_ClickImage.py","dontCheckBut.png"],
-                   shell=True)
-    time.sleep(0.1)
-    subprocess.run([os.getcwd() + "/131_ClickImage.py","okBut.png"],shell=True)
-    time.sleep(2)
+    #subprocess.run([os.getcwd() + "/131_ClickImage.py","dontCheckBut.png"],
+    #               shell=True)
+    #time.sleep(0.1)
+    #subprocess.run([os.getcwd() + "/131_ClickImage.py","okBut.png"],shell=True)
+    time.sleep(3)
     
     subprocess.run([os.getcwd() + "/131_ClickImage.py","spectateBut.png"],
                    shell=True)
@@ -50,6 +50,8 @@ generation = sys.argv[1]
 subGen = sys.argv[2]
 
 result = 0
+win1 = 0
+win2 = 0
     
 #how many games to play with this deck
 while gameCount < 1:  
@@ -63,6 +65,8 @@ while gameCount < 1:
     
     hostGame()
     
+    time.sleep(0.2)
+	
     p1 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI1,'bot1','1'],
                           shell=True,stdout=subprocess.PIPE, 
                           stderr = subprocess.PIPE,
@@ -96,12 +100,12 @@ while gameCount < 1:
     output, stderr = p1.communicate()
     print(output)
     if format(output).find('win') >= 0:
-        result = 1
+        win1 += 1
     elif format(output).find('lose') >= 0:
-        result = -1  
+        win2 += 1  
       
-    if result != 0:  
-        winWeight += result 
+    #if result != 0:  
+    #    winWeight += result 
     gameCount += 1
 
 # Save the deck list
@@ -129,30 +133,38 @@ deckList = open(os.getcwd()
 deckListOther = open(os.getcwd() 
                 +"/windbot_master/bin/Debug/Decks/"+ deck2 ,"r")
 
-if abs(winWeight) < gameCount/2:
-    winWeight = winWeight - gameCount
+#if abs(winWeight) < gameCount/2:
+#    winWeight = winWeight - gameCount
+win1 = win1/gameCount
+win2 = win2/gameCount
 for l in deckList:
     if len(l)>3:
         if l[0] !='#' and l[0] != '!':
-            c.execute('SELECT weight FROM cardList where id = (?)', (int(l.strip()),))
-            currentWeight = int(c.fetchone()[0])
-            currentWeight += winWeight
-            c.execute('UPDATE cardList SET weight = (?) WHERE id = (?)', (currentWeight, int(l.strip())))
-            conn.commit()
-            card_list[l.strip()] += winWeight
+            cardId = l.strip()
+			if cardId not in deckListOther:
+				c.execute('SELECT win,games,percentage FROM cardList where id = (?)', (int(cardId),))
+				list = c.fetchone()
+				wins = int(list[0])
+				wins += win1
+				games = int(list[1]) + gameCount
+				percentage = wins/games
+				c.execute('UPDATE cardList SET win = (?), games = (?), percentage = (?) WHERE id = (?)', (wins, games, percentage, int(cardId)))
+				conn.commit()
 	    
 for l in deckListOther:
     if len(l)>3:
         if l[0] !='#' and l[0] != '!':
-            c.execute('SELECT weight FROM cardList where id = (?)', (int(l.strip()),))
-            currentWeight = int(c.fetchone()[0])
-            currentWeight -= winWeight
-            c.execute('UPDATE cardList SET weight = (?) WHERE id = (?)', (currentWeight, int(l.strip())))
-            conn.commit()	    
-            card_list[l.strip()] -= winWeight
+		    cardId = l.strip()
+			if cardId not in deckList:
+				c.execute('SELECT win,games,percentage FROM cardList where id = (?)', (int(cardId)),))
+				list = c.fetchone()
+				wins = int(list[0])
+				wins += win2
+				games = int(list[1]) + gameCount
+				percentage = wins/games
+				c.execute('UPDATE cardList SET win = (?), games = (?), percentage = (?) WHERE id = (?)', (wins, games, percentage, int(cardId)))
+				conn.commit()	    
             
 deckList.close()
 deckListOther.close()
 c.close()
-
-writeDict(card_list, os.getcwd() +"/cardData.txt",':') 

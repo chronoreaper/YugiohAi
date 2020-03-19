@@ -8,4 +8,5 @@ Game:7
 Game:8
 Game:9
 Game:10
-Seconds Past:313
+Time Past:0:04:10
+Time Past Excluding Setup:0:03:49

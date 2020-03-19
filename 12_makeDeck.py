@@ -37,7 +37,7 @@ card_weight_sorted = sorted(card_weight, key=card_weight.get, reverse=True)
 deck_list_main = []
 
 deckSize = 40
-topCards = 1
+topCards = 30
 topCardsRange = max(topCards, 40)
 
 #adds random card to main 

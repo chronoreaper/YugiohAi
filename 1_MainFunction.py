@@ -1,14 +1,23 @@
 import sys, os, subprocess, time, glob
+import datetime
 
+def Log(string):
+    file = open("log.txt","a")
+    print(string)
+    file.write(string+"\n")
+    file.close()
+	
 generation = 0
 
 start = time.time()
 error = 0 
 warning = 0
 
+#Erace Previous Log
 file = open("log.txt","w")
 file.write("")
 file.close()
+
 print("getting cards from database")
 #gets all the cards from the database
 subprocess.run([os.getcwd() + "/11_SqlReader.py"],shell=True)
@@ -18,6 +27,7 @@ files = glob.glob(os.getcwd() +"/KoishiPro_Sakura/deck/*")
 for f in files:
     os.remove(f)
 
+startNoSetup = time.time()
 print("done set up")
 #makes the two random decks
 count = 1
@@ -50,8 +60,10 @@ while ((count <= 10) and (error == 0) and (warning < 3)):
 
 file = open("log.txt","a")
 end = time.time()
-print("Seconds Past:" + str(int(end - start)))
-file.write("Seconds Past:" + str(int(end - start))+"\n")
+
+Log("Time Past:" + str(datetime.timedelta(seconds=int(end - start))))
+Log("Time Past Excluding Setup:" + str(datetime.timedelta(seconds=int(end - startNoSetup))))
+
 if error == 1:
     print("there were errors")
 if warning >= 3:

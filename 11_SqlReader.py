@@ -14,9 +14,10 @@ cardList = {}
 
 c.execute('SELECT texts.id, texts.name From texts '+ 
                      'Inner JOIN datas ON texts.id = datas.id '+
-                     'WHERE ot=3 AND level=4 AND type=17')
+                     'WHERE ot=3 AND level=4 AND type=17 AND def < 2000')
 					 
 for row in c.fetchall():
+    print("Adding to DB:" + str(row))
     value = (row[0], row[1],0,0,0)
     c2.execute('INSERT INTO cardList VALUES (?,?,?,?,?)', value)
     conn2.commit()

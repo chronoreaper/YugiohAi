@@ -49,7 +49,18 @@ def GetDeckFile(deck):
 	deckFile.close()
 	
 	return file
-				
+
+def GetGameLog(deck):
+	file = []
+	deckFile = open(os.getcwd()+'/windbot_master/bin/Debug/'+ deck + ".txt" ,"r")
+	for l in deckFile:
+		if len(l)>3:
+			file.append(l.split("]")[1])
+	deckFile.close()
+	
+	return file
+AIName1 = 'bot1'
+AIName2 = 'bot2'		
 AI1 = 'Random'
 AI2 = 'Random2'
 deck1 = 'AI_Random.ydk'
@@ -117,8 +128,6 @@ while gameCount < 1:
 	elif format(output).find('lose') >= 0:
 		win2 += 1  
 	  
-	#if result != 0:  
-	#	 winWeight += result 
 	gameCount += 1
 
 # Save the deck list
@@ -141,14 +150,9 @@ card_list = {}
 card_list = readDict(os.getcwd() +"/cardData.txt",':')
 cardListSize = len(card_list)
 
-deckList = GetDeckFile(deck1)
-				
-deckListOther = GetDeckFile(deck2)
+deckList = GetGameLog(AIName1)#GetDeckFile(deck1)				
+deckListOther = GetGameLog(AIName2)#GetDeckFile(deck2)
 
-#if abs(winWeight) < gameCount/2:
-#	 winWeight = winWeight - gameCount
-#win1 = win1/gameCount
-#win2 = win2/gameCount
 print("	Saving Deck 1 Results")
 for l in deckList:
 	if l[0] !='#' and l[0] != '!':
@@ -163,7 +167,6 @@ for l in deckList:
 			c.execute('UPDATE cardList SET win = (?), games = (?), percentage = (?) WHERE id = (?)', (wins, games, percentage, int(cardId)))
 			conn.commit()	
 			
-print("	Saving Deck 2 Results")
 print("	Saving Deck 2 Results")
 for l in deckListOther:
 	if l[0] !='#' and l[0] != '!':

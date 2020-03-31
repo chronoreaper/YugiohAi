@@ -1,6 +1,6 @@
 import sys, string, os, time, subprocess
 
-print("running ygppro")
+print("		running ygppro")
 os.chdir(os.getcwd()+'/KoishiPro_Sakura')
 
 #os.system(os.getcwd() + '/ygopro.exe')

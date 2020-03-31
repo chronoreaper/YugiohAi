@@ -76,6 +76,8 @@ namespace WindBot
             Info.Hand = Config.GetInt("Hand", Info.Hand);
             Info.Debug = Config.GetBool("Debug", Info.Debug);
             Info.Chat = Config.GetBool("Chat", Info.Chat);
+            Logger.Path = Info.Name + ".txt";
+            Logger.DeleteFile();
             Run(Info);
         }
 

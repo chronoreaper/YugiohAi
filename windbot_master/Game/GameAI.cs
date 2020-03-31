@@ -431,6 +431,7 @@ namespace WindBot.Game
                     if (ShouldExecute(exec, card, ExecutorType.Activate, main.ActivableDescs[i]))
                     {
                         _dialogs.SendActivate(card.Name);
+                        Logger.WriteToFile($"{card.Name}]{card.Id}");
                         return new MainPhaseAction(MainPhaseAction.MainAction.Activate, card.ActionActivateIndex[main.ActivableDescs[i]]);
                     }
                 }
@@ -439,6 +440,7 @@ namespace WindBot.Game
                     if (ShouldExecute(exec, card, ExecutorType.MonsterSet))
                     {
                         _dialogs.SendSetMonster();
+                        Logger.WriteToFile($"{card.Name}]{card.Id}");
                         return new MainPhaseAction(MainPhaseAction.MainAction.SetMonster, card.ActionIndex);
                     }
                 }
@@ -452,6 +454,7 @@ namespace WindBot.Game
                     if (ShouldExecute(exec, card, ExecutorType.SpSummon))
                     {
                         _dialogs.SendSummon(card.Name);
+                        Logger.WriteToFile($"{card.Name}]{card.Id}");
                         return new MainPhaseAction(MainPhaseAction.MainAction.SpSummon, card.ActionIndex);
                     }
                 }
@@ -460,6 +463,7 @@ namespace WindBot.Game
                     if (ShouldExecute(exec, card, ExecutorType.Summon))
                     {
                         _dialogs.SendSummon(card.Name);
+                        Logger.WriteToFile($"{card.Name}]{card.Id}");
                         return new MainPhaseAction(MainPhaseAction.MainAction.Summon, card.ActionIndex);
                     }
                     if (ShouldExecute(exec, card, ExecutorType.SummonOrSet))
@@ -468,16 +472,21 @@ namespace WindBot.Game
                             main.MonsterSetableCards.Contains(card))
                         {
                             _dialogs.SendSetMonster();
+                            Logger.WriteToFile($"{card.Name}]{card.Id}");
                             return new MainPhaseAction(MainPhaseAction.MainAction.SetMonster, card.ActionIndex);
                         }
                         _dialogs.SendSummon(card.Name);
+                        Logger.WriteToFile($"{card.Name}]{card.Id}");
                         return new MainPhaseAction(MainPhaseAction.MainAction.Summon, card.ActionIndex);
                     }
                 }                
                 foreach (ClientCard card in main.SpellSetableCards)
                 {
                     if (ShouldExecute(exec, card, ExecutorType.SpellSet))
+                    {
+                        Logger.WriteToFile($"{card.Name}]{card.Id}");
                         return new MainPhaseAction(MainPhaseAction.MainAction.SetSpell, card.ActionIndex);
+                    }
                 }
             }
 

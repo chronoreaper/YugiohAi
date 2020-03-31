@@ -45,4 +45,4 @@ if pos[0] != -1:
     pyautogui.moveTo(pos[0]+w/2, pos[1]+h/2)
     pyautogui.click(button="left")
 else:
-    print("image not found") 
+    print("		image not found") 

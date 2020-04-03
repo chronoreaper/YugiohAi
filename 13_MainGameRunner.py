@@ -39,26 +39,94 @@ def hostGame():
 	
 	subprocess.run([os.getcwd() + "/131_ClickImage.py","spectateBut.png"],
 				   shell=True)
-def GetDeckFile(deck):
-	file = []
+def GetCardQuantity(deck):
+	dict = {}
 	deckFile = open(os.getcwd() 
 				+"/windbot_master/bin/Debug/Decks/"+ deck ,"r")
-	for l in deckFile:
-		if len(l)>3:
-			file.append(l)
+	for card in deckFile:
+		cardId = card.strip()
+		if len(cardId)>3:
+			if cardId[0] !='#' and cardId[0] != '!':
+				if cardId not in dict:
+					dict[cardId] = 1
+				else:
+					dict[cardId] = dict[cardId] + 1
 	deckFile.close()
 	
-	return file
+	return dict
 
 def GetGameLog(deck):
 	file = []
 	deckFile = open(os.getcwd()+'/windbot_master/bin/Debug/'+ deck + ".txt" ,"r")
 	for l in deckFile:
 		if len(l)>3:
-			file.append(l.split("]")[1])
+			file.append(l.split("]")[1].strip())
 	deckFile.close()
 	
 	return file
+	
+def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result):
+	# Takes in two list and a dictonary
+	# deck = the deck you are saving, list of ids
+	# deckQuant= the quantity of all the cards in your deck
+	# deckOther = the other deck
+	# deckQuantOther=the quantity of all the cards in the other deck
+	# this takes a long time, need to optimize
+	conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
+	c = conn.cursor()
+	for card in deckQuant:
+		for related in deckQuant:
+			if (related not in deckQuantOther or deckQuant[related] != deckQuantOther[related]) and (card not in deckQuantOther or deckQuant[card] != deckQuantOther[card]):
+				c.execute('SELECT wins,gamesPlayed, games FROM cardRelated where id = (?) and relatedid = (?) and idQuant = (?) and relatedQuant = (?)', 
+					(int(card),int(related),deckQuant[card],deckQuant[related]))
+				list = c.fetchone()
+				if list != None:
+					wins = int(list[0])
+					gamesPlayed = int(list[1])
+					games = int(list[2]) + 1
+					if card in deck: # Run only if played
+						gamesPlayed += 1
+						wins += result
+					value = (wins, gamesPlayed ,games, int(card),int(related),deckQuant[card],deckQuant[related])
+					c.execute('UPDATE cardRelated SET wins = (?), gamesPlayed = (?), games = (?) WHERE id = (?) and relatedid = (?) and idQuant = (?) and relatedQuant = (?)', 
+					value)
+				else:
+					value = (card,related,deckQuant[card],deckQuant[related],result,1,1)
+					c.execute('INSERT INTO cardRelated VALUES (?,?,?,?,?,?,?)', value)
+					
+	conn.commit()
+	c.close()
+	# Takes in two list and a dictonary
+	# deck = the deck you are saving, list of ids
+	# deckQuant= the quantity of all the cards in your deck
+	# deckOther = the other deck
+	# deckQuantOther=the quantity of all the cards in the other deck
+	# Ignores the quantity for id.
+	conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
+	c = conn.cursor()
+
+	for card in deckQuant:
+		for related in deckQuant:
+			if (related not in deckQuantOther or deckQuant[related] != deckQuantOther[related]):
+				c.execute('SELECT wins,gamesPlayed, games FROM cardRelated where id = (?) and relatedid = (?) and relatedQuant = (?)', 
+					(int(card),int(related),deckQuant[related]))
+				list = c.fetchone()
+				if list != None:
+					wins = int(list[0])
+					gamesPlayed = int(list[1])
+					games = int(list[2]) + 1
+					if card in deck: # Run only if played
+						gamesPlayed += 1
+						wins += result
+					value = (wins, gamesPlayed ,games, int(card),int(related),deckQuant[related])
+					c.execute('UPDATE cardRelated SET wins = (?), gamesPlayed = (?), games = (?) WHERE id = (?) and relatedid = (?) and and relatedQuant = (?)', 
+					value)
+				else:
+					value = (card,related,-1,deckQuant[related],result,1,1)
+					c.execute('INSERT INTO cardRelated VALUES (?,?,?,?,?,?,?)', value)
+	conn.commit()
+	c.close()
+
 AIName1 = 'bot1'
 AIName2 = 'bot2'		
 AI1 = 'Random'
@@ -77,6 +145,9 @@ win2 = 0
 	
 #how many games to play with this deck
 while gameCount < 1:  
+	win1 = 0
+	win2 = 0
+	
 	print("	running game " + str(gameCount))
 	#subprocess.Popen - does not wait to finish
 	#subprocess.run - waits to finish
@@ -100,7 +171,7 @@ while gameCount < 1:
 						  shell=True)
 	
 	if (p1.poll() == None or p2.poll() == None):
-		time.sleep(2)
+		time.sleep(1)
 	
 	time.sleep(0.5)
 	
@@ -118,7 +189,9 @@ while gameCount < 1:
 	while count < 50 and (p1.poll() == None or p2.poll() == None):
 		time.sleep(1)
 		count += 1
-	  
+		
+	if count>= 50:
+		print("	Game too long to finish")
 	os.system("	TASKKILL /F /IM ygopro.exe")	   
 	
 	output, stderr = p1.communicate()
@@ -130,11 +203,19 @@ while gameCount < 1:
 	  
 	gameCount += 1
 
-# Save the deck list
+	# Save to database
+	deckList = GetGameLog(AIName1)
+	deckListOther = GetGameLog(AIName2)
 
-conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
-c = conn.cursor()
+	deckQuant = GetCardQuantity(deck1)	
+	deckQuantOther = GetCardQuantity(deck2)
 
+	print("	Saving Deck 1 Results")
+	UpdateDatabase(deckList,deckQuant,deckListOther,deckQuantOther, win1)
+
+	print("	Saving Deck 2 Results")
+	UpdateDatabase(deckListOther,deckQuantOther,deckList,deckQuant, win2)
+	
 # Copy decks
 newDeckname = str(generation) + "_"+ str(subGen) + "_"+ str(win1)+ deck1 
 src_dir=os.getcwd()+"/windbot_master/bin/Debug/Decks/"+ deck1
@@ -145,40 +226,3 @@ newDeckname = str(generation) + "_"+ str(subGen) + "_"+ str(win2)+ deck2
 src_dir=os.getcwd()+"/windbot_master/bin/Debug/Decks/"+ deck2
 dst_dir=os.getcwd()+"/KoishiPro_Sakura/deck/"+ newDeckname
 shutil.copy(src_dir,dst_dir)
-
-card_list = {}
-card_list = readDict(os.getcwd() +"/cardData.txt",':')
-cardListSize = len(card_list)
-
-deckList = GetGameLog(AIName1)#GetDeckFile(deck1)				
-deckListOther = GetGameLog(AIName2)#GetDeckFile(deck2)
-
-print("	Saving Deck 1 Results")
-for l in deckList:
-	if l[0] !='#' and l[0] != '!':
-		cardId = l.strip()
-		if l not in deckListOther:
-			c.execute('SELECT win,games,percentage FROM cardList where id = (?)', (int(cardId),))
-			list = c.fetchone()
-			wins = int(list[0])
-			wins += win1
-			games = int(list[1]) + gameCount
-			percentage = wins/games
-			c.execute('UPDATE cardList SET win = (?), games = (?), percentage = (?) WHERE id = (?)', (wins, games, percentage, int(cardId)))
-			conn.commit()	
-			
-print("	Saving Deck 2 Results")
-for l in deckListOther:
-	if l[0] !='#' and l[0] != '!':
-		cardId = l.strip()
-		if l not in deckList:
-			c.execute('SELECT win,games,percentage FROM cardList where id = (?)', (int(cardId),))
-			list = c.fetchone()
-			wins = int(list[0])
-			wins += win2
-			games = int(list[1]) + gameCount
-			percentage = wins/games
-			c.execute('UPDATE cardList SET win = (?), games = (?), percentage = (?) WHERE id = (?)', (wins, games, percentage, int(cardId)))
-			conn.commit()		
-
-c.close()

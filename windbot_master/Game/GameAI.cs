@@ -181,6 +181,7 @@ namespace WindBot.Game
                     ClientCard card = battle.ActivableCards[i];
                     if (ShouldExecute(exec, card, ExecutorType.Activate, battle.ActivableDescs[i]))
                     {
+                        Logger.WriteToFile($"{card.Name}]{card.Id}");
                         _dialogs.SendChaining(card.Name);
                         return new BattlePhaseAction(BattlePhaseAction.BattleAction.Activate, card.ActionIndex);
                     }
@@ -332,6 +333,7 @@ namespace WindBot.Game
                     ClientCard card = cards[i];
                     if (ShouldExecute(exec, card, ExecutorType.Activate, descs[i]))
                     {
+                        Logger.WriteToFile($"{card.Name}]{card.Id}");
                         _dialogs.SendChaining(card.Name);
                         return i;
                     }
@@ -398,7 +400,10 @@ namespace WindBot.Game
             foreach (CardExecutor exec in Executor.Executors)
             {
                 if (ShouldExecute(exec, card, ExecutorType.Activate, desc))
+                {
+                    Logger.WriteToFile($"{card.Name}]{card.Id}");
                     return true;
+                }
             }
             return false;
         }
@@ -484,7 +489,6 @@ namespace WindBot.Game
                 {
                     if (ShouldExecute(exec, card, ExecutorType.SpellSet))
                     {
-                        Logger.WriteToFile($"{card.Name}]{card.Id}");
                         return new MainPhaseAction(MainPhaseAction.MainAction.SetSpell, card.ActionIndex);
                     }
                 }

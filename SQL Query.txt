@@ -1,0 +1,9 @@
+select t1.name, t.[idQuant],--t2.name,t.relatedQuant,
+wins, gamesPlayed, 
+round(wins*1.0/gamesPlayed,3) as percentage, 
+round(wins*wins*1.0/gamesPlayed,2) as weight
+from cardRelated t
+join cardList t1 on t1.id = t.id 
+join cardList t2 on t2.id = t.relatedid
+where t.id = t.relatedid
+order by weight desc

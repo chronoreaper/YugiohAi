@@ -4,64 +4,77 @@ from random import randrange
 from collections import OrderedDict
 import sqlite3
 
+def AddToDeck(cards, limit, deck_main ):
+	count = 0
+	index = 0
+	while (count < limit and len(cards) > 0):
+		#index = random.randint(0,len(cards)-1)
+		card = cards[index][0]
+		quant = cards[index][1]
+		if deck_main.count(str(card))==0:#if not in list
+			# make sure you dont exceed the limit
+			if count + quant > limit:
+				quant = limit - count
+			#print("	Adding "+str(card)+ " x"+str(quant))
+			for x in range(quant):
+				deck_main.append(str(card)) 
+				count += 1
+		del cards[index]#Remove it from the list
+	return deck_main
 
-def readDict(filename, sep):
-    with open(filename, "r") as f:
-        d = {}
-        for line in f:
-            if len(line) > 6:
-                values = line.split(sep)
-                d[values[0]] = int(values[1])
-        f.close()
-        return(d)
+def AddToDeckRandom(cards, limit, deck_main ):
+	count = 0
+	while (count < limit and len(cards) > 0):
+		index = random.randint(0,len(cards)-1)
+		card = cards[index][0]
+		quant = random.randint(0,2)+1
+		
+		if deck_main.count(str(card))==0:#if not in list
+			# make sure you dont exceed the limit
+			if count + quant > limit:
+				quant = limit - count
+			#print("	Adding "+str(card)+ " x"+str(quant))
+			for x in range(quant):
+				deck_main.append(str(card)) 
+				count += 1
+			del cards[index]#Remove it from the list
+	return deck_main
 
-cardList = open("cardData.txt","r")
 conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
 c = conn.cursor()
 
-card_weight = {}
-card_list = []
-deck_list_main = []
-deck_list_extr = []
-deck_list_side = []
+#select t.id, t1.name, t.relatedQuant, wins, games, wins*1.0/games as percentage, wins*wins*1.0/games as #weight
+#from cardRelated t
+#join cardList t1 on t1.id = t.id 
+#join cardList t2 on t2.id = t.relatedid
+#where t.id = t.relatedid
+#group by t1.name
+#order by weight desc
 
-#adds all cards in the cardList file
-for l in cardList:
-    name = l[ :l.find(':')]
-    card_list.append(name)
-    
-card_weight = readDict('cardData.txt',':')
-
-card_weight_sorted = sorted(card_weight, key=card_weight.get, reverse=True)
-
-deck_list_main = []
+# these contain strings
+deck_main = []
+deck_extr = []
+deck_side = []
 
 deckSize = 40
 topCards = 0
-topCardsRange = max(topCards, 40)
+topCardsRange = min(topCards, 40)
 
 #adds random card to main 
 
-c.execute('SELECT id,name from cardList ORDER BY percentage DESC LIMIT (?)', (topCards,))
-for row in c.fetchall():
-    deck_list_main.append(str(row[0])) 
+c.execute('select id, idQuant, wins*wins*1.0/games as weight '+
+	'from cardRelated '+
+	'where id = relatedid '+
+	#'group by id '+
+	'order by weight desc '+
+	'LIMIT (?)', (topCards,))
+cards = c.fetchall()
 
-#i = 0
-#while (i < topCards):
-    #card = card_weight_sorted[randrange(topCardsRange)]
-    #if deck_list_main.count(card)<1:#3:
-        #deck_list_main.append(card) 
-        #i += 1
-c.execute('SELECT id,name from cardList ORDER BY RANDOM()')
-lst = c.fetchall()
-count = 0
-index = 0
-while (count < deckSize - topCards):
-    card = lst[index][0]#card_list[randrange(len(card_list))]
-    index += 1
-    if deck_list_main.count(card)<1:#3:
-        deck_list_main.append(str(card)) 
-        count += 1
+deck_main = AddToDeck(cards,topCardsRange, deck_main)
+
+c.execute('SELECT id from cardList ORDER BY RANDOM()')
+cards = c.fetchall()
+deck_main = AddToDeckRandom(cards,deckSize - len(deck_main), deck_main)
 
 #f = open(os.getcwd() + '/windbot_master/bin/Debug/Decks/AI_Random.ydk' ,"w+")
 f = open(os.getcwd() + '/windbot_master/bin/Debug/Decks/'+ sys.argv[1] ,"w+")    
@@ -71,12 +84,12 @@ f.write("#created by deck_maker_ai\n")
 f.write("#main\n")
 cardcount=0
 #print("----")
-for i in deck_list_main:
+for i in deck_main:
     #print(i)
     f.write(i +'\n')
 f.write("#extra\n")
 f.write("!side\n")
-#for i in deck_list_side:
+#for i in deck_side:
 #    f.write(i +'\n')    
 
 f.close()

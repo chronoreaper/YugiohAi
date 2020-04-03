@@ -13,14 +13,19 @@ start = time.time()
 error = 0 
 warning = 0
 
-#Erace Previous Log
+#Erase Previous Log
 file = open("log.txt","w")
 file.write("")
 file.close()
 
-print("getting cards from database")
+#Erase FLList or there will be errors
+file = open(os.getcwd() + "/KoishiPro_Sakura/lflist.conf","w")
+file.write("")
+file.close()
+
+print("Setting up cards in database")
 #gets all the cards from the database
-subprocess.run([os.getcwd() + "/11_SqlReader.py"],shell=True)
+#subprocess.run([os.getcwd() + "/11_SqlReader.py"],shell=True)
 
 print("deleting old deck files from ygopro")
 files = glob.glob(os.getcwd() +"/KoishiPro_Sakura/deck/*")
@@ -63,7 +68,7 @@ end = time.time()
 
 Log("Time Past:" + str(datetime.timedelta(seconds=int(end - start))))
 Log("Time Past Excluding Setup:" + str(datetime.timedelta(seconds=int(end - startNoSetup))))
-
+Log("Average Game Time:"+str(datetime.timedelta(seconds=int((end - startNoSetup)/count))))
 if error == 1:
     print("there were errors")
 if warning >= 3:

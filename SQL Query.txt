@@ -7,3 +7,11 @@ join cardList t1 on t1.id = t.id
 join cardList t2 on t2.id = t.relatedid
 where t.id = t.relatedid
 order by weight desc
+
+select t1.name,t2.name,wins,games,
+round(wins*1.0/games,3) as percentage, 
+round(wins*wins*1.0/games,2) as weight
+from cardCounter t
+join cardList t1 on t1.id = t.id 
+join cardList t2 on t2.id = t.otherid
+order by weight desc

@@ -37,8 +37,10 @@ The relationship comparing to see how many times a card wins against another car
 The data to see if the ai should play a card or not
 
 * id, the card to check if it should play
+* action, the action about to be performed
 * check, what it should check in the game
 * value, the value of what it should check
+* count, the number of times this holds true
 * wins, how many times it has won if the ai has played that card
 * games, how many games it has played the card
-* inprocess, keeps track if the ai has not yet recorded the results of the games yet.
+* inprogress, keeps track if the ai has not yet recorded the results of the games yet.

@@ -25,7 +25,7 @@ file.close()
 
 print("Setting up cards in database")
 #gets all the cards from the database
-#subprocess.run([os.getcwd() + "/11_SqlReader.py"],shell=True)
+subprocess.run([os.getcwd() + "/11_SqlReader.py"],shell=True)
 
 print("deleting old deck files from ygopro")
 files = glob.glob(os.getcwd() +"/KoishiPro_Sakura/deck/*")
@@ -36,7 +36,7 @@ startNoSetup = time.time()
 print("done set up")
 #makes the two random decks
 count = 1
-while ((count <= 1000) and (error == 0) and (warning < 3)):
+while ((count <= 2000) and (error == 0) and (warning < 3)):
     file = open("log.txt","a")
     print("Game:"+str(count))
     file.write("Game:"+str(count)+"\n")

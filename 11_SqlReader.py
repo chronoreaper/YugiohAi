@@ -16,6 +16,8 @@ c2 = conn2.cursor()
 print("	Resetting DB Values")
 c2.execute('DELETE FROM cardList')
 c2.execute('DELETE FROM cardRelated')
+c2.execute('DELETE FROM cardCounter')
+c2.execute('DELETE FROM playCard')
 
 cardList = {}
 
@@ -28,6 +30,7 @@ c.execute('SELECT texts.id, texts.name From texts '+
 					 'or texts.name like "red medicine" '+
 					 'or texts.name like "ookazi" '+
 					 'or texts.name like "fossil dig" '+
+					 'or texts.name like "oops!" ' +
 					 'GROUP by texts.name')
 count = 0				 
 for row in c.fetchall():

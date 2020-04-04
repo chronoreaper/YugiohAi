@@ -77,6 +77,7 @@ namespace WindBot
             Info.Debug = Config.GetBool("Debug", Info.Debug);
             Info.Chat = Config.GetBool("Chat", Info.Chat);
             Logger.Path = Info.Name + ".txt";
+            Logger.Name = Info.Name;
             Logger.DeleteFile();
             Run(Info);
         }

@@ -74,6 +74,7 @@ def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result):
 	# this takes a long time, need to optimize
 	conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
 	c = conn.cursor()
+	#record the relationship in the deck
 	for card in deckQuant:
 		for related in deckQuant:
 			if (related not in deckQuantOther or deckQuant[related] != deckQuantOther[related]) and (card not in deckQuantOther or deckQuant[card] != deckQuantOther[card]):
@@ -92,41 +93,35 @@ def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result):
 					value)
 				else:
 					value = (card,related,deckQuant[card],deckQuant[related],result,1,1)
-					c.execute('INSERT INTO cardRelated VALUES (?,?,?,?,?,?,?)', value)
-					
+					c.execute('INSERT INTO cardRelated VALUES (?,?,?,?,?,?,?)', value)				
+	conn.commit()
+	
+	# Record the relationship against the other deck
+	i = 0
+	j = 0
+	for card in deck:
+		j=0
+		for related in deckOther:
+			if related != card:
+				if related not in deck:
+					if card not in deckOther:
+						if card not in deck[i+1:]:
+							if related not in deckOther[j+1:]:
+								c.execute('SELECT wins,games FROM cardCounter where id = (?) and otherid = (?)', (int(card),int(related)))
+								list = c.fetchone()
+								if list != None:
+									wins = int(list[0]) + result
+									games = int(list[1]) + 1
+									value = (wins ,games,int(card),int(related))
+									c.execute('UPDATE cardCounter SET wins = (?), games = (?) WHERE id = (?) and otherid = (?)', value)
+								else:
+									value = (card,related,result,1)
+									c.execute('INSERT INTO cardCounter VALUES (?,?,?,?)', value)
+			j +=1
+		i +=1
 	conn.commit()
 	c.close()
-	# Takes in two list and a dictonary
-	# deck = the deck you are saving, list of ids
-	# deckQuant= the quantity of all the cards in your deck
-	# deckOther = the other deck
-	# deckQuantOther=the quantity of all the cards in the other deck
-	# Ignores the quantity for id.
-	conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
-	c = conn.cursor()
-
-	for card in deckQuant:
-		for related in deckQuant:
-			if (related not in deckQuantOther or deckQuant[related] != deckQuantOther[related]):
-				c.execute('SELECT wins,gamesPlayed, games FROM cardRelated where id = (?) and relatedid = (?) and relatedQuant = (?)', 
-					(int(card),int(related),deckQuant[related]))
-				list = c.fetchone()
-				if list != None:
-					wins = int(list[0])
-					gamesPlayed = int(list[1])
-					games = int(list[2]) + 1
-					if card in deck: # Run only if played
-						gamesPlayed += 1
-						wins += result
-					value = (wins, gamesPlayed ,games, int(card),int(related),deckQuant[related])
-					c.execute('UPDATE cardRelated SET wins = (?), gamesPlayed = (?), games = (?) WHERE id = (?) and relatedid = (?) and and relatedQuant = (?)', 
-					value)
-				else:
-					value = (card,related,-1,deckQuant[related],result,1,1)
-					c.execute('INSERT INTO cardRelated VALUES (?,?,?,?,?,?,?)', value)
-	conn.commit()
-	c.close()
-
+	
 AIName1 = 'bot1'
 AIName2 = 'bot2'		
 AI1 = 'Random'

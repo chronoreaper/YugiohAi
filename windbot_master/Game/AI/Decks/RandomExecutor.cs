@@ -25,6 +25,15 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.SpellSet);
         }
 
+        public override bool OnSelectHand()
+        {
+            bool choice = Program.Rand.Next(2) > 0;
+
+            Logger.AddToDatabase(action:"GoFirst",value:choice.ToString());
+
+            return choice;
+        }
+
         public override IList<ClientCard> OnSelectCard(IList<ClientCard> cards, int min, int max, int hint, bool cancelable)
         {
             if (Duel.Phase == DuelPhase.BattleStart)

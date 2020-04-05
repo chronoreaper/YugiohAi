@@ -36,7 +36,7 @@ startNoSetup = time.time()
 print("done set up")
 #makes the two random decks
 count = 1
-while ((count <= 2000) and (error == 0) and (warning < 3)):
+while ((count <= 5) and (error == 0) and (warning < 3)):
     file = open("log.txt","a")
     print("Game:"+str(count))
     file.write("Game:"+str(count)+"\n")

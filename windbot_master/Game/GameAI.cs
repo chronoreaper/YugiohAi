@@ -44,28 +44,6 @@ namespace WindBot.Game
         public void OnJoinGame()
         {
             _dialogs.SendWelcome();
-            string databasePath = Config.GetString("DbPath", "cards.cdb");
-            //database(databasePath);
-        }
-
-        internal static Random Rand;
-
-        private void database(string databasePath)
-        {
-            //@"URI=file:\windbot_master\windbot_master\bin\Debug\cards.cdb";
-            string absolutePath = @"URI=file:\windbot_master\windbot_master\bin\Debug\cards.cdb";
-            SqliteConnection con = new SqliteConnection(absolutePath);
-            con.Open();
-            const string sql =
-                  "SELECT id, type FROM datas LIMIT 1";
-            SqliteCommand cmd = new SqliteCommand(sql, con);
-            SqliteDataReader rdr = cmd.ExecuteReader();
-
-           while (rdr.Read())
-           {
-                Console.WriteLine($"{rdr.GetInt64(0)} {rdr.GetInt64(1)}");
-           }
-
         }
 
         /// <summary>

@@ -59,6 +59,16 @@ namespace WindBot.Game.AI.Decks
             return selected;
         }
 
+
+        public override bool OnSelectHand()
+        {
+            bool choice = Program.Rand.Next(2) > 0;
+
+            Logger.RecordAction(action: "GoFirst", value: choice.ToString());
+
+            return choice;
+        }
+
         public override int OnSelectOption(IList<int> options)
         {
             return Program.Rand.Next(options.Count);

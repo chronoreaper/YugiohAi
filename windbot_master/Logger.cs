@@ -14,25 +14,64 @@ namespace WindBot
         private const int WIN = 0;
         private const int LOSE = 1;
         private const int TIE = 2;
+        private const string BLANK = "''";
 
         private static void ConnectToDatabase()
         {
             if (SQLCon == null)
             {
+                WriteLine("Create Connection to Database");
                 //@"URI=file:\windbot_master\windbot_master\bin\Debug\cards.cdb";
-                string absolutePath =@"\cardData.cdb";
+                string dir = Directory.GetCurrentDirectory();
+                //Go to the YugiohAi Directory
+                dir = dir.Remove(dir.IndexOf(@"windbot_master\bin\Debug")) + "cardData.cdb";
+                string absolutePath = $@"URI = file: {dir}";
                 SQLCon = new SqliteConnection(absolutePath);
             }
         }
-
-        public static List<int> CheckDatabase(int id = -1, string action = "", string check = "", string value = "", int count = 1)
+        /// <summary>
+        /// Adds the action to the actions performed this game.
+        /// </summary>
+        /// <param name="id">Id of the card</param>
+        /// <param name="action">Action performed</param>
+        /// <param name="verify">What value was verifyed</param>
+        /// <param name="value">The value to verify</param>
+        /// <param name="count">how many times it was found</param>
+        /// <returns>the values from the database that matches the input.</returns>
+        public static List<int> RecordAction(int id = -1, string action = "", string verify = "", string value = "", int count = 1)
         {
-            List<int> result = new List<int>();
             ConnectToDatabase();
-
             SQLCon.Open();
+
+            List<int> result = new List<int>();
+
             string sql =
-                  $"SELECT wins, games FROM playCard WHERE id = {id} AND action = {action} AND check = {check} AND value = {value} AND count = {count} AND inprogress =  ''";
+                  $"INSERT INTO playCard (id,action,verify,value,count,inprogress) VALUES ({id},'{action}','{verify}','{value}',{count},'{Name}')";
+            SqliteCommand cmd = new SqliteCommand(sql, SQLCon);
+            cmd.ExecuteNonQuery();
+
+
+            SQLCon.Close();
+            return result;
+        }
+
+        /// <summary>
+        /// Gets the weight of the input from the database.
+        /// </summary>
+        /// <param name="id">Id of the card</param>
+        /// <param name="action">Action performed</param>
+        /// <param name="verify">What value was verifyed</param>
+        /// <param name="value">The value to verify</param>
+        /// <param name="count">how many times it was found</param>
+        public static void GetData(int id = -1, string action = "", string verify = "", string value = "", int count = 1)
+        {
+            ConnectToDatabase();
+            SQLCon.Open();
+
+            List<int> result = new List<int>();
+
+            string sql =
+                  $"SELECT wins, games FROM playCard WHERE id = {id} AND action = '{action}' AND verify = '{verify}' AND value = '{value}' AND count = {count} AND inprogress =  {BLANK}";
             SqliteCommand cmd = new SqliteCommand(sql, SQLCon);
             using (SqliteDataReader rdr = cmd.ExecuteReader())
                 while (rdr.Read())
@@ -40,26 +79,6 @@ namespace WindBot
                     result.Add(rdr.GetInt32(0));
                     result.Add(rdr.GetInt32(1));
                 }
-            SQLCon.Close();
-            return result;
-        }
-
-        /// <summary>
-        /// Adds the action to the database
-        /// </summary>
-        /// <param name="id">Id of the card</param>
-        /// <param name="action">Action performed</param>
-        /// <param name="check">What value was checked</param>
-        /// <param name="value">The value to check</param>
-        /// <param name="count">how many times it was found</param>
-        public static void AddToDatabase(int id = -1, string action = "", string check = "", string value = "", int count = 1)
-        {
-            ConnectToDatabase();
-            SQLCon.Open();
-            string sql =
-                  $"INSERT INTO playCard (id,action,check,value,count,inprogress) VALUES ({id},{action},{check},{value},{count},{Name}";
-            SqliteCommand cmd = new SqliteCommand(sql, SQLCon);
-            cmd.ExecuteNonQuery();
 
             SQLCon.Close();
         }
@@ -79,24 +98,46 @@ namespace WindBot
 
                 //Select all the data that was stored
                 string sql =
-                      $"SELECT id,action,check,value,count,wins,games FROM playCard WHERE inprogress = {Name}";
+                      $"SELECT id,action,verify,value,count FROM playCard WHERE inprogress = '{Name}'";
                 SqliteCommand cmd = new SqliteCommand(sql, SQLCon);
-                using (SqliteDataReader rdr = cmd.ExecuteReader())
-                    while (rdr.Read())
-                    {
-                        int id = rdr.GetInt32(0);
-                        string action = rdr.GetString(1);
-                        string check = rdr.GetString(1);
-                        string value = rdr.GetString(1);
-                        int count = rdr.GetInt32(0);
-                        int wins = rdr.GetInt32(0) + result == WIN ? 1 : 0;
-                        int games = rdr.GetInt32(0) + 1;
+                try
+                {
+                    using (SqliteDataReader rdr = cmd.ExecuteReader())
+                        while (rdr.Read())
+                        {
+                            int id = rdr.GetInt32(0);
+                            string action = rdr.GetString(1);
+                            string verify = rdr.GetString(2);
+                            string value = rdr.GetString(3);
+                            int count = rdr.GetInt32(4);
+                            int wins = result == WIN ? 1 : 0;
 
-                        sql = $"INSERT INTO playCard (id,action,check,value,count,wins,gamesinprogress) " +
-                                $"VALUES ({id},{action},{check},{value},{count},{wins},{games}''";
-                        cmd = new SqliteCommand(sql, SQLCon);
-                        cmd.ExecuteNonQuery();
-                    }
+                            sql = $"UPDATE playCard SET wins = wins + {wins}, games = games + 1, inprogress = {BLANK} WHERE " +
+                                    $"id = {id} AND action = '{action}' AND verify = '{verify}' AND value = '{value}' AND count = {count} AND inprogress =  {BLANK}";
+                            cmd = new SqliteCommand(sql, SQLCon);
+                            int rowsUpdated = cmd.ExecuteNonQuery();
+                            WriteLine($"{rowsUpdated} Rows Were updated.");
+                            // If there was no update, add it instead
+                            if (rowsUpdated <= 0)
+                            {
+                                //The master data isnt in the database yet so add it
+                                sql = $"INSERT INTO playCard (id,action,verify,value,count,wins,games,inprogress) VALUES ({id},'{action}','{verify}','{value}',{count},{wins},1,'')";
+                                cmd = new SqliteCommand(sql, SQLCon);
+                                rowsUpdated = cmd.ExecuteNonQuery();
+                                WriteLine($"{rowsUpdated} Rows were inserted.");
+                            }
+                        }
+                    //Removed the inprogress rows
+                    sql =
+                      $"DELETE FROM playCard WHERE inprogress = '{Name}'";
+                    cmd = new SqliteCommand(sql, SQLCon);
+                    cmd.ExecuteNonQuery();
+                }
+                catch (SqliteException e)
+                {
+                    WriteLine("This ai probably never used the database");
+                    WriteLine(e.Message);
+                }
                 SQLCon.Close();
             }
         }

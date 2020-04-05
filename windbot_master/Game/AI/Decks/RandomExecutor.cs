@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using WindBot;
 using WindBot.Game;
 using WindBot.Game.AI;
+using System;
 
 namespace WindBot.Game.AI.Decks
 {
@@ -18,6 +19,7 @@ namespace WindBot.Game.AI.Decks
         public RandomExecutor(GameAI ai, Duel duel)
             : base(ai, duel)
         {
+            AddExecutor(ExecutorType.Summon, ShouldNormalSummon);
             AddExecutor(ExecutorType.SpSummon);
             AddExecutor(ExecutorType.Activate, DefaultDontChainMyself);
             AddExecutor(ExecutorType.SummonOrSet);
@@ -25,11 +27,20 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.SpellSet);
         }
 
+        private bool ShouldNormalSummon()
+        {
+            foreach (ClientCard Monster in Enemy.GetMonsters())
+            {
+
+            }
+            return true;
+        }
+
         public override bool OnSelectHand()
         {
             bool choice = Program.Rand.Next(2) > 0;
 
-            Logger.AddToDatabase(action:"GoFirst",value:choice.ToString());
+            Logger.RecordAction(action:"GoFirst",value:choice.ToString());
 
             return choice;
         }

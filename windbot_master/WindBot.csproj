@@ -70,6 +70,7 @@
     <Compile Include="Game\AI\Decks\BlackwingExecutor.cs" />
     <Compile Include="Game\AI\Decks\CrusadiaExecutor.cs" />
     <Compile Include="Game\AI\Decks\Level8Executor.cs" />
+    <Compile Include="Game\AI\Decks\RandomExecutorBase.cs" />
     <Compile Include="Game\AI\Decks\RandomExecutor2.cs" />
     <Compile Include="Game\AI\Decks\RandomExecutor.cs" />
     <Compile Include="Game\AI\Decks\SalamangreatExecutor.cs" />

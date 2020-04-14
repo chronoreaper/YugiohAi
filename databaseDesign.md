@@ -37,7 +37,9 @@ The relationship comparing to see how many times a card wins against another car
 The data to see if the ai should play a card or not
 
 * id, the card to check if it should play
+* location, the location of the card
 * action, the action about to be performed
+* result, the result of the action ie, summon in attack or defence or choose to activate an effect.
 * verify, what it should check in the game
 * value, the value of what it should check
 * count, the number of times this holds true

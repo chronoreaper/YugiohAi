@@ -8,7 +8,7 @@ import sqlite3
 #Run after you hosted a game
 ###
 AI1 = 'Random'
-subprocess.run([os.getcwd() + "/12_makeDeck.py", "AI_Random.ydk"],shell=True)
+#subprocess.run([os.getcwd() + "/12_makeDeck.py", "AI_Random.ydk"],shell=True)
 p1 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI1,'bot1','1'],
 					  shell=True,stdout=subprocess.PIPE, 
 					  stderr = subprocess.PIPE,

@@ -20,9 +20,40 @@ c2.execute('DELETE FROM cardCounter')
 c2.execute('DELETE FROM playCard')
 
 cardList = {}
+# for the other deck
+#'WHERE texts.id = 84754430 '+
+#'or texts.id = 10000000 '+
+#'or texts.id = 51945556 '+
+#'or texts.id = 14778250 '+
+#'or texts.id = 31786629 '+
+#'or texts.id = 7572887 '+
+#'or texts.id = 84290642 '+
+#'or texts.id = 25259669 '+
+#'or texts.id = 74131780 '+
+#'or texts.id = 16226786 '+
+#'or texts.id = 91133740 '+
+#'or texts.id = 53620899 '+
+#'or texts.id = 8131171 '+
+#'or texts.id = 12538374 '+
+
+#'WHERE texts.id = 55144522 '+
+#'or texts.id = 75953262 '+
+#'or texts.id = 39256679 '+
+#'or texts.id = 62651957 '+
+#'or texts.id = 11321183 '+
+#'or texts.id = 7459013 '+
+#'or texts.id = 92125819 '+
+#'or texts.id = 91731841 '+
+#'or texts.id = 90582719 '+
+#'or texts.id = 35052053 '+
+#'or texts.id = 11091375 '+
+#'or texts.id = 84754430 '+
+#'or texts.id = 81823360 '+
+#'or texts.id = 47226949 '+
 
 c.execute('SELECT texts.id, texts.name From texts '+ 
                      'Inner JOIN datas ON texts.id = datas.id '+
+
                      'WHERE ot=3 AND level=4 AND type=17 AND def < 2000 AND atk >= 1800 ' +
 					 'or texts.name like "pot of greed" '+
 					 'or texts.name like "raigeki" ' +

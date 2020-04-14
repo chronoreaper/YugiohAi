@@ -36,7 +36,7 @@ startNoSetup = time.time()
 print("done set up")
 #makes the two random decks
 count = 1
-while ((count <= 5) and (error == 0) and (warning < 3)):
+while ((count <= 10) and (error == 0) and (warning < 3)):
     file = open("log.txt","a")
     print("Game:"+str(count))
     file.write("Game:"+str(count)+"\n")
@@ -68,7 +68,7 @@ end = time.time()
 
 Log("Time Past:" + str(datetime.timedelta(seconds=int(end - start))))
 Log("Time Past Excluding Setup:" + str(datetime.timedelta(seconds=int(end - startNoSetup))))
-Log("Average Game Time:"+str(datetime.timedelta(seconds=int((end - startNoSetup)/count))))
+Log("Average Game Time:"+str(datetime.timedelta(seconds=int((end - startNoSetup)/(count-1)))))
 if error == 1:
     print("there were errors")
 if warning >= 3:

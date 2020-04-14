@@ -39,6 +39,11 @@ def hostGame():
 	
 	subprocess.run([os.getcwd() + "/131_ClickImage.py","spectateBut.png"],
 				   shell=True)
+				   
+	time.sleep(0.1)
+	
+	subprocess.run([os.getcwd() + "/131_ClickImage.py","spectateBut.png"],
+			   shell=True)
 def GetCardQuantity(deck):
 	dict = {}
 	deckFile = open(os.getcwd() 
@@ -179,14 +184,19 @@ while gameCount < 1:
 	  
 	count = 0
 	
-	#make sure the game does not run longer than 50 sec
+	#make sure the game does not run longer than needed
 	#ends the ygopro program as soon as the ais are done. Ais play faster than what you see.
-	while count < 50 and (p1.poll() == None or p2.poll() == None):
+	#
+	while count < 300 and (p1.poll() == None or p2.poll() == None) or (p1.poll() == None and p2.poll() != None) or (p1.poll() != None and p2.poll() == None):
 		time.sleep(1)
 		count += 1
 		
-	if count>= 50:
+	# the game probably never started
+	if count>= 300 and (p1.poll() == None and p2.poll() == None):
 		print("	Game too long to finish")
+		
+	print("	Game took "+str(count)+" seconds.")
+		
 	os.system("	TASKKILL /F /IM ygopro.exe")	   
 	
 	output, stderr = p1.communicate()
@@ -197,7 +207,8 @@ while gameCount < 1:
 		win2 += 1  
 	  
 	gameCount += 1
-
+	
+	print("	Saving deck to database")
 	# Save to database
 	deckList = GetGameLog(AIName1)
 	deckListOther = GetGameLog(AIName2)
@@ -205,6 +216,8 @@ while gameCount < 1:
 	deckQuant = GetCardQuantity(deck1)	
 	deckQuantOther = GetCardQuantity(deck2)
 
+	time.sleep(1)
+	
 	print("	Saving Deck 1 Results")
 	UpdateDatabase(deckList,deckQuant,deckListOther,deckQuantOther, win1)
 

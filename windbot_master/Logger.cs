@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 
 namespace WindBot
 {
@@ -33,110 +34,142 @@ namespace WindBot
         /// Adds the action to the actions performed this game.
         /// </summary>
         /// <param name="id">Id of the card</param>
+        /// <param name="location">The location of the card</param>
         /// <param name="action">Action performed</param>
+        /// <param name="result">The value of the action performed</param>
         /// <param name="verify">What value was verifyed</param>
         /// <param name="value">The value to verify</param>
         /// <param name="count">how many times it was found</param>
-        /// <returns>the values from the database that matches the input.</returns>
-        public static List<int> RecordAction(int id = -1, string action = "", string verify = "", string value = "", int count = 1)
+        public static void RecordAction(string id = "",string location = "",  string action = "", string result = "", string verify = "", string value = "", int count = 1)
         {
             ConnectToDatabase();
-            SQLCon.Open();
+            using (SQLCon)
+            {
+                SQLCon.Open();
 
-            List<int> result = new List<int>();
+                string sql =
+                      $"INSERT INTO playCard (id,location,action,result,verify,value,count,inprogress) VALUES ('{id}','{location}','{action}','{result}','{verify}','{value}',{count},'{Name}')";
+                SqliteCommand cmd = new SqliteCommand(sql, SQLCon);
+                cmd.ExecuteNonQuery();
 
-            string sql =
-                  $"INSERT INTO playCard (id,action,verify,value,count,inprogress) VALUES ({id},'{action}','{verify}','{value}',{count},'{Name}')";
-            SqliteCommand cmd = new SqliteCommand(sql, SQLCon);
-            cmd.ExecuteNonQuery();
-
-
-            SQLCon.Close();
-            return result;
+                SQLCon.Close();
+            }
         }
 
         /// <summary>
         /// Gets the weight of the input from the database.
         /// </summary>
         /// <param name="id">Id of the card</param>
+        /// <param name="location">The location of the card</param>
         /// <param name="action">Action performed</param>
+        /// <param name="result">The value of the action performed</param>
         /// <param name="verify">What value was verifyed</param>
         /// <param name="value">The value to verify</param>
         /// <param name="count">how many times it was found</param>
-        public static void GetData(int id = -1, string action = "", string verify = "", string value = "", int count = 1)
+        public static List<int> GetData(string id = "", string location = "", string action = "", string result = "", string verify = "", string value = "", int count = 1)
         {
+            List<int> row = new List<int>();
+
             ConnectToDatabase();
-            SQLCon.Open();
+            using (SQLCon)
+            {
+                SQLCon.Open();
 
-            List<int> result = new List<int>();
-
-            string sql =
-                  $"SELECT wins, games FROM playCard WHERE id = {id} AND action = '{action}' AND verify = '{verify}' AND value = '{value}' AND count = {count} AND inprogress =  {BLANK}";
-            SqliteCommand cmd = new SqliteCommand(sql, SQLCon);
-            using (SqliteDataReader rdr = cmd.ExecuteReader())
-                while (rdr.Read())
+                string sql =
+                      $"SELECT wins, games FROM playCard WHERE id = '{id}' AND location = '{location}' AND action = '{action}' AND result = '{result}' AND verify = '{verify}' AND value = '{value}' AND count = {count} AND inprogress =  {BLANK}";
+                using (SqliteCommand cmd = new SqliteCommand(sql, SQLCon))
                 {
-                    result.Add(rdr.GetInt32(0));
-                    result.Add(rdr.GetInt32(1));
+                    using (SqliteDataReader rdr = cmd.ExecuteReader())
+                        while (rdr.Read())
+                        {
+                            row.Add(rdr.GetInt32(0));
+                            row.Add(rdr.GetInt32(1));
+                        }
                 }
 
-            SQLCon.Close();
+                SQLCon.Close();
+            }
+            return row;
         }
 
         /// <summary>
         /// Updates the data base result
         /// </summary>
-        /// <param name="result">0 = win, 1 = lose, 2 = tie</param>
-        public static void UpdateDatabase(int result)
+        /// <param name="gameResult">0 = win, 1 = lose, 2 = tie</param>
+        /// <param name="otherName">Name of the opponent</param>
+        public static void UpdateDatabase(int gameResult, string otherName)
         {
-            if (result != TIE)
+            WriteLine("Updating Database with result");
+            //since two programs cant access the database at the same time,
+            //run if you lost the game.
+            if (gameResult != TIE && gameResult != WIN)
             {
-                ConnectToDatabase();
-                List<int> query = new List<int>();
+                RecordPlayerGameData(gameResult, Name);
+                RecordPlayerGameData(gameResult == WIN?LOSE:WIN, otherName);
+            }
+        }
 
+        /// <summary>
+        /// Updates the data base result
+        /// </summary>
+        /// <param name="gameResult">0 = win, 1 = lose, 2 = tie</param>
+        /// <param name="Player">Name of player</param>
+        private static void RecordPlayerGameData(int gameResult, string Player)
+        {
+            ConnectToDatabase();
+
+            using (SQLCon)
+            {
                 SQLCon.Open();
 
                 //Select all the data that was stored
                 string sql =
-                      $"SELECT id,action,verify,value,count FROM playCard WHERE inprogress = '{Name}'";
-                SqliteCommand cmd = new SqliteCommand(sql, SQLCon);
-                try
+                      $"SELECT id,location,action,result,verify,value,count FROM playCard WHERE inprogress = '{Player}'";
+                using (SqliteCommand cmd = new SqliteCommand(sql, SQLCon))
                 {
                     using (SqliteDataReader rdr = cmd.ExecuteReader())
+                    {
                         while (rdr.Read())
                         {
-                            int id = rdr.GetInt32(0);
-                            string action = rdr.GetString(1);
-                            string verify = rdr.GetString(2);
-                            string value = rdr.GetString(3);
-                            int count = rdr.GetInt32(4);
-                            int wins = result == WIN ? 1 : 0;
+                            string id = rdr.GetString(0);
+                            string location = rdr.GetString(1);
+                            string action = rdr.GetString(2);
+                            string result = rdr.GetString(3);
+                            string verify = rdr.GetString(4);
+                            string value = rdr.GetString(5);
+                            int count = rdr.GetInt32(6);
+                            int wins = gameResult == WIN ? 1 : 0;
 
                             sql = $"UPDATE playCard SET wins = wins + {wins}, games = games + 1, inprogress = {BLANK} WHERE " +
-                                    $"id = {id} AND action = '{action}' AND verify = '{verify}' AND value = '{value}' AND count = {count} AND inprogress =  {BLANK}";
-                            cmd = new SqliteCommand(sql, SQLCon);
-                            int rowsUpdated = cmd.ExecuteNonQuery();
-                            WriteLine($"{rowsUpdated} Rows Were updated.");
+                                    $"id = '{id}' AND location = '{location}' AND action = '{action}'  AND result = '{result}' AND verify = '{verify}' AND value = '{value}' AND count = {count} AND inprogress =  {BLANK}";
+
+                            int rowsUpdated = 0;
+
+                            using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon))
+                            {
+                                rowsUpdated = cmd2.ExecuteNonQuery();
+                                //WriteLine($"{rowsUpdated} Rows Were updated.");
+                            }
                             // If there was no update, add it instead
                             if (rowsUpdated <= 0)
                             {
                                 //The master data isnt in the database yet so add it
-                                sql = $"INSERT INTO playCard (id,action,verify,value,count,wins,games,inprogress) VALUES ({id},'{action}','{verify}','{value}',{count},{wins},1,'')";
-                                cmd = new SqliteCommand(sql, SQLCon);
-                                rowsUpdated = cmd.ExecuteNonQuery();
-                                WriteLine($"{rowsUpdated} Rows were inserted.");
+                                sql = $"INSERT INTO playCard (id,location,action,result,verify,value,count,wins,games,inprogress) VALUES ('{id}','{location}','{action}','{result}','{verify}','{value}',{count},{wins},1,{BLANK})";
+                                using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon))
+                                {
+                                    rowsUpdated = cmd2.ExecuteNonQuery();
+                                    //WriteLine($"{rowsUpdated} Rows were inserted.");
+                                }
                             }
                         }
-                    //Removed the inprogress rows
-                    sql =
-                      $"DELETE FROM playCard WHERE inprogress = '{Name}'";
-                    cmd = new SqliteCommand(sql, SQLCon);
-                    cmd.ExecuteNonQuery();
+                    }
                 }
-                catch (SqliteException e)
+                //Removed the inprogress rows
+                sql =
+                    $"DELETE FROM playCard WHERE inprogress = '{Player}'";
+                using (SqliteCommand cmd = new SqliteCommand(sql, SQLCon))
                 {
-                    WriteLine("This ai probably never used the database");
-                    WriteLine(e.Message);
+                    cmd.ExecuteNonQuery();
                 }
                 SQLCon.Close();
             }

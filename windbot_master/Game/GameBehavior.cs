@@ -367,7 +367,7 @@ namespace WindBot.Game
 
             string otherName = _room.Position == 0 ? _room.Names[1] : _room.Names[0];
             string textResult = (result == 2 ? "Draw" : result == 0 ? "Win" : "Lose");
-            Logger.UpdateDatabase(result);
+            Logger.UpdateDatabase(result, otherName);
             Logger.DebugWriteLine("Duel finished against " + otherName + ", result: " + textResult);
         }
 

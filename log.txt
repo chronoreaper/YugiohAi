@@ -1,5 +1,4 @@
 Game:1
-Game:2
-Game:3
-Game:4
-Game:5
+Time Past:0:00:59
+Time Past Excluding Setup:0:00:58
+Average Game Time:0:00:58

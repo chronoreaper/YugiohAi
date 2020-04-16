@@ -6,6 +6,7 @@ using System;
 using System.IO;
 using YGOSharp.OCGWrapper;
 using Mono.Data.Sqlite;
+using WindBot.Game.AI.Decks;
 
 namespace WindBot.Game
 {
@@ -99,7 +100,7 @@ namespace WindBot.Game
             m_materialSelector = null;
             m_option = -1;
             m_yesno = -1;
-           
+
             m_place = 0;
             if (Duel.Player == 0 && Duel.Phase == DuelPhase.Draw)
             {
@@ -123,9 +124,9 @@ namespace WindBot.Game
         /// <param name="player">Player who is currently chaining.</param>
         public void OnChaining(ClientCard card, int player)
         {
-            Executor.OnChaining(player,card);
+            Executor.OnChaining(player, card);
         }
-        
+
         /// <summary>
         /// Called when a chain has been solved.
         /// </summary>
@@ -320,7 +321,7 @@ namespace WindBot.Game
             // If we're forced to chain, we chain the first card. However don't do anything.
             return forced ? 0 : -1;
         }
-        
+
         /// <summary>
         /// Called when the AI has to use one or more counters.
         /// </summary>
@@ -386,6 +387,66 @@ namespace WindBot.Game
             return false;
         }
 
+        private class ChoiceWeight
+        {
+            public MainPhaseAction.MainAction BestAction = MainPhaseAction.MainAction.ToEndPhase;
+            public ClientCard BestCard = null;
+            public int BestIndex = 0;
+            public double BestWeight = 0;
+            public RandomExecutorBase Executor;
+
+            public ChoiceWeight(RandomExecutorBase executor)
+            {
+                Executor = executor;
+            }
+
+            public void SetBest(MainPhaseAction.MainAction action,ClientCard card, int index = -1)
+            {
+                Executor.SetCard((ExecutorType)(int)action, card, index);
+
+                string actionString = action.ToString();
+                if (action == MainPhaseAction.MainAction.Repos)
+                    actionString += $" {card.Position.ToString()}";
+
+                double weight = Executor.ActionWeight(actionString);
+
+                if (weight >= BestWeight)
+                {
+                    RecordAction(BestAction, BestCard, false);
+                    BestWeight = weight;
+                    BestAction = action;
+                    BestCard = card;
+                    BestIndex = index;
+                }
+                else
+                {
+                    RecordAction(action, card, false);
+                }
+            }
+
+            public void RecordAction(MainPhaseAction.MainAction action, ClientCard card, bool execute = false)
+            {
+                string actionString = action.ToString();
+
+                if (action == MainPhaseAction.MainAction.Repos)
+                    actionString += $" {card.Position.ToString()}";
+
+                if (execute)
+                    Logger.WriteToFile($"{card.Name}]{card.Id}");
+
+                Executor.SetCard((ExecutorType)(int)action, card, -1);
+                Executor.RecordAction(actionString, execute.ToString());
+            }
+
+            public MainPhaseAction ReturnBestAction()
+            {
+                if (BestAction != MainPhaseAction.MainAction.ToBattlePhase && BestAction != MainPhaseAction.MainAction.ToEndPhase)
+                    return new MainPhaseAction(BestAction, BestIndex);
+                else
+                    return new MainPhaseAction(BestAction);
+            }
+        }
+
         /// <summary>
         /// Called when the AI has to do something during the main phase.
         /// </summary>
@@ -393,90 +454,155 @@ namespace WindBot.Game
         /// <returns>A new MainPhaseAction containing the action to do.</returns>
         public MainPhaseAction OnSelectIdleCmd(MainPhase main)
         {
-            Executor.SetMain(main);
-            foreach (CardExecutor exec in Executor.Executors)
+            RandomExecutorBase RandomExecutor = Executor as RandomExecutorBase;
+            if (RandomExecutor != null)
             {
-            	if (exec.Type == ExecutorType.GoToEndPhase && main.CanEndPhase && exec.Func()) // check if should enter end phase directly
+                RandomExecutor.SetMain(main);
+                ChoiceWeight choice = new ChoiceWeight(RandomExecutor);
+                //Loop through normal summonable monsters
+                foreach (ClientCard card in main.SummonableCards)
                 {
-                    _dialogs.SendEndTurn();
-                    return new MainPhaseAction(MainPhaseAction.MainAction.ToEndPhase);
+                    RandomExecutor.SetCard(ExecutorType.Summon, card, -1);
+                    
+                    if (weight>= choice.BestWeight)
+                    {
+                        BestWeight = weight;
+                        BestAction = MainPhaseAction.MainAction.Summon;
+                        BestCard = card;
+                    }
                 }
-                if (exec.Type==ExecutorType.GoToBattlePhase && main.CanBattlePhase && exec.Func()) // check if should enter battle phase directly
-                {
-                    return new MainPhaseAction(MainPhaseAction.MainAction.ToBattlePhase);
-                }
-                // NOTICE: GoToBattlePhase and GoToEndPhase has no "card" can be accessed to ShouldExecute(), so instead use exec.Func() to check ...
-                // enter end phase and enter battle pahse is in higher priority. 
-
+                //loop through activatable cards
                 for (int i = 0; i < main.ActivableCards.Count; ++i)
                 {
                     ClientCard card = main.ActivableCards[i];
-                    if (ShouldExecute(exec, card, ExecutorType.Activate, main.ActivableDescs[i]))
+                    var v = card.Name;
+                    Executor.SetCard(ExecutorType.Activate, card, main.ActivableDescs[i]);
+                    double weight = RandomExecutor.ActionWeight(MainPhaseAction.MainAction.Activate.ToString());
+                    if (weight >= BestWeight)
                     {
-                        _dialogs.SendActivate(card.Name);
-                        Logger.WriteToFile($"{card.Name}]{card.Id}");
-                        return new MainPhaseAction(MainPhaseAction.MainAction.Activate, card.ActionActivateIndex[main.ActivableDescs[i]]);
+                        BestWeight = weight;
+                        BestAction = MainPhaseAction.MainAction.Activate;
+                        BestCard = card;
+                        BestIndex = card.ActionActivateIndex[main.ActivableDescs[i]];
                     }
                 }
-                foreach (ClientCard card in main.MonsterSetableCards)
+
+                switch (BestAction)
                 {
-                    if (ShouldExecute(exec, card, ExecutorType.MonsterSet))
-                    {
-                        _dialogs.SendSetMonster();
-                        Logger.WriteToFile($"{card.Name}]{card.Id}");
-                        return new MainPhaseAction(MainPhaseAction.MainAction.SetMonster, card.ActionIndex);
-                    }
+                    case MainPhaseAction.MainAction.Activate:
+                        _dialogs.SendActivate(BestCard.Name);
+
+                        return new MainPhaseAction(BestAction, BestIndex);
+                    case MainPhaseAction.MainAction.Repos:
+                        break;
+                    case MainPhaseAction.MainAction.SetMonster:
+                        break;
+                    case MainPhaseAction.MainAction.SetSpell:
+                        break;
+                    case MainPhaseAction.MainAction.SpSummon:
+                        break;
+                    case MainPhaseAction.MainAction.Summon:
+                        _dialogs.SendSummon(BestCard.Name);
+                        Logger.WriteToFile($"{BestCard.Name}]{BestCard.Id}");
+                        Executor.SetCard(ExecutorType.Summon, BestCard, -1);
+                        RandomExecutor.RecordAction(BestAction.ToString(), true.ToString());
+                        return new MainPhaseAction(BestAction, BestCard.ActionIndex);
+                    default:
+                        if (main.CanBattlePhase && Duel.Fields[0].HasAttackingMonster())
+                            return new MainPhaseAction(MainPhaseAction.MainAction.ToBattlePhase);
+                        break;
                 }
-                foreach (ClientCard card in main.ReposableCards)
+
+                _dialogs.SendEndTurn();
+                return new MainPhaseAction(MainPhaseAction.MainAction.ToEndPhase);
+            }
+            else//the regular one
+            {
+                Executor.SetMain(main);
+                foreach (CardExecutor exec in Executor.Executors)
                 {
-                    if (ShouldExecute(exec, card, ExecutorType.Repos))
-                        return new MainPhaseAction(MainPhaseAction.MainAction.Repos, card.ActionIndex);
-                }
-                foreach (ClientCard card in main.SpecialSummonableCards)
-                {
-                    if (ShouldExecute(exec, card, ExecutorType.SpSummon))
+                    if (exec.Type == ExecutorType.GoToEndPhase && main.CanEndPhase && exec.Func()) // check if should enter end phase directly
                     {
-                        _dialogs.SendSummon(card.Name);
-                        Logger.WriteToFile($"{card.Name}]{card.Id}");
-                        return new MainPhaseAction(MainPhaseAction.MainAction.SpSummon, card.ActionIndex);
+                        _dialogs.SendEndTurn();
+                        return new MainPhaseAction (MainPhaseAction.MainAction.ToEndPhase);
                     }
-                }
-                foreach (ClientCard card in main.SummonableCards)
-                {
-                    if (ShouldExecute(exec, card, ExecutorType.Summon))
+                    if (exec.Type == ExecutorType.GoToBattlePhase && main.CanBattlePhase && exec.Func()) // check if should enter battle phase directly
                     {
-                        _dialogs.SendSummon(card.Name);
-                        Logger.WriteToFile($"{card.Name}]{card.Id}");
-                        return new MainPhaseAction(MainPhaseAction.MainAction.Summon, card.ActionIndex);
+                        return new MainPhaseAction(MainPhaseAction.MainAction.ToBattlePhase);
                     }
-                    if (ShouldExecute(exec, card, ExecutorType.SummonOrSet))
+                    // NOTICE: GoToBattlePhase and GoToEndPhase has no "card" can be accessed to ShouldExecute(), so instead use exec.Func() to check ...
+                    // enter end phase and enter battle pahse is in higher priority. 
+
+                    for (int i = 0; i < main.ActivableCards.Count; ++i)
                     {
-                        if (Executor.Util.IsAllEnemyBetter(true) && Executor.Util.IsAllEnemyBetterThanValue(card.Attack + 300, false) &&
-                            main.MonsterSetableCards.Contains(card))
+                        ClientCard card = main.ActivableCards[i];
+                        if (ShouldExecute(exec, card, ExecutorType.Activate, main.ActivableDescs[i]))
+                        {
+                            _dialogs.SendActivate(card.Name);
+                            Logger.WriteToFile($"{card.Name}]{card.Id}");
+                            return new MainPhaseAction(MainPhaseAction.MainAction.Activate, card.ActionActivateIndex[main.ActivableDescs[i]]);
+                        }
+                    }
+                    foreach (ClientCard card in main.MonsterSetableCards)
+                    {
+                        if (ShouldExecute(exec, card, ExecutorType.MonsterSet))
                         {
                             _dialogs.SendSetMonster();
                             Logger.WriteToFile($"{card.Name}]{card.Id}");
                             return new MainPhaseAction(MainPhaseAction.MainAction.SetMonster, card.ActionIndex);
                         }
-                        _dialogs.SendSummon(card.Name);
-                        Logger.WriteToFile($"{card.Name}]{card.Id}");
-                        return new MainPhaseAction(MainPhaseAction.MainAction.Summon, card.ActionIndex);
                     }
-                }                
-                foreach (ClientCard card in main.SpellSetableCards)
-                {
-                    if (ShouldExecute(exec, card, ExecutorType.SpellSet))
+                    foreach (ClientCard card in main.ReposableCards)
                     {
-                        return new MainPhaseAction(MainPhaseAction.MainAction.SetSpell, card.ActionIndex);
+                        if (ShouldExecute(exec, card, ExecutorType.Repos))
+                            return new MainPhaseAction(MainPhaseAction.MainAction.Repos, card.ActionIndex);
+                    }
+                    foreach (ClientCard card in main.SpecialSummonableCards)
+                    {
+                        if (ShouldExecute(exec, card, ExecutorType.SpSummon))
+                        {
+                            _dialogs.SendSummon(card.Name);
+                            Logger.WriteToFile($"{card.Name}]{card.Id}");
+                            return new MainPhaseAction(MainPhaseAction.MainAction.SpSummon, card.ActionIndex);
+                        }
+                    }
+                    foreach (ClientCard card in main.SummonableCards)
+                    {
+                        if (ShouldExecute(exec, card, ExecutorType.Summon))
+                        {
+                            _dialogs.SendSummon(card.Name);
+                            Logger.WriteToFile($"{card.Name}]{card.Id}");
+                            return new MainPhaseAction(MainPhaseAction.MainAction.Summon, card.ActionIndex);
+                        }
+                        if (ShouldExecute(exec, card, ExecutorType.SummonOrSet))
+                        {
+                            if (Executor.Util.IsAllEnemyBetter(true) && Executor.Util.IsAllEnemyBetterThanValue(card.Attack + 300, false) &&
+                                main.MonsterSetableCards.Contains(card))
+                            {
+                                _dialogs.SendSetMonster();
+                                Logger.WriteToFile($"{card.Name}]{card.Id}");
+                                return new MainPhaseAction(MainPhaseAction.MainAction.SetMonster, card.ActionIndex);
+                            }
+                            _dialogs.SendSummon(card.Name);
+                            Logger.WriteToFile($"{card.Name}]{card.Id}");
+                            return new MainPhaseAction(MainPhaseAction.MainAction.Summon, card.ActionIndex);
+                        }
+                    }
+                    foreach (ClientCard card in main.SpellSetableCards)
+                    {
+                        if (ShouldExecute(exec, card, ExecutorType.SpellSet))
+                        {
+                            return new MainPhaseAction(MainPhaseAction.MainAction.SetSpell, card.ActionIndex);
+                        }
                     }
                 }
+
+                if (main.CanBattlePhase && Duel.Fields[0].HasAttackingMonster())
+                    return new MainPhaseAction(MainPhaseAction.MainAction.ToBattlePhase);
+
+                _dialogs.SendEndTurn();
+                return new MainPhaseAction(MainPhaseAction.MainAction.ToEndPhase);
             }
-
-            if (main.CanBattlePhase && Duel.Fields[0].HasAttackingMonster())
-                return new MainPhaseAction(MainPhaseAction.MainAction.ToBattlePhase);
-
-            _dialogs.SendEndTurn();
-            return new MainPhaseAction(MainPhaseAction.MainAction.ToEndPhase); 
         }
 
         /// <summary>

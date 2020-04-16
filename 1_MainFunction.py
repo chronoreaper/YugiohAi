@@ -12,7 +12,6 @@ generation = 0
 start = time.time()
 error = 0 
 warning = 0
-
 #Erase Previous Log
 file = open("log.txt","w")
 file.write("")
@@ -23,9 +22,10 @@ file = open(os.getcwd() + "/KoishiPro_Sakura/lflist.conf","w")
 file.write("")
 file.close()
 
-print("Setting up cards in database")
-#gets all the cards from the database
-subprocess.run([os.getcwd() + "/11_SqlReader.py"],shell=True)
+if len(sys.argv)>1 and "reset" in sys.argv:
+	print("Setting up cards in database")
+	#gets all the cards from the database
+	subprocess.run([os.getcwd() + "/11_SqlReader.py"],shell=True)
 
 print("deleting old deck files from ygopro")
 files = glob.glob(os.getcwd() +"/KoishiPro_Sakura/deck/*")
@@ -36,14 +36,16 @@ startNoSetup = time.time()
 print("done set up")
 #makes the two random decks
 count = 1
-while ((count <= 10) and (error == 0) and (warning < 3)):
+repeatFor = 1
+
+while ((count <= repeatFor) and (error == 0) and (warning < 3)):
     file = open("log.txt","a")
     print("Game:"+str(count))
     file.write("Game:"+str(count)+"\n")
     print("making decks")
     
-    subprocess.run([os.getcwd() + "/12_makeDeck.py", "AI_Random.ydk"],shell=True)
-    subprocess.run([os.getcwd() + "/12_makeDeck.py", "AI_Random2.ydk"],shell=True)
+    #subprocess.run([os.getcwd() + "/12_makeDeck.py", "AI_Random.ydk"],shell=True)
+    #subprocess.run([os.getcwd() + "/12_makeDeck.py", "AI_Random2.ydk"],shell=True)
     
     #Runs the game
     

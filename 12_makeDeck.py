@@ -57,7 +57,7 @@ deck_extr = []
 deck_side = []
 
 deckSize = 40
-topCards = 0
+topCards = 20
 topCardsRange = min(topCards, 40)
 
 #adds random card to main 

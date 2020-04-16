@@ -183,16 +183,18 @@ while gameCount < 1:
 		check = 1
 	  
 	count = 0
+	globalTimeOut = 60*5
 	
 	#make sure the game does not run longer than needed
 	#ends the ygopro program as soon as the ais are done. Ais play faster than what you see.
 	#
-	while count < 300 and (p1.poll() == None or p2.poll() == None) or (p1.poll() == None and p2.poll() != None) or (p1.poll() != None and p2.poll() == None):
+	while globalTimeOut > 0 and ((count < 300 and (p1.poll() == None or p2.poll() == None)) or (p1.poll() == None and p2.poll() != None) or (p1.poll() != None and p2.poll() == None)):
 		time.sleep(1)
 		count += 1
+		globalTimeOut -=1
 		
 	# the game probably never started
-	if count>= 300 and (p1.poll() == None and p2.poll() == None):
+	if globalTimeOut <= 0 or (count>= 300 and (p1.poll() == None and p2.poll() == None)):
 		print("	Game too long to finish")
 		
 	print("	Game took "+str(count)+" seconds.")

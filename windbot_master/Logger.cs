@@ -99,6 +99,7 @@ namespace WindBot
         /// <param name="otherName">Name of the opponent</param>
         public static void UpdateDatabase(int gameResult, string otherName)
         {
+            //return;
             WriteLine("Updating Database with result");
             //since two programs cant access the database at the same time,
             //run if you lost the game.
@@ -121,6 +122,7 @@ namespace WindBot
             using (SQLCon)
             {
                 SQLCon.Open();
+                SqliteTransaction transaction = SQLCon.BeginTransaction();
 
                 //Select all the data that was stored
                 string sql =
@@ -140,12 +142,12 @@ namespace WindBot
                             int count = rdr.GetInt32(6);
                             int wins = gameResult == WIN ? 1 : 0;
 
-                            sql = $"UPDATE playCard SET wins = wins + {wins}, games = games + 1, inprogress = {BLANK} WHERE " +
-                                    $"id = '{id}' AND location = '{location}' AND action = '{action}'  AND result = '{result}' AND verify = '{verify}' AND value = '{value}' AND count = {count} AND inprogress =  {BLANK}";
+                            sql = $"UPDATE playCard SET wins = wins + {wins}, games = games + 1 WHERE " +
+                                    $"id = '{id}' AND location = '{location}' AND action = '{action}'  AND result LIKE '{result}' AND verify = '{verify}' AND value = '{value}' AND count = {count} AND inprogress =  {BLANK}";
 
                             int rowsUpdated = 0;
 
-                            using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon))
+                            using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon,transaction))
                             {
                                 rowsUpdated = cmd2.ExecuteNonQuery();
                                 //WriteLine($"{rowsUpdated} Rows Were updated.");
@@ -155,7 +157,7 @@ namespace WindBot
                             {
                                 //The master data isnt in the database yet so add it
                                 sql = $"INSERT INTO playCard (id,location,action,result,verify,value,count,wins,games,inprogress) VALUES ('{id}','{location}','{action}','{result}','{verify}','{value}',{count},{wins},1,{BLANK})";
-                                using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon))
+                                using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon, transaction))
                                 {
                                     rowsUpdated = cmd2.ExecuteNonQuery();
                                     //WriteLine($"{rowsUpdated} Rows were inserted.");
@@ -164,6 +166,7 @@ namespace WindBot
                         }
                     }
                 }
+                transaction.Commit();
                 //Removed the inprogress rows
                 sql =
                     $"DELETE FROM playCard WHERE inprogress = '{Player}'";

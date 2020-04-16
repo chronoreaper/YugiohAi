@@ -76,13 +76,13 @@ namespace WindBot.Game.AI.Decks
             foreach(ClientCard clientCard in cards)
             {
                 //if it doesnt exist in the list already
-                if (cardWeight.Find(cardInst => clientCard.Equals(cardInst)) == null)
+                if (cardWeight.Find(cardInst => clientCard.Equals(cardInst.Card)) == null)
                 {
-                    for (int quant = 1; quant <= cards.GetCardCount(clientCard.Id); quant++) {
+                    for (int quant = 1; quant <= Math.Min(cards.GetCardCount(clientCard.Id),max); quant++) {
                         cardWeight.Add(new ClientCardWeight()
                         {
                             Card = clientCard,
-                            Weight = GetWeight($"Select", $"{clientCard.Name} x{quant}"),
+                            Weight = GetWeight($"Select", $"{clientCard.Name ?? "Set Monster"} x{quant}"),
                             Quantity = quant
                         });
                     }
@@ -94,7 +94,7 @@ namespace WindBot.Game.AI.Decks
             int count = 0;
             for (int i = 0; i < cardWeight.Count; i++)
             {
-                if (count + cardWeight[i].Quantity <= numberSelected)
+                if (count + cardWeight[i].Quantity < numberSelected)
                 {
                     for(int j = 0; j < cardWeight[i].Quantity; j++)
                     {
@@ -125,12 +125,12 @@ namespace WindBot.Game.AI.Decks
         {
             Random random = new Random();
             CardPosition pos = positions[random.Next(positions.Count)];
-            double greatestWeight = 0;
+            double greatestWeight = 1;
 
             foreach (CardPosition position in positions)
             {
                 double weight = GetWeight($"Position", position.ToString());
-                if (weight >= greatestWeight)
+                if (weight > greatestWeight)
                 {
                     weight = greatestWeight;
                     pos = position;
@@ -144,11 +144,11 @@ namespace WindBot.Game.AI.Decks
         public override int OnSelectOption(IList<int> options)
         {
             int option = -1;
-            double greatestWeight = 0;
+            double greatestWeight = 1;
             foreach (int choice in options)
             {
                 double weight = GetWeight($"Option", choice.ToString());
-                if (weight >= greatestWeight)
+                if (weight > greatestWeight)
                 {
                     weight = greatestWeight;
                     option = choice;
@@ -168,37 +168,37 @@ namespace WindBot.Game.AI.Decks
 
         protected bool ShouldNormalSummon()
         {
-            return ShouldPerformAction("Normal Summon");
+            return ShouldPerformAction($"Normal Summon {Duel.Phase.ToString()}");
         }
 
         protected bool ShouldSpSummon()
         {
-            return ShouldPerformAction("Special Summon");
+            return ShouldPerformAction($"Special Summon {Duel.Phase.ToString()}");
         }
 
         protected bool ShouldActivate()
         {
-            return ShouldPerformAction("Activate", DefaultDontChainMyself());
+            return ShouldPerformAction($"Activate {Duel.Phase.ToString()}", DefaultDontChainMyself());
         }
 
         protected bool ShouldSummonOrSet()
         {
-            return ShouldPerformAction("SummonOrSet");
+            return ShouldPerformAction($"SummonOrSet {Duel.Phase.ToString()}");
         }
 
         protected bool ShouldRepos()
         {
-            return ShouldPerformAction("Repos",DefaultMonsterRepos());
+            return ShouldPerformAction($"Repos from {Card.Position} {Duel.Phase.ToString()}",DefaultMonsterRepos());
         }
 
         protected bool ShouldSpellSet()
         {
-            return ShouldPerformAction("Set Spell Trap");
+            return ShouldPerformAction($"Set Spell Trap {Duel.Phase.ToString()}");
         }
 
         protected bool ShouldMonsterSet()
         {
-            return ShouldPerformAction("Set Monster");
+            return ShouldPerformAction($"Set Monster {Duel.Phase.ToString()}");
         }
 
         /// <summary>
@@ -213,14 +213,17 @@ namespace WindBot.Game.AI.Decks
 
             if (shouldPerform)
             {
-                double yes = GetWeight(action, true.ToString());
-                double no = GetWeight(action, false.ToString());
-                if (yes == 0)
-                    yes = Program.Rand.NextDouble();
-                if (no == 0)
-                    no = Program.Rand.NextDouble();
-                if (yes >= 0.35)
-                if ((Math.Abs(yes-no) >= 0.05 && yes>=no )|| Program.Rand.NextDouble()>=0.5)
+                string v = Card.Name;
+                double yes = Math.Max(GetWeight(action, true.ToString()),1);
+                double no = Math.Max(GetWeight(action, false.ToString()),1);
+
+                int minGames = 5;// must be greater than 0
+                double threshold = 0.17;
+                double diffThresh = 10;
+                double k = no/yes;
+                double m = yes - no;
+                if ((yes >= minGames && no >= minGames) && (no / yes < threshold || yes-no > diffThresh)
+                    || Program.Rand.NextDouble() >= 0.5 && (yes < minGames || no < minGames))
                 {
                     perform =  true;
                 }
@@ -229,7 +232,20 @@ namespace WindBot.Game.AI.Decks
             return perform;
         }
 
-        protected void RecordAction(string action, string result)
+        /// <summary>
+        /// Checks if the bot should perform the given action
+        /// </summary>
+        /// <param name="action">action given</param>
+        /// <returns>true if it should perform.</returns>
+        public double ActionWeight(string action)
+        {
+            string v = Card.Name;
+            double yes = GetWeight(action, true.ToString());
+            //double no = Math.Max(GetWeight(action, false.ToString()), 1);
+            return yes;
+        }
+
+        public void RecordAction(string action, string result)
         {
             //TODO: fix the count.
             //Bot
@@ -256,7 +272,7 @@ namespace WindBot.Game.AI.Decks
             //Logger.RecordAction(Card.Id, Card.Location.ToString(), action, result, "Number of Spell,Trap", Enemy.GetSpellCountWithoutField().ToString(), 1);
         }
 
-        protected  double GetWeight(string action, string result)
+        public double GetWeight(string action, string result)
         {
             double weight = 0;
             List<int> score = new List<int>();
@@ -272,35 +288,40 @@ namespace WindBot.Game.AI.Decks
                 score.AddRange(Logger.GetData(Card.Name, Card.Location.ToString(), action, result, "Player Monsters", Monster.Name.ToString(), 1));
             }
 
+            score.AddRange(Logger.GetData(Card.Name, Card.Location.ToString(), action, result, "Number of Monsters Bot", Bot.GetMonsterCount().ToString(), 1));
+            score.AddRange(Logger.GetData(Card.Name, Card.Location.ToString(), action, result, "Cards In Bot Hand", Bot.GetHandCount().ToString(), 1));
+
+
             //Enemy
             foreach (ClientCard Monster in Enemy.GetMonsters())
             {
                 score.AddRange(Logger.GetData(Card.Name, Card.Location.ToString(), action, result, "Enemy Monsters", Monster.Name?.ToString()??"Set Monster", 1));
             }
-
             score.AddRange(Logger.GetData(Card.Name, Card.Location.ToString(), action, result, "Cards In Opponent Hand", Enemy.GetHandCount().ToString(), 1));
+            score.AddRange(Logger.GetData(Card.Name, Card.Location.ToString(), action, result, "Number of Monsters Opponent", Enemy.GetMonsterCount().ToString(), 1));
 
             int count = 0;
-            double wins = 0;
-            double games = 0;
-            double total = 0;
+            double totalWins = 0;
+            double totalGames = 0;
             for (int i = 0; i<score.Count; i+=2)
             {
-                wins += score[i];
-                games += score[i + 1];
+                double wins = score[i];
+                double games = score[i + 1];
+                totalWins += score[i];
+                totalGames += score[i + 1];
                 if (score[i + 1] >= 1)
                 {
-                    total += (double)score[i] / score[i + 1];
-                    count++;
+                    weight += wins * wins / games;
+                    count +=(int) games;
                 }
             }
-
-            if (total >= 0)
-                total = (total / count);
-            if (games >= 10)
-                weight = wins / games;
-            else weight = Program.Rand.NextDouble();
-
+            weight = totalWins / totalGames;
+            if (totalGames < 10)
+                weight = Program.Rand.NextDouble();
+            /*if (count < 10)
+                weight = Program.Rand.Next(100);*/
+            else if (totalWins / totalGames < 0.3) weight = -1;
+            
             return weight;
         }
     }

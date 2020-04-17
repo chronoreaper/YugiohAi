@@ -389,11 +389,11 @@ namespace WindBot.Game
 
         private class ChoiceWeight
         {
-            public MainPhaseAction.MainAction BestAction = MainPhaseAction.MainAction.ToEndPhase;
-            public ClientCard BestCard = null;
-            public int BestIndex = 0;
-            public double BestWeight = 0;
-            public RandomExecutorBase Executor;
+            public MainPhaseAction.MainAction BestAction { get; private set; } = MainPhaseAction.MainAction.ToEndPhase;
+            public ClientCard BestCard { get; private set; } = null;
+            public int BestIndex { get; private set; } = 0;
+            public double BestWeight { get; private set; } = 0;
+            public RandomExecutorBase Executor { get; private set; }
 
             public ChoiceWeight(RandomExecutorBase executor)
             {
@@ -463,36 +463,20 @@ namespace WindBot.Game
                 foreach (ClientCard card in main.SummonableCards)
                 {
                     RandomExecutor.SetCard(ExecutorType.Summon, card, -1);
-                    
-                    if (weight>= choice.BestWeight)
-                    {
-                        BestWeight = weight;
-                        BestAction = MainPhaseAction.MainAction.Summon;
-                        BestCard = card;
-                    }
+                    choice.SetBest(MainPhaseAction.MainAction.Summon, card);
                 }
                 //loop through activatable cards
                 for (int i = 0; i < main.ActivableCards.Count; ++i)
                 {
                     ClientCard card = main.ActivableCards[i];
-                    var v = card.Name;
-                    Executor.SetCard(ExecutorType.Activate, card, main.ActivableDescs[i]);
-                    double weight = RandomExecutor.ActionWeight(MainPhaseAction.MainAction.Activate.ToString());
-                    if (weight >= BestWeight)
-                    {
-                        BestWeight = weight;
-                        BestAction = MainPhaseAction.MainAction.Activate;
-                        BestCard = card;
-                        BestIndex = card.ActionActivateIndex[main.ActivableDescs[i]];
-                    }
+                    choice.SetBest(MainPhaseAction.MainAction.Summon, card, main.ActivableDescs[i]);
                 }
 
-                switch (BestAction)
+                switch (choice.BestAction)
                 {
                     case MainPhaseAction.MainAction.Activate:
-                        _dialogs.SendActivate(BestCard.Name);
-
-                        return new MainPhaseAction(BestAction, BestIndex);
+                        _dialogs.SendActivate(choice.BestCard.Name);
+                        break;
                     case MainPhaseAction.MainAction.Repos:
                         break;
                     case MainPhaseAction.MainAction.SetMonster:
@@ -502,19 +486,17 @@ namespace WindBot.Game
                     case MainPhaseAction.MainAction.SpSummon:
                         break;
                     case MainPhaseAction.MainAction.Summon:
-                        _dialogs.SendSummon(BestCard.Name);
-                        Logger.WriteToFile($"{BestCard.Name}]{BestCard.Id}");
-                        Executor.SetCard(ExecutorType.Summon, BestCard, -1);
-                        RandomExecutor.RecordAction(BestAction.ToString(), true.ToString());
-                        return new MainPhaseAction(BestAction, BestCard.ActionIndex);
-                    default:
+                        _dialogs.SendSummon(choice.BestCard.Name);
+                        break;
+                    case MainPhaseAction.MainAction.ToBattlePhase:
                         if (main.CanBattlePhase && Duel.Fields[0].HasAttackingMonster())
                             return new MainPhaseAction(MainPhaseAction.MainAction.ToBattlePhase);
                         break;
+                    case MainPhaseAction.MainAction.ToEndPhase:
+                        _dialogs.SendEndTurn();
+                        break;
                 }
-
-                _dialogs.SendEndTurn();
-                return new MainPhaseAction(MainPhaseAction.MainAction.ToEndPhase);
+                return choice.ReturnBestAction();
             }
             else//the regular one
             {

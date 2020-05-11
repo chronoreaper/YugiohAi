@@ -1,4 +1,33 @@
 Game:1
-Time Past:0:00:59
-Time Past Excluding Setup:0:00:58
-Average Game Time:0:00:58
+Game:2
+Game:3
+Game:4
+Game:5
+Game:6
+Game:7
+Game:8
+Game:9
+Game:10
+Game:11
+Game:12
+Game:13
+Game:14
+Game:15
+Game:16
+Game:17
+Game:18
+Game:19
+Game:20
+Game:21
+Game:22
+Game:23
+Game:24
+Game:25
+Game:26
+Game:27
+Game:28
+Game:29
+Game:30
+Time Past:0:45:44
+Time Past Excluding Setup:0:45:44
+Average Game Time:0:01:31

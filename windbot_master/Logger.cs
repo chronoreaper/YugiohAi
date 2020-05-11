@@ -9,16 +9,18 @@ namespace WindBot
     public static class Logger
     {
         public static string Path = "log.txt";
+        public static string LogPath = "gameLog.txt";
         public static string Name = "ai";
+        private static string BLANK = "";
         public static SqliteConnection SQLCon = null;
 
         private const int WIN = 0;
         private const int LOSE = 1;
         private const int TIE = 2;
-        private const string BLANK = "''";
 
         private static void ConnectToDatabase()
         {
+            BLANK = Name + "_master";
             if (SQLCon == null)
             {
                 WriteLine("Create Connection to Database");
@@ -40,7 +42,7 @@ namespace WindBot
         /// <param name="verify">What value was verifyed</param>
         /// <param name="value">The value to verify</param>
         /// <param name="count">how many times it was found</param>
-        public static void RecordAction(string id = "",string location = "",  string action = "", string result = "", string verify = "", string value = "", int count = 1)
+        public static void RecordAction(string id = "",string location = "",  string action = "", string result = "", string verify = "", string value = "", int count = 1, double wins = 1)
         {
             ConnectToDatabase();
             using (SQLCon)
@@ -48,7 +50,7 @@ namespace WindBot
                 SQLCon.Open();
 
                 string sql =
-                      $"INSERT INTO playCard (id,location,action,result,verify,value,count,inprogress) VALUES ('{id}','{location}','{action}','{result}','{verify}','{value}',{count},'{Name}')";
+                      $"INSERT INTO playCard (id,location,action,result,verify,value,count,wins,inprogress) VALUES ('{id}','{location}','{action}','{result}','{verify}','{value}',{count},{wins},'{Name}')";
                 SqliteCommand cmd = new SqliteCommand(sql, SQLCon);
                 cmd.ExecuteNonQuery();
 
@@ -66,25 +68,48 @@ namespace WindBot
         /// <param name="verify">What value was verifyed</param>
         /// <param name="value">The value to verify</param>
         /// <param name="count">how many times it was found</param>
-        public static List<int> GetData(string id = "", string location = "", string action = "", string result = "", string verify = "", string value = "", int count = 1)
+        /// <param name="depth">How deep the recursion is</param>
+        public static List<double> GetData(string id = "", string location = "", string action = "", string result = "", string verify = "", string value = "", int count = 1, int depth = 0)
         {
-            List<int> row = new List<int>();
+            List<double> row = new List<double>();
 
+            //break if too deep
+            if (depth >= 2)
+            {
+                row.Add(0);
+                row.Add(0);
+                return row;
+            }
+
+            double games = 0;
             ConnectToDatabase();
             using (SQLCon)
             {
                 SQLCon.Open();
 
                 string sql =
-                      $"SELECT wins, games FROM playCard WHERE id = '{id}' AND location = '{location}' AND action = '{action}' AND result = '{result}' AND verify = '{verify}' AND value = '{value}' AND count = {count} AND inprogress =  {BLANK}";
+                      $"SELECT wins, games FROM playCard WHERE id = '{id}' AND location = '{location}' " +
+                      $"AND action = '{action}' AND result = '{result}' AND verify = '{verify}' " +
+                      $"AND value = '{value}' AND count = {count} AND inprogress =  '{BLANK}' "
+                      + $"AND (wins > 3 OR wins < -3)";
                 using (SqliteCommand cmd = new SqliteCommand(sql, SQLCon))
                 {
                     using (SqliteDataReader rdr = cmd.ExecuteReader())
                         while (rdr.Read())
                         {
-                            row.Add(rdr.GetInt32(0));
+                            row.Add(rdr.GetDouble(0));
                             row.Add(rdr.GetInt32(1));
+                            games += rdr.GetDouble(0);
                         }
+                }
+
+                //the weight is not large enough
+                //so fill in missing data with existing data of similar cards
+                if (games < 10)
+                {
+                    //temp
+                    //row.Clear();
+                    // TODO: find similar data
                 }
 
                 SQLCon.Close();
@@ -118,7 +143,7 @@ namespace WindBot
         private static void RecordPlayerGameData(int gameResult, string Player)
         {
             ConnectToDatabase();
-
+            BLANK = Player + "_master";
             using (SQLCon)
             {
                 SQLCon.Open();
@@ -126,7 +151,7 @@ namespace WindBot
 
                 //Select all the data that was stored
                 string sql =
-                      $"SELECT id,location,action,result,verify,value,count FROM playCard WHERE inprogress = '{Player}'";
+                      $"SELECT id,location,action,result,verify,value,count,wins FROM playCard WHERE inprogress = '{Player}'";
                 using (SqliteCommand cmd = new SqliteCommand(sql, SQLCon))
                 {
                     using (SqliteDataReader rdr = cmd.ExecuteReader())
@@ -140,11 +165,15 @@ namespace WindBot
                             string verify = rdr.GetString(4);
                             string value = rdr.GetString(5);
                             int count = rdr.GetInt32(6);
-                            int wins = gameResult == WIN ? 1 : 0;
+                            double wins = rdr.GetDouble(7);
+                            if( wins > 0)//chose to do action
+                                wins *= gameResult == WIN ? 1 : -1;
+                            else//chose not to do an action
+                                wins *= gameResult == WIN ? 1 : -1;
 
                             sql = $"UPDATE playCard SET wins = wins + {wins}, games = games + 1 WHERE " +
-                                    $"id = '{id}' AND location = '{location}' AND action = '{action}'  AND result LIKE '{result}' AND verify = '{verify}' AND value = '{value}' AND count = {count} AND inprogress =  {BLANK}";
-
+                                    $"id = '{id}' AND location = '{location}' AND action = '{action}'  AND result LIKE '{result}' AND verify = '{verify}' AND value = '{value}' AND count = {count} AND inprogress =  '{BLANK}'";
+                                        
                             int rowsUpdated = 0;
 
                             using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon,transaction))
@@ -156,7 +185,7 @@ namespace WindBot
                             if (rowsUpdated <= 0)
                             {
                                 //The master data isnt in the database yet so add it
-                                sql = $"INSERT INTO playCard (id,location,action,result,verify,value,count,wins,games,inprogress) VALUES ('{id}','{location}','{action}','{result}','{verify}','{value}',{count},{wins},1,{BLANK})";
+                                sql = $"INSERT INTO playCard (id,location,action,result,verify,value,count,wins,games,inprogress) VALUES ('{id}','{location}','{action}','{result}','{verify}','{value}',{count},{wins},1,'{BLANK}')";
                                 using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon, transaction))
                                 {
                                     rowsUpdated = cmd2.ExecuteNonQuery();
@@ -182,6 +211,8 @@ namespace WindBot
         {
             if (File.Exists(Path))
                 File.Delete(Path);
+            if (File.Exists(Name + LogPath))
+                File.Delete(Name + LogPath);
         }
 
         public static void WriteToFile(string str)
@@ -195,6 +226,10 @@ namespace WindBot
         public static void WriteLine(string message)
         {
             Console.WriteLine("[" + DateTime.Now.ToString("yy-MM-dd HH:mm:ss") + "] " + message);
+            using (StreamWriter sw = File.AppendText(Name + LogPath))
+            {
+                sw.WriteLine("[" + DateTime.Now.ToString("yy-MM-dd HH:mm:ss") + "] " + message);
+            }
         }
         public static void DebugWriteLine(string message)
         {

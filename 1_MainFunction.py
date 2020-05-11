@@ -1,5 +1,6 @@
 import sys, os, subprocess, time, glob
 import datetime
+import argparse
 
 def Log(string):
     file = open("log.txt","a")
@@ -31,13 +32,20 @@ print("deleting old deck files from ygopro")
 files = glob.glob(os.getcwd() +"/KoishiPro_Sakura/deck/*")
 for f in files:
     os.remove(f)
+	
+print("deleting old replays from ygopro")
+files = glob.glob(os.getcwd() +"/KoishiPro_Sakura/replay/*")
+for f in files:
+    os.remove(f)
 
 startNoSetup = time.time()
 print("done set up")
 #makes the two random decks
+repeatFor = 3
 count = 1
-repeatFor = 1
-
+if "--repeat" in sys.argv:
+	repeatFor = int(sys.argv[sys.argv.index("--repeat")+1])
+print("Running " + str(repeatFor) + " times")
 while ((count <= repeatFor) and (error == 0) and (warning < 3)):
     file = open("log.txt","a")
     print("Game:"+str(count))

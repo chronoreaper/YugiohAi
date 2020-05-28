@@ -96,7 +96,7 @@ namespace WindBot.Game.AI.Decks
                         cardWeight.Add(new ClientCardWeight()
                         {
                             Card = clientCard,
-                            Weight = GetWeight($"Select", $"{clientCard.Name ?? "Set Monster" } {Card?.Position.ToString()} x{quant}"),
+                            Weight = GetWeight($"Select", SelectStringBuilder(clientCard,quant)),
                             Quantity = quant
                         });
                     }
@@ -121,14 +121,19 @@ namespace WindBot.Game.AI.Decks
 
             foreach (ClientCard card in selected)
             {
-                RecordAction($"Select", $"{card.Name ?? "Set Monster"} {Card?.Position.ToString()}");
-                Logger.WriteLine($"Choosing {card.Name ?? "Set Monster"} {Card?.Position.ToString()}");
+                RecordAction($"Select", SelectStringBuilder(card));
+                Logger.WriteLine($"Choosing {SelectStringBuilder(card)}");
                 //RecordAction($"Select",$"{card.Name} { card.Position.ToString()}");
                 //RecordAction($"Select", $"{card.Name}");
                 //RecordAction("Number Selected", count.ToString());
             }
 
             return selected;
+        }
+
+        private string SelectStringBuilder(ClientCard Card, int Quant = 1)
+        {
+            return $"{Card.Name ?? "Set Monster" } {Card?.Position.ToString()} {Card.Controller}";// x{Quant}";
         }
 
         private class ClientCardWeight
@@ -156,7 +161,7 @@ namespace WindBot.Game.AI.Decks
                     pos = position;
                 }
             }
-
+            Logger.WriteLine("Position "+pos.ToString());
             RecordAction($"Position", pos.ToString());
             return pos;
         }
@@ -261,44 +266,15 @@ namespace WindBot.Game.AI.Decks
 
         public void RecordAction(string action, string result, double wins = 1)
         {
-            //Bot
-
-            var cardQuant = ListToQuantity(Bot.Hand);
-            foreach (ClientCard CardInHand in cardQuant.Keys)
-            {
-                Logger.RecordAction(Card?.Name, Card?.Location.ToString(), action, result, "Card In Hand", CardInHand.Name.ToString(), cardQuant[CardInHand], wins);
-            }
-
-            cardQuant = ListToQuantity(Bot.GetMonsters());
-            foreach (ClientCard Monster in cardQuant.Keys)
-            {
-                Logger.RecordAction(Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Player Monsters", Monster.Name.ToString(), cardQuant[Monster], wins);
-            }
-
-            Logger.RecordAction(Card?.Name, Card?.Location.ToString(), action, result, "Number of Monsters Bot", Bot.GetMonsterCount().ToString(), 1, wins);
-            Logger.RecordAction(Card?.Name, Card?.Location.ToString(), action, result, "Cards In Bot Hand", Bot.GetHandCount().ToString(), 1, wins);
-            //Enemy
-            foreach (ClientCard Monster in Enemy.GetMonsters())
-            {
-                Logger.RecordAction(Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Enemy Monsters", Monster.Name?.ToString() ?? "Set Monster", 1, wins);
-            }
-
-            Logger.RecordAction(Card?.Name, Card?.Location.ToString(), action, result, "Cards In Opponent Hand", Enemy.GetHandCount().ToString(), 1, wins);
-            Logger.RecordAction(Card?.Name, Card?.Location.ToString(), action, result, "Number of Monsters Opponent", Enemy.GetMonsterCount().ToString(), 1, wins);
-            //Logger.RecordAction(Card.Id, Card.Location.ToString(), action, result, "Number of Spell,Trap", Enemy.GetSpellCountWithoutField().ToString(), 1, wins);
-             
-            //previous actions that turn
-            foreach (PreviousAction previous in ActionPerformedTurn)
-            {
-                Logger.RecordAction(Card?.Name, Card?.Location.ToString(), action, result, previous.Action, previous.Value, 1, wins);
-            }
-
-            //record as previous action
-            //if (wins>0)
-            //    ActionPerformedTurn.Add(new PreviousAction("Previous " + action, Card.Name));
+            DataModifier(action, result, wins, false);
         }
 
         public double GetWeight(string action, string result)
+        {
+            return DataModifier(action,result);
+        }
+
+        private double DataModifier(string action, string result, double win = 0,bool GetData = true)
         {
             double weight = 0;
             List<double> score = new List<double>();
@@ -307,50 +283,75 @@ namespace WindBot.Game.AI.Decks
             var cardQuant = ListToQuantity(Bot.Hand);
             foreach (ClientCard CardInHand in cardQuant.Keys)
             {
-                score.AddRange(Logger.GetData(Card?.Name, Card?.Location.ToString(), action, result, "Card In Hand", CardInHand.Name.ToString(), cardQuant[CardInHand]));
+                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString(), action, result, "Card In Hand", CardInHand.Name.ToString(), cardQuant[CardInHand], win));
             }
 
             cardQuant = ListToQuantity(Bot.GetMonsters());
             foreach (ClientCard Monster in cardQuant.Keys)
             {
-                score.AddRange(Logger.GetData(Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Player Monsters", Monster.Name.ToString(), cardQuant[Monster]));
+                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Player Monsters", Monster.Name.ToString(), cardQuant[Monster], win));
             }
 
-            score.AddRange(Logger.GetData(Card?.Name, Card?.Location.ToString(), action, result, "Number of Monsters Bot", Bot.GetMonsterCount().ToString(), 1));
-            score.AddRange(Logger.GetData(Card?.Name, Card?.Location.ToString(), action, result, "Cards In Bot Hand", Bot.GetHandCount().ToString(), 1));
+            score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString(), action, result, "Number of Monsters Bot", Bot.GetMonsterCount().ToString(), 1, win));
+            score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString(), action, result, "Cards In Bot Hand", Bot.GetHandCount().ToString(), 1, win));
 
 
             //Enemy
-            foreach (ClientCard Monster in Enemy.GetMonsters())
+            cardQuant = ListToQuantity(Enemy.GetMonsters());
+            foreach (ClientCard Monster in cardQuant.Keys)
             {
-                score.AddRange(Logger.GetData(Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Enemy Monsters", Monster.Name?.ToString()??"Set Monster", 1));
+                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Enemy Monsters", Monster.Name?.ToString() ?? "Set Monster", cardQuant[Monster], win));
             }
-            score.AddRange(Logger.GetData(Card?.Name, Card?.Location.ToString(), action, result, "Cards In Opponent Hand", Enemy.GetHandCount().ToString(), 1));
-            score.AddRange(Logger.GetData(Card?.Name, Card?.Location.ToString(), action, result, "Number of Monsters Opponent", Enemy.GetMonsterCount().ToString(), 1));
+
+            //gy monsters
+            cardQuant = ListToQuantity(Bot.GetGraveyardMonsters());
+            foreach (ClientCard Monster in cardQuant.Keys)
+            {
+                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Enemy Monsters GY", Monster.Name.ToString(), cardQuant[Monster], win));
+            }
+            score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString(), action, result, "Cards In Opponent Hand", Enemy.GetHandCount().ToString(), 1, win));
+            score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString(), action, result, "Number of Monsters Opponent", Enemy.GetMonsterCount().ToString(), 1, win));
 
             //previous actions that turn
             foreach (PreviousAction previous in ActionPerformedTurn)
             {
-                score.AddRange(Logger.GetData(Card?.Name, Card?.Location.ToString(), action, result, previous.Action, previous.Value, 1));
+                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString(), action, result, previous.Action, previous.Value, 1, win));
             }
+
+            //record as previous action
+            //if (wins>0)
+            //    ActionPerformedTurn.Add(new PreviousAction("Previous " + action, Card.Name));
 
             int count = 0;
             double totalWins = 0;
             double totalGames = 0;
-            for (int i = 0; i<score.Count; i+=2)
+            for (int i = 0; i < score.Count; i += 2)
             {
                 double wins = score[i];
                 double games = score[i + 1];
-                totalWins += Math.Min(5,Math.Max(score[i],-5));
+                totalWins += Math.Min(5, Math.Max(score[i], -5));
                 totalGames += score[i + 1];
                 if (score[i + 1] >= 1)
                 {
                     weight += wins;
-                    count +=(int) games;
+                    count += (int)games;
                 }
             }
-           
+
             return weight;
+        }
+
+        private List<double> SQLCom(bool GetData, string id, string location, string action, string result, string verify, string value, int count, double wins)
+        {
+            if (GetData)
+            {
+                return Logger.GetData(id, location, action, result, verify, value, count);
+            }
+            else
+            {
+                Logger.RecordAction(id, location, action, result, verify, value, count, wins);
+                return new List<double>();
+            }
         }
 
         private Dictionary<ClientCard,int> ListToQuantity(IList<ClientCard> clientCards)
@@ -358,14 +359,14 @@ namespace WindBot.Game.AI.Decks
             Dictionary<string, CardToQuant> cardQuant = new Dictionary<string, CardToQuant>();
             foreach(ClientCard card in clientCards)
             {
-                if (!cardQuant.ContainsKey(card.Name))
+                if (!cardQuant.ContainsKey(card.Name ?? "Set Monster"))
                 {
-                    cardQuant.Add(card.Name, new CardToQuant() { card = card, quant = 1 });
+                    cardQuant.Add(card.Name ?? "Set Monster", new CardToQuant() { card = card, quant = 1 });
                 }
                 else
                 {
                     CardToQuant count;
-                    cardQuant.TryGetValue(card.Name, out count);
+                    cardQuant.TryGetValue(card.Name ?? "Set Monster", out count);
                     if (count != null) {
                         count.quant++;
                     }

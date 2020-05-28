@@ -20,7 +20,7 @@ namespace WindBot
 
         private static void ConnectToDatabase()
         {
-            BLANK = Name + "_master";
+            //BLANK = Name + "_master";
             if (SQLCon == null)
             {
                 WriteLine("Create Connection to Database");
@@ -76,8 +76,6 @@ namespace WindBot
             //break if too deep
             if (depth >= 2)
             {
-                row.Add(0);
-                row.Add(0);
                 return row;
             }
 
@@ -90,8 +88,9 @@ namespace WindBot
                 string sql =
                       $"SELECT wins, games FROM playCard WHERE id = '{id}' AND location = '{location}' " +
                       $"AND action = '{action}' AND result = '{result}' AND verify = '{verify}' " +
-                      $"AND value = '{value}' AND count = {count} AND inprogress =  '{BLANK}' "
-                      + $"AND (wins > 3 OR wins < -3)";
+                      $"AND value = '{value}' AND count = {count} AND inprogress =  '{BLANK}' ";
+                //Console.WriteLine(sql);
+                      //+ $"AND (wins > 10 OR wins < -10)";
                 using (SqliteCommand cmd = new SqliteCommand(sql, SQLCon))
                 {
                     using (SqliteDataReader rdr = cmd.ExecuteReader())
@@ -99,13 +98,13 @@ namespace WindBot
                         {
                             row.Add(rdr.GetDouble(0));
                             row.Add(rdr.GetInt32(1));
-                            games += rdr.GetDouble(0);
+                            games += rdr.GetDouble(1);
                         }
                 }
 
                 //the weight is not large enough
                 //so fill in missing data with existing data of similar cards
-                if (games < 10)
+                if (games < 5)
                 {
                     //temp
                     //row.Clear();
@@ -143,7 +142,7 @@ namespace WindBot
         private static void RecordPlayerGameData(int gameResult, string Player)
         {
             ConnectToDatabase();
-            BLANK = Player + "_master";
+            //BLANK = Player + "_master";
             using (SQLCon)
             {
                 SQLCon.Open();
@@ -172,7 +171,9 @@ namespace WindBot
                                 wins *= gameResult == WIN ? 1 : -1;
 
                             sql = $"UPDATE playCard SET wins = wins + {wins}, games = games + 1 WHERE " +
-                                    $"id = '{id}' AND location = '{location}' AND action = '{action}'  AND result LIKE '{result}' AND verify = '{verify}' AND value = '{value}' AND count = {count} AND inprogress =  '{BLANK}'";
+                                    $"id = '{id}' AND location = '{location}' AND action = '{action}'  AND result LIKE '{result}' " +
+                                    $"AND verify = '{verify}' AND value = '{value}' AND count = {count} " +
+                                    $"AND inprogress =  '{BLANK}' AND ABS(wins + {wins}) <= 5";
                                         
                             int rowsUpdated = 0;
 

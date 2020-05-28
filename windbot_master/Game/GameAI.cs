@@ -455,7 +455,7 @@ namespace WindBot.Game
                     }
                     Logger.RecordAction(card?.Name, card?.Location.ToString(), actionString, value, location, betterCard.Name.ToString(), 1, -1);
                 }
-                else RecordAction(action, card, desc, false);
+                //else RecordAction(action, card, desc, false);
             }
 
             public void RecordAction(MainPhaseAction.MainAction action, ClientCard card,int desc, bool execute = true)

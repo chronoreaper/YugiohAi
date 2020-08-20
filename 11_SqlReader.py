@@ -54,13 +54,12 @@ c.execute('SELECT texts.id, texts.name From texts '+
 					# 'or texts.id = 55144522 '+
 					# 'or texts.id = 79571449 '+
 					
-                     'where ot=3 and level=4 and type=17 and def < 2000 and atk >= 1800 ' +
+                     'where ot=3 and level=4 and type=33 and race = 1 and attribute = 1 ' +
 					 'or texts.name like "pot of greed" '+
 					 'or texts.name like "raigeki" ' +
 					 'or texts.name like "sparks" '+
 					 'or texts.name like "red medicine" '+
 					 'or texts.name like "ookazi" '+
-					 'or texts.name like "fossil dig" '+
 					 'or texts.name like "oops!" ' +
 					 'GROUP by texts.name')
 count = 0				 

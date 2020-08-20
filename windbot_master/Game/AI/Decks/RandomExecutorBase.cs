@@ -24,6 +24,10 @@ namespace WindBot.Game.AI.Decks
             }
         }
 
+        protected int CardAdvStartSelf = 0;
+        protected int CardAdvStartOpp = 0;
+        protected int ActionId = 0;
+
         public class CardId
         {
             public const int LeoWizard = 4392470;
@@ -43,10 +47,33 @@ namespace WindBot.Game.AI.Decks
 
         }
 
+        public int GetCardAdvantage()
+        {
+            return Bot.GetFieldHandCount() - CardAdvStartSelf + CardAdvStartOpp - Enemy.GetFieldHandCount();
+        }
+
         public override void OnNewTurn()
         {
+            //update results based on previous turn
+            /*if (Duel.Turn > 1)
+            {
+                double weightChange = 1;
+                int cardAdvantage = GetCardAdvantage();
+                if (cardAdvantage < -2)
+                    weightChange = -1;
+                else if (cardAdvantage < -1)
+                    weightChange = 0.5;
+                else if (cardAdvantage > 1)
+                    weightChange = 2;
+                Logger.ModifyAction(Duel.Turn - 1, weightChange);
+            }*/
+
+            //reset
             base.OnNewTurn();
             ActionPerformedTurn.Clear();
+            CardAdvStartSelf = Bot.GetFieldHandCount();
+            CardAdvStartOpp = Enemy.GetFieldHandCount();
+            ActionId = 0;
         }
 
         public override bool OnSelectHand()
@@ -57,7 +84,7 @@ namespace WindBot.Game.AI.Decks
             if (weights.Count > 0)
                 choice = weights[0] > 0 ? true : false;
 
-            Logger.RecordAction(action: "GoFirst", wins: choice ? 1 : -1);
+            Logger.RecordAction(action: "GoFirst", wins: choice ? 1 : -1, turn: Duel.Turn);
 
             return choice;
         }
@@ -103,12 +130,13 @@ namespace WindBot.Game.AI.Decks
                 }
             }
 
-            cardWeight.Sort((pair1, pair2) => pair1.Weight.CompareTo(pair2.Weight));
+            cardWeight.Sort((pair1, pair2) => pair2.Weight.CompareTo(pair1.Weight));
 
             int count = 0;
             // choose the cards
             for (int i = 0; i < cardWeight.Count; i++)
             {
+                Logger.WriteLine($"     {cardWeight[i].Weight}:{cardWeight[i].Card.Name},{cardWeight[i].Quantity}");
                 if (count + cardWeight[i].Quantity <= numberSelected)
                 {
                     for(int j = 0; j < cardWeight[i].Quantity; j++)
@@ -122,7 +150,7 @@ namespace WindBot.Game.AI.Decks
             foreach (ClientCard card in selected)
             {
                 RecordAction($"Select", SelectStringBuilder(card));
-                Logger.WriteLine($"Choosing {SelectStringBuilder(card)}");
+                Logger.WriteLine($"Choosing {SelectStringBuilder(card)} for Action id {ActivateDescription}");
                 //RecordAction($"Select",$"{card.Name} { card.Position.ToString()}");
                 //RecordAction($"Select", $"{card.Name}");
                 //RecordAction("Number Selected", count.ToString());
@@ -267,13 +295,16 @@ namespace WindBot.Game.AI.Decks
         public void RecordAction(string action, string result, double wins = 1)
         {
             DataModifier(action, result, wins, false);
+            ActionId++;
         }
 
         public double GetWeight(string action, string result)
         {
-            return DataModifier(action,result);
+            Random rand = new Random();
+            double weight = DataModifier(action, result);
+            return weight;
         }
-
+        
         private double DataModifier(string action, string result, double win = 0,bool GetData = true)
         {
             double weight = 0;
@@ -283,73 +314,85 @@ namespace WindBot.Game.AI.Decks
             var cardQuant = ListToQuantity(Bot.Hand);
             foreach (ClientCard CardInHand in cardQuant.Keys)
             {
-                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString(), action, result, "Card In Hand", CardInHand.Name.ToString(), cardQuant[CardInHand], win));
+                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Card In Hand", CardInHand.Name.ToString(), cardQuant[CardInHand], win));
             }
 
             cardQuant = ListToQuantity(Bot.GetMonsters());
             foreach (ClientCard Monster in cardQuant.Keys)
             {
-                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Player Monsters", Monster.Name.ToString(), cardQuant[Monster], win));
+                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Player Monsters", Monster.Name.ToString() + Monster.Position.ToString(), cardQuant[Monster], win));
             }
 
-            score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString(), action, result, "Number of Monsters Bot", Bot.GetMonsterCount().ToString(), 1, win));
-            score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString(), action, result, "Cards In Bot Hand", Bot.GetHandCount().ToString(), 1, win));
+            cardQuant = ListToQuantity(Bot.GetGraveyardMonsters());
+            foreach (ClientCard Monster in cardQuant.Keys)
+            {
+                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Player Monsters GY", Monster.Name.ToString(), cardQuant[Monster], win));
+            }
+
+            score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Number of Monsters Bot", Bot.GetMonsterCount().ToString(), 1, win));
+            score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Cards In Bot Hand", Bot.GetHandCount().ToString(), 1, win));
 
 
             //Enemy
             cardQuant = ListToQuantity(Enemy.GetMonsters());
             foreach (ClientCard Monster in cardQuant.Keys)
             {
-                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Enemy Monsters", Monster.Name?.ToString() ?? "Set Monster", cardQuant[Monster], win));
+                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Enemy Monsters", Monster.Name?.ToString() ?? "Set Monster" + Monster.Position.ToString(), cardQuant[Monster], win));
             }
 
             //gy monsters
-            cardQuant = ListToQuantity(Bot.GetGraveyardMonsters());
+            cardQuant = ListToQuantity(Enemy.GetGraveyardMonsters());
             foreach (ClientCard Monster in cardQuant.Keys)
             {
                 score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Enemy Monsters GY", Monster.Name.ToString(), cardQuant[Monster], win));
             }
-            score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString(), action, result, "Cards In Opponent Hand", Enemy.GetHandCount().ToString(), 1, win));
-            score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString(), action, result, "Number of Monsters Opponent", Enemy.GetMonsterCount().ToString(), 1, win));
+            score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Cards In Opponent Hand", Enemy.GetHandCount().ToString(), 1, win));
+            score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Number of Monsters Opponent", Enemy.GetMonsterCount().ToString(), 1, win));
 
             //previous actions that turn
             foreach (PreviousAction previous in ActionPerformedTurn)
             {
-                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString(), action, result, previous.Action, previous.Value, 1, win));
+                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, previous.Action, previous.Value, 1, win));
             }
 
             //record as previous action
             //if (wins>0)
             //    ActionPerformedTurn.Add(new PreviousAction("Previous " + action, Card.Name));
 
-            int count = 0;
-            double totalWins = 0;
+            double gamesWon = 0;
             double totalGames = 0;
-            for (int i = 0; i < score.Count; i += 2)
+            double activator = 0;
+            for (int i = 0; i < score.Count; i += 1)
             {
-                double wins = score[i];
-                double games = score[i + 1];
-                totalWins += Math.Min(5, Math.Max(score[i], -5));
+                gamesWon += score[i];
                 totalGames += score[i + 1];
-                if (score[i + 1] >= 1)
-                {
-                    weight += wins;
-                    count += (int)games;
-                }
+                activator += score[i] / 10;
             }
 
-            return weight;
+            if (GetData)
+            {
+                Logger.WriteLine($"{activator} Activater");
+                Logger.WriteLine($"{gamesWon} games won");
+                Logger.WriteLine($"Number of games: {totalGames}");
+            }
+            else //recording action
+            {
+                Logger.SaveActionWeight(Duel.Turn, ActionId, activator);
+            }
+
+            return activator;
+            //return weight + totalGames * 0.001 * Math.Sign(weight);
         }
 
         private List<double> SQLCom(bool GetData, string id, string location, string action, string result, string verify, string value, int count, double wins)
         {
             if (GetData)
             {
-                return Logger.GetData(id, location, action, result, verify, value, count);
+                return Logger.GetData(Logger.master,id, location, action, result, verify, value, count);
             }
-            else
+            else // record action
             {
-                Logger.RecordAction(id, location, action, result, verify, value, count, wins);
+                Logger.RecordAction(id, location, action, result, verify, value, count, wins, Duel.Turn, ActionId);
                 return new List<double>();
             }
         }

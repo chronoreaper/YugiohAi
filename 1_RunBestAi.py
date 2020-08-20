@@ -20,10 +20,10 @@ p1 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI1,'bot1','1'],
 					  shell=True,stdout=subprocess.PIPE, 
 					  stderr = subprocess.PIPE,
 					  universal_newlines=True)
-					  
-while(p1.poll == None):
-	time.sleep(1)
-					  
+output, stderr = p1.communicate()	
+			  
+print(format(output))
+ 		  
 src_dir=os.getcwd()+"/windbot_master/bin/Debug/Decks/"+ deck1
 dst_dir=os.getcwd()+"/KoishiPro_Sakura/deck/"+ deck1
 shutil.copy(src_dir,dst_dir)

@@ -70,7 +70,7 @@ def GetGameLog(deck):
 	
 	return file
 	
-def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result):
+def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result,name):
 	# Takes in two list and a dictonary
 	# deck = the deck you are saving, list of ids
 	# deckQuant= the quantity of all the cards in your deck
@@ -83,8 +83,8 @@ def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result):
 	for card in deckQuant:
 		for related in deckQuant:
 			if (related not in deckQuantOther or deckQuant[related] != deckQuantOther[related]) and (card not in deckQuantOther or deckQuant[card] != deckQuantOther[card]):
-				c.execute('SELECT wins,gamesPlayed, games FROM cardRelated where id = (?) and relatedid = (?) and idQuant = (?) and relatedQuant = (?)', 
-					(int(card),int(related),deckQuant[card],deckQuant[related]))
+				c.execute('SELECT wins,gamesPlayed, games FROM cardRelated where id = (?) and relatedid = (?) and idQuant = (?) and relatedQuant = (?) and inprogress = (?)', 
+					(int(card),int(related),deckQuant[card],deckQuant[related],name))
 				list = c.fetchone()
 				if list != None:
 					wins = int(list[0])
@@ -93,12 +93,12 @@ def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result):
 					if card in deck: # Run only if played
 						gamesPlayed += 1
 						wins += result
-					value = (wins, gamesPlayed ,games, int(card),int(related),deckQuant[card],deckQuant[related])
-					c.execute('UPDATE cardRelated SET wins = (?), gamesPlayed = (?), games = (?) WHERE id = (?) and relatedid = (?) and idQuant = (?) and relatedQuant = (?)', 
+					value = (wins, gamesPlayed ,games, int(card),int(related),deckQuant[card],deckQuant[related],name)
+					c.execute('UPDATE cardRelated SET wins = (?), gamesPlayed = (?), games = (?) WHERE id = (?) and relatedid = (?) and idQuant = (?) and relatedQuant = (?) and inprogress = (?)', 
 					value)
 				else:
-					value = (card,related,deckQuant[card],deckQuant[related],result,1,1)
-					c.execute('INSERT INTO cardRelated VALUES (?,?,?,?,?,?,?)', value)				
+					value = (card,related,deckQuant[card],deckQuant[related],result,1,1,name)
+					c.execute('INSERT INTO cardRelated VALUES (?,?,?,?,?,?,?,?)', value)				
 	conn.commit()
 	
 	# Record the relationship against the other deck
@@ -112,27 +112,30 @@ def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result):
 					if card not in deckOther:
 						if card not in deck[i+1:]:
 							if related not in deckOther[j+1:]:
-								c.execute('SELECT wins,games FROM cardCounter where id = (?) and otherid = (?)', (int(card),int(related)))
+								c.execute('SELECT wins,games FROM cardCounter where id = (?) and otherid = (?) and inprogress = (?)', (int(card),int(related),name))
 								list = c.fetchone()
 								if list != None:
 									wins = int(list[0]) + result
 									games = int(list[1]) + 1
-									value = (wins ,games,int(card),int(related))
-									c.execute('UPDATE cardCounter SET wins = (?), games = (?) WHERE id = (?) and otherid = (?)', value)
+									value = (wins ,games,int(card),int(related),name)
+									c.execute('UPDATE cardCounter SET wins = (?), games = (?) WHERE id = (?) and otherid = (?) and inprogress = (?)', value)
 								else:
-									value = (card,related,result,1)
-									c.execute('INSERT INTO cardCounter VALUES (?,?,?,?)', value)
+									value = (card,related,result,1, name)
+									c.execute('INSERT INTO cardCounter VALUES (?,?,?,?,?)', value)
 			j +=1
 		i +=1
 	conn.commit()
 	c.close()
 	
 AIName1 = 'bot1'
-AIName2 = 'bot2'		
-AI1 = 'Random'
-AI2 = 'Random2'
+AIName2 = 'bot2'	
+
+#The Deck name and location	
+AI1Deck = 'Random'
+AI2Deck = 'Random2'
 deck1 = 'AI_Random.ydk'
 deck2 = 'AI_Random2.ydk'
+
 winWeight = 0
 gameCount = 0
 
@@ -161,13 +164,13 @@ while gameCount < 1:
 	time.sleep(0.2)
 	
 	print("	runningAi1")
-	p1 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI1,'bot1','1'],
+	p1 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI1Deck,AIName1,'1'],
 						  shell=True,stdout=subprocess.PIPE, 
 						  stderr = subprocess.PIPE,
 						  universal_newlines=True)
 	time.sleep(1)
 	print("	runningAi2")
-	p2 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI2,'bot2','0'],
+	p2 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI2Deck,AIName2,'0'],
 						  shell=True)
 	
 	if (p1.poll() == None or p2.poll() == None):
@@ -221,10 +224,10 @@ while gameCount < 1:
 	time.sleep(1)
 	
 	print("	Saving Deck 1 Results")
-	UpdateDatabase(deckList,deckQuant,deckListOther,deckQuantOther, win1)
+	UpdateDatabase(deckList,deckQuant,deckListOther,deckQuantOther, win1, AIName1)
 
 	print("	Saving Deck 2 Results")
-	UpdateDatabase(deckListOther,deckQuantOther,deckList,deckQuant, win2)
+	UpdateDatabase(deckListOther,deckQuantOther,deckList,deckQuant, win2, AIName2)
 	
 # Copy decks
 newDeckname = str(generation) + "_"+ str(subGen) + "_"+ str(win1)+ deck1 

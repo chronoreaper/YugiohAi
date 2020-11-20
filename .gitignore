@@ -354,7 +354,5 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
-*.cdb
-*.cdb
-cardData.cdb
-cardData.cdb
+*.ydk
+cardData - Copy.cdb

@@ -19,12 +19,11 @@ namespace WindBot
         private const int LOSE = 1;
         private const int TIE = 2;
 
-        public static string master { get; private set; } = "";
+        public static string master { get; private set; } = "master";
         public static string noActivateValue { get => " nouse"; }
 
         private static void ConnectToDatabase()
         {
-            master = Name;
             if (SQLCon == null)
             {
                 WriteLine("Create Connection to Database");
@@ -74,7 +73,6 @@ namespace WindBot
             {
                 actionWeight[turn].Add(actionId, weight);
             }
-
         }
 
         /// <summary>
@@ -84,17 +82,17 @@ namespace WindBot
         /// <param name="weight">The weight to multiply by</param>
         public static void ModifyAction(int turn, double weight)
         {
-            ConnectToDatabase();
-            using (SQLCon)
+            List<Data> toAdd = new List<Data>();
+            foreach (var node in data.FindAll(x => x.turn == turn))
             {
-                SQLCon.Open();
-                string sql = $"UPDATE playCard SET wins = wins * {weight}" +
-                    $" WHERE games = {turn} AND inprogress = '{Name}'";
-                SqliteCommand cmd = new SqliteCommand(sql, SQLCon);
-                cmd.ExecuteNonQuery();
-
-                SQLCon.Close();
+                Data newNode = new Data(node);
+                newNode.modified = true;
+                newNode.wins = weight;
+                toAdd.Add(newNode);
+                //node.modified = true;
+                //node.wins = weight;
             }
+            data.AddRange(toAdd);
         }
 
         /// <summary>
@@ -120,6 +118,7 @@ namespace WindBot
 
             double games = 0;
             double wins = 0;
+            //master = "master";//inprogress
             ConnectToDatabase();
             using (SQLCon)
             {
@@ -129,7 +128,7 @@ namespace WindBot
                       $"SELECT wins, games FROM playCard WHERE id = \"{id}\" AND location = \"{location}\" " +
                       $"AND action = \"{action}\" AND result = \"{result}\" AND verify = \"{verify}\" " +
                       $"AND value = \"{value}\" AND count = {count} AND " +
-                      $"inprogress =  \"{inprogress}\"";
+                      $"inprogress =  \"{master}\"";
                 //Console.WriteLine(sql);
                 //+ $"AND (wins > 10 OR wins < -10)";
                 using (SqliteCommand cmd = new SqliteCommand(sql, SQLCon))
@@ -143,7 +142,7 @@ namespace WindBot
                             games += rdr.GetDouble(1);
                         }
                 }
-
+                Console.WriteLine(string.Format($"{wins,-5},{games,-3},{id,-3},{location,-3},{action,-3},{result,-3},{verify,-3},{value,-3},{count,-3}"));
                 SQLCon.Close();
             }
             return row;
@@ -177,39 +176,48 @@ namespace WindBot
                     string value = info.value;
                     int count = info.count;
                     double wins = Math.Sign(info.wins);
-                    double games = info.games;
+                    double games = info.turn; //stored as games since the database column is named games
 
-                    // Checks how confident this is a good move 
-                    double confidence = 1;
-                    if (actionWeight[info.games].ContainsKey(info.actionId + 1))
-                        confidence = Math.Abs(actionWeight[info.games][info.actionId]);
-                    wins *= confidence;
-
-                    master = Name;
-                    if (wins < 0)
+                    if (!info.modified && info.turn!=0)
                     {
-                        wins = -wins;
+                        // Checks how confident this is a good move 
+                        double confidence = 1;
+                        if (actionWeight[info.turn].ContainsKey(info.actionId + 1))
+                            confidence = Math.Abs(actionWeight[info.turn][info.actionId]);
+                        //if (confidence !=0 )
+                        //wins *= confidence;
+
+                        if (gameResult == LOSE)
+                        {
+                            wins = -wins;
+                        }
+                        else
+                        {
+                            //wins *= 0.5;
+                        }
                     }
 
                     // round(({Math.Sign(wins)} * 20 - wins)/5)
-                    sql = $"UPDATE playCard SET wins = wins + {wins}, games = games + 1 WHERE " +
+                    sql = $"UPDATE playCard SET wins = wins + {wins}, " +
+                        $"games = games + 1 WHERE " +
                             $"id = \"{id}\" AND location = \"{location}\" AND action = \"{action}\"  AND result LIKE \"{result}\" " +
                             $"AND verify = \"{verify}\" AND value = \"{value}\" AND count = {count} " +
-                            $"AND inprogress =  \"{master}\" " +
-                            $"AND wins + {wins} <= 10 AND wins + {wins} >= -10";
+                            $"AND inprogress =  \"{Name}\" ";// +
+                           // $"AND wins == {wins}";
+                           // $"AND wins + {wins} <= 10 AND wins + {wins} >= -10";
 
                     int rowsUpdated = 0;
-
+                    
                     using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon, transaction))
                     {
                         rowsUpdated = cmd2.ExecuteNonQuery();
-                        //WriteLine($"{rowsUpdated} Rows Were updated.");
+                        //WriteLine($"{rowsUpdated} Rows Were updated." );
                     }
                     // If there was no update, add it instead
                     if (rowsUpdated <= 0)
                     {
                         //The master data isnt in the database yet so add it
-                        sql = $"INSERT INTO playCard (id,location,action,result,verify,value,count,wins,games,inprogress) VALUES (\"{id}\",\"{location}\",\"{action}\",\"{result}\",\"{verify}\",\"{value}\",{count},{wins},1,\"{master}\")";
+                        sql = $"INSERT INTO playCard (id,location,action,result,verify,value,count,wins,games,inprogress) VALUES (\"{id}\",\"{location}\",\"{action}\",\"{result}\",\"{verify}\",\"{value}\",{count},{wins},1,\"{Name}\")";
                         using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon, transaction))
                         {
                             rowsUpdated = cmd2.ExecuteNonQuery();
@@ -269,8 +277,9 @@ namespace WindBot
             public string value;
             public int count;
             public double wins;
-            public int games;
+            public int turn;
             public int actionId;
+            public bool modified = false;
             public Data(string id, string location, string action, string result, string verify, string value, int count, double wins, int turn, int actionId)
             {
                 this.id = id;
@@ -281,8 +290,22 @@ namespace WindBot
                 this.value = value;
                 this.count = count;
                 this.wins = wins;
-                this.games = turn;
+                this.turn = turn;
                 this.actionId = actionId;
+            }
+
+            public Data(Data node)
+            {
+                this.id = node.id;
+                this.location = node.location;
+                this.action = node.action;
+                this.result = node.result;
+                this.verify = node.verify;
+                this.value = node.value;
+                this.count = node.count;
+                this.wins = node.wins;
+                this.turn = node.turn;
+                this.actionId = node.actionId;
             }
         }
     }

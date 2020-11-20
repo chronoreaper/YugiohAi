@@ -9,7 +9,7 @@ def Log(string):
     file.close()
 	
 generation = 0
-
+	
 start = time.time()
 error = 0 
 warning = 0
@@ -42,10 +42,15 @@ startNoSetup = time.time()
 print("done set up")
 #makes the two random decks
 repeatFor = 3
+gamesToPlay = 1
 count = 1
 if "--repeat" in sys.argv:
 	repeatFor = int(sys.argv[sys.argv.index("--repeat")+1])
-print("Running " + str(repeatFor) + " times")
+	
+if "--games" in sys.argv:
+	gamesToPlay = int(sys.argv[sys.argv.index("--games")+1])
+	
+print("Running " + str(repeatFor) + " times X " + str(gamesToPlay) + " games")
 while ((count <= repeatFor) and (error == 0) and (warning < 3)):
     file = open("log.txt","a")
     print("Game:"+str(count))
@@ -59,7 +64,7 @@ while ((count <= repeatFor) and (error == 0) and (warning < 3)):
     
     print("running game")
     
-    subprocess.run([os.getcwd() + "/13_MainGameRunner.py",str(generation),str(count)],shell=True)
+    subprocess.run([os.getcwd() + "/13_MainGameRunner.py",str(generation),str(count),str(gamesToPlay)],shell=True)
                    #stdout=subprocess.PIPE)
     
     #output = p.stdout.read().decode("utf-8") 

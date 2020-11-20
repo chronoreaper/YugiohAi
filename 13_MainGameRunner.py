@@ -2,6 +2,7 @@ import sys, string, os, time
 import subprocess
 import shutil
 import sqlite3
+import math
 
 def writeDict(d, filename, sep):
 	with open(filename, "w") as f:
@@ -21,20 +22,6 @@ def readDict(filename, sep):
 	
 def hostGame(): 
 	print("	hosting game")
-	#time.sleep(2.5)
-	
-	#print("click lan button")
-	#subprocess.run([os.getcwd() + "/131_ClickImage.py","LanBut.png"],shell=True)
-	#time.sleep(0.3)
-	
-	#print("click host button")
-	#subprocess.run([os.getcwd() + "/131_ClickImage.py","HostBut.png"],shell=True)
-	#time.sleep(1)
-	
-	#subprocess.run([os.getcwd() + "/131_ClickImage.py","dontCheckBut.png"],
-	#				shell=True)
-	#time.sleep(0.1)
-	#subprocess.run([os.getcwd() + "/131_ClickImage.py","okBut.png"],shell=True)
 	time.sleep(3)
 	
 	subprocess.run([os.getcwd() + "/131_ClickImage.py","spectateBut.png"],
@@ -70,13 +57,12 @@ def GetGameLog(deck):
 	
 	return file
 	
-def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result,name):
+def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result,name,compressMaster):
 	# Takes in two list and a dictonary
 	# deck = the deck you are saving, list of ids
 	# deckQuant= the quantity of all the cards in your deck
 	# deckOther = the other deck
 	# deckQuantOther=the quantity of all the cards in the other deck
-	# this takes a long time, need to optimize
 	conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
 	c = conn.cursor()
 	#record the relationship in the deck
@@ -90,9 +76,10 @@ def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result,name):
 					wins = int(list[0])
 					gamesPlayed = int(list[1])
 					games = int(list[2]) + 1
+					x = gamesToPlay if compressMaster else 1 # checks if master value needs to be compressed
 					if card in deck: # Run only if played
 						gamesPlayed += 1
-						wins += result
+						wins = result #+ wins / x
 					value = (wins, gamesPlayed ,games, int(card),int(related),deckQuant[card],deckQuant[related],name)
 					c.execute('UPDATE cardRelated SET wins = (?), gamesPlayed = (?), games = (?) WHERE id = (?) and relatedid = (?) and idQuant = (?) and relatedQuant = (?) and inprogress = (?)', 
 					value)
@@ -115,7 +102,8 @@ def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result,name):
 								c.execute('SELECT wins,games FROM cardCounter where id = (?) and otherid = (?) and inprogress = (?)', (int(card),int(related),name))
 								list = c.fetchone()
 								if list != None:
-									wins = int(list[0]) + result
+									x = gamesToPlay if compressMaster else 1 # checks if master value needs to be compressed
+									wins = result #+ int(list[0]) / x 
 									games = int(list[1]) + 1
 									value = (wins ,games,int(card),int(related),name)
 									c.execute('UPDATE cardCounter SET wins = (?), games = (?) WHERE id = (?) and otherid = (?) and inprogress = (?)', value)
@@ -126,13 +114,46 @@ def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result,name):
 		i +=1
 	conn.commit()
 	c.close()
+
+def UpdateGameAi(AIName1,win1,AIName2,win2):
+	"""
+	Takes the games played and saves them to the master ai.
+	"""
+	conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
+	c = conn.cursor()
+	aiList = [AIName1,AIName2]
+	aiResult = [win1,win2]
+	# Select all unique node for an ai
+	for ai in aiList:
+		c.execute('SELECT id,location,action,result,verify,value,count,wins,games FROM playCard where inprogress = (?)',(ai,))
+		records = c.fetchall()
+		# for each record, try and update master
+		i = 0;
+		for row in records:
+			node = tuple(row[:-2])
+			c.execute('SELECT games FROM playCard WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"', node)
+			list = c.fetchone()
+			if list != None : # It exists in master
+				if row[-1] >= int(gamesToPlay):
+					x = gamesToPlay * 2 if not i else 1# Only divide the master data once
+					value = (x,row[-2],x,row[-1],row[0],row[1],row[2],row[3],row[4],row[5],row[6])
+					c.execute('UPDATE playCard SET wins = cast(wins / (?) as int) + (?), games = cast(games/ (?) as int) + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
+					#value = (row[-2],row[-1],row[0],row[1],row[2],row[3],row[4],row[5],row[6])
+					#c.execute('UPDATE playCard SET wins = (?), games = (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
+			else: # add it to master
+				value = tuple(row)
+				c.execute('INSERT INTO playCard VALUES (?,?,?,?,?,?,?,?,?,\"master\")', value)
+			i += 1
+		c.execute('DELETE FROM playCard WHERE inprogress = (?)',(ai,))
+	conn.commit()
+	c.close()
 	
 AIName1 = 'bot1'
 AIName2 = 'bot2'	
 
 #The Deck name and location	
 AI1Deck = 'Random'
-AI2Deck = 'Random2'
+AI2Deck = 'Master'#'Random2'
 deck1 = 'AI_Random.ydk'
 deck2 = 'AI_Random2.ydk'
 
@@ -141,13 +162,14 @@ gameCount = 0
 
 generation = sys.argv[1]
 subGen = sys.argv[2]
+gamesToPlay = sys.argv[3]
 
 result = 0
 win1 = 0
 win2 = 0
 	
-#how many games to play with this deck
-while gameCount < 1:  
+#how many games to play with this deck and AI
+while gameCount < int(gamesToPlay):  
 	win1 = 0
 	win2 = 0
 	
@@ -186,18 +208,19 @@ while gameCount < 1:
 		check = 1
 	  
 	count = 0
-	globalTimeOut = 60*5
+	globalTimeOut = 60*5 # Includes updating to database
+	timeout = 300 # Length of each game
 	
 	#make sure the game does not run longer than needed
 	#ends the ygopro program as soon as the ais are done. Ais play faster than what you see.
 	#
-	while globalTimeOut > 0 and ((count < 300 and (p1.poll() == None or p2.poll() == None)) or (p1.poll() == None and p2.poll() != None) or (p1.poll() != None and p2.poll() == None)):
+	while globalTimeOut > 0 and ((count < timeout and (p1.poll() == None or p2.poll() == None)) or (p1.poll() == None and p2.poll() != None) or (p1.poll() != None and p2.poll() == None)):
 		time.sleep(1)
 		count += 1
 		globalTimeOut -=1
 		
 	# the game probably never started
-	if globalTimeOut <= 0 or (count>= 300 and (p1.poll() == None and p2.poll() == None)):
+	if globalTimeOut <= 0 or (count>= timeout and (p1.poll() == None and p2.poll() == None)):
 		print("	Game too long to finish")
 		
 	print("	Game took "+str(count)+" seconds.")
@@ -213,22 +236,24 @@ while gameCount < 1:
 	  
 	gameCount += 1
 	
-	print("	Saving deck to database")
-	# Save to database
-	deckList = GetGameLog(AIName1)
-	deckListOther = GetGameLog(AIName2)
+print("	Saving deck to database")
+# Save to database
+deckList = GetGameLog(AIName1)
+deckListOther = GetGameLog(AIName2)
 
-	deckQuant = GetCardQuantity(deck1)	
-	deckQuantOther = GetCardQuantity(deck2)
+deckQuant = GetCardQuantity(deck1)	
+deckQuantOther = GetCardQuantity(deck2)
 
-	time.sleep(1)
+time.sleep(1)
+
+print("	Saving Deck 1 Results")
+UpdateDatabase(deckList,deckQuant,deckListOther,deckQuantOther, win1, AIName1,True)
+
+print("	Saving Deck 2 Results")
+UpdateDatabase(deckListOther,deckQuantOther,deckList,deckQuant, win2, AIName2,False)
 	
-	print("	Saving Deck 1 Results")
-	UpdateDatabase(deckList,deckQuant,deckListOther,deckQuantOther, win1, AIName1)
+UpdateGameAi(AIName1,win1,AIName2,win2)
 
-	print("	Saving Deck 2 Results")
-	UpdateDatabase(deckListOther,deckQuantOther,deckList,deckQuant, win2, AIName2)
-	
 # Copy decks
 newDeckname = str(generation) + "_"+ str(subGen) + "_"+ str(win1)+ deck1 
 src_dir=os.getcwd()+"/windbot_master/bin/Debug/Decks/"+ deck1

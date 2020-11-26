@@ -112,7 +112,7 @@ namespace WindBot.Game.AI.Decks
                             Logger.ModifyAction(Duel.Turn - 1, 0.5);
                     }
                 }
-                /*else//Calculate advatage of two turns
+                else//Calculate advatage of two turns
                 {
                     if (playerFieldLossPre == 0)
                     {
@@ -137,7 +137,7 @@ namespace WindBot.Game.AI.Decks
                         else if (playerFieldLossPre < enemyFieldLossPre)
                             Logger.ModifyAction(Duel.Turn - 2, 0.5);
                     }
-                }*/
+                }
             }
 
             //reset

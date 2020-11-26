@@ -81,34 +81,63 @@ namespace WindBot.Game.AI.Decks
                 //int cardAdvantage = GetCardAdvantageField();
                 //int cardAdvantagePre = GetCardAdvantageFieldPre();
                 int enemyFieldLoss = CardAdvStartOppField - Enemy.GetFieldCount();
+                int enemyFieldLossPre = CardAdvStartOppFieldPre - Enemy.GetFieldCount();
                 int playerFieldLoss = CardAdvStartSelfField - Bot.GetFieldCount();
-                //int playerFieldLossPre = CardAdvStartSelfFieldPre - Bot.GetFieldCount();
+                int playerFieldLossPre = CardAdvStartSelfFieldPre - Bot.GetFieldCount();
                 int playerHandGain = Bot.GetHandCount() - CardAdvStartSelfHand;
                 //int playerCardGainPre = Bot.GetFieldHandCount() - CardAdvStartSelfFieldPre - CardAdvStartSelfHandPre;
-
-                if (playerFieldLoss == 0)
+                if (Duel.Turn % 2 == (Duel.IsFirst ? 0 : 1))//do this calculation on the start of opp turn, so all actions on your turn
                 {
-                    if (enemyFieldLoss > 0)
-                        Logger.ModifyAction(Duel.Turn - 1, 1);
+                    if (playerFieldLoss == 0)
+                    {
+                        if (enemyFieldLoss > 0)
+                            Logger.ModifyAction(Duel.Turn - 1, 1);
+                    }
+                    else if (playerFieldLoss > 0)
+                    {
+                        if (enemyFieldLoss == 0)
+                            Logger.ModifyAction(Duel.Turn - 1, -2);
+                        else if (enemyFieldLoss < 0)
+                            Logger.ModifyAction(Duel.Turn - 1, -2);
+                        else if (enemyFieldLoss < playerFieldLoss)
+                            Logger.ModifyAction(Duel.Turn - 1, -1);
+                    }
+                    else//player field loss < 0
+                    {
+                        if (enemyFieldLoss == 0)
+                            Logger.ModifyAction(Duel.Turn - 1, 1);
+                        else if (enemyFieldLoss > 0)
+                            Logger.ModifyAction(Duel.Turn - 1, 2);
+                        else if (playerFieldLoss < enemyFieldLoss)
+                            Logger.ModifyAction(Duel.Turn - 1, 0.5);
+                    }
                 }
-                else if (playerFieldLoss > 0)
+                /*else//Calculate advatage of two turns
                 {
-                    if (enemyFieldLoss == 0)
-                        Logger.ModifyAction(Duel.Turn - 1, -2);
-                    else if (enemyFieldLoss < 0)
-                        Logger.ModifyAction(Duel.Turn - 1, -3);
-                    else if (enemyFieldLoss < playerFieldLoss)
-                        Logger.ModifyAction(Duel.Turn - 1, -1);
-                }
-                else//player field loss < 0
-                {
-                    if (enemyFieldLoss == 0)
-                        Logger.ModifyAction(Duel.Turn - 1, 1);
-                    else if (enemyFieldLoss > 0)
-                        Logger.ModifyAction(Duel.Turn - 1, 2);
-                    else if (playerFieldLoss < enemyFieldLoss)
-                        Logger.ModifyAction(Duel.Turn - 1, 0.5);
-                }
+                    if (playerFieldLossPre == 0)
+                    {
+                        if (enemyFieldLossPre > 0)
+                            Logger.ModifyAction(Duel.Turn - 2, 1);
+                    }
+                    else if (playerFieldLossPre > 0)
+                    {
+                        if (enemyFieldLossPre == 0)
+                            Logger.ModifyAction(Duel.Turn - 2, -2);
+                        else if (enemyFieldLossPre < 0)
+                            Logger.ModifyAction(Duel.Turn - 2, -2);
+                        else if (enemyFieldLossPre < playerFieldLossPre)
+                            Logger.ModifyAction(Duel.Turn - 2, -1);
+                    }
+                    else//player field loss < 0
+                    {
+                        if (enemyFieldLossPre == 0)
+                            Logger.ModifyAction(Duel.Turn - 2, 1);
+                        else if (enemyFieldLossPre > 0)
+                            Logger.ModifyAction(Duel.Turn - 2, 2);
+                        else if (playerFieldLossPre < enemyFieldLossPre)
+                            Logger.ModifyAction(Duel.Turn - 2, 0.5);
+                    }
+                }*/
             }
 
             //reset
@@ -290,9 +319,9 @@ namespace WindBot.Game.AI.Decks
             return ShouldPerformAction($"SummonOrSet {Duel.Phase.ToString()}");
         }
 
-        protected bool ShouldRepos()
+        public bool ShouldRepos()
         {
-            return ShouldPerformAction($"Repos from {Card.Position} {Duel.Phase.ToString()}",DefaultMonsterRepos());
+            return DefaultMonsterRepos();//ShouldPerformAction($"Repos from {Card.Position} {Duel.Phase.ToString()}",DefaultMonsterRepos());
         }
 
         protected bool ShouldSpellSet()
@@ -334,10 +363,7 @@ namespace WindBot.Game.AI.Decks
         /// <returns>true if it should perform.</returns>
         public double ActionWeight(string action)
         {
-            string v = Card.Name;
-            double yes = GetWeight(action, "");
-            //double no = Math.Max(GetWeight(action, false.ToString()), 1);
-            return yes;
+            return GetWeight(action, "");;
         }
 
         public void RecordAction(string action, string result, double wins = 1)
@@ -445,7 +471,7 @@ namespace WindBot.Game.AI.Decks
             }
             else //recording action
             {
-                Logger.SaveActionWeight(Duel.Turn, ActionId, activator);
+                Logger.SaveActionWeight(Duel.Turn, ActionId, activator,Card?.Name);
             }
 
             return activator;

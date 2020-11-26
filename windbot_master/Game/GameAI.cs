@@ -420,7 +420,8 @@ namespace WindBot.Game
 
                 if (action == MainPhaseAction.MainAction.Repos)
                 {
-                    weight -= 1;//set default to not repos
+                    //weight -= 1;//set default to not repos
+                    weight = Executor.ShouldRepos() ? 1 : -1;
                 }
 
                 if (weight >= BestWeight)

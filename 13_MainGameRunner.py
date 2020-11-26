@@ -153,7 +153,7 @@ AIName2 = 'bot2'
 
 #The Deck name and location	
 AI1Deck = 'Random'
-AI2Deck = 'Master'#'Random2'
+AI2Deck = 'Master'#'Random2' #
 deck1 = 'AI_Random.ydk'
 deck2 = 'AI_Random2.ydk'
 

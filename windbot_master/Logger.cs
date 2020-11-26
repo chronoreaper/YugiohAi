@@ -14,7 +14,7 @@ namespace WindBot
         public static SqliteConnection SQLCon = null;
 
         private static List<Data> data = new List<Data>();
-        private static Dictionary<int, Dictionary<int, double>> actionWeight = new Dictionary<int, Dictionary<int, double>>();
+        private static Dictionary<int, Dictionary<int, ActionWeightCard>> actionWeight = new Dictionary<int, Dictionary<int, ActionWeightCard>>();
         private const int WIN = 0;
         private const int LOSE = 1;
         private const int TIE = 2;
@@ -56,12 +56,13 @@ namespace WindBot
         /// <param name="turn">Turn the action is executed</param>
         /// <param name="actionId">the Id of the action</param>
         /// <param name="weight">The confidence weight of the action performed</param>
-        public static void SaveActionWeight(int turn, int actionId, double weight)
+        /// <param name="id">The card id that performs this action</param>
+        public static void SaveActionWeight(int turn, int actionId, double weight, string id)
         {
             //check if the turn is in the dictonary
             if (!actionWeight.ContainsKey(turn))
             {
-                actionWeight.Add(turn, new Dictionary<int, double>());
+                actionWeight.Add(turn, new Dictionary<int, ActionWeightCard>());
             }
 
             //There should only be one call per action Id
@@ -71,7 +72,7 @@ namespace WindBot
             }
             else
             {
-                actionWeight[turn].Add(actionId, weight);
+                actionWeight[turn].Add(actionId, new ActionWeightCard(id,weight));
             }
         }
 
@@ -183,7 +184,7 @@ namespace WindBot
                         // Checks how confident this is a good move 
                         double confidence = 1;
                         if (actionWeight[info.turn].ContainsKey(info.actionId + 1))
-                            confidence = Math.Abs(actionWeight[info.turn][info.actionId]);
+                            confidence = Math.Abs(actionWeight[info.turn][info.actionId].weight);
                         //if (confidence !=0 )
                         //wins *= confidence;
 
@@ -194,6 +195,11 @@ namespace WindBot
                         else
                         {
                             //wins *= 0.5;
+                        }
+
+                        if (wins < 0)
+                        {
+                            //wins = 0;
                         }
                     }
 
@@ -266,6 +272,16 @@ namespace WindBot
             Console.ForegroundColor = ConsoleColor.White;
             Console.Error.WriteLine("[" + DateTime.Now.ToString("yy-MM-dd HH:mm:ss") + "] " + message);
             Console.ResetColor();
+        }
+
+        public class ActionWeightCard{
+            public string id;
+            public double weight;
+            public ActionWeightCard(string id, double weight)
+            {
+                this.id = id;
+                this.weight = weight;
+            }
         }
 
         public class Data{

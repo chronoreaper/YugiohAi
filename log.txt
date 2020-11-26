@@ -98,6 +98,6 @@ Game:97
 Game:98
 Game:99
 Game:100
-Time Past:1:49:12
-Time Past Excluding Setup:1:49:11
-Average Game Time:0:01:05
+Time Past:2:00:02
+Time Past Excluding Setup:2:00:00
+Average Game Time:0:01:12

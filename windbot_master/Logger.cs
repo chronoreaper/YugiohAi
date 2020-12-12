@@ -179,14 +179,17 @@ namespace WindBot
                     double wins = Math.Sign(info.wins);
                     double games = info.turn; //stored as games since the database column is named games
 
-                    if (!info.modified && info.turn!=0)
+                    if (!info.modified)
                     {
-                        // Checks how confident this is a good move 
-                        double confidence = 1;
-                        if (actionWeight[info.turn].ContainsKey(info.actionId + 1))
-                            confidence = Math.Abs(actionWeight[info.turn][info.actionId].weight);
-                        //if (confidence !=0 )
-                        //wins *= confidence;
+                        if (info.turn != 0)
+                        {
+                            // Checks how confident this is a good move 
+                            double confidence = 1;
+                            if (actionWeight[info.turn].ContainsKey(info.actionId + 1))
+                                confidence = Math.Abs(actionWeight[info.turn][info.actionId].weight);
+                            //if (confidence !=0 )
+                            //wins *= confidence;
+                        }
 
                         if (gameResult == LOSE)
                         {
@@ -194,12 +197,21 @@ namespace WindBot
                         }
                         else
                         {
-                            //wins *= 0.5;
+                            wins *= 0.5;
+                            games *= 0.5;
                         }
 
                         if (wins < 0)
                         {
                             //wins = 0;
+                        }
+                    }
+                    else
+                    {
+                        if (gameResult == LOSE)
+                        {
+                            wins *= 0.5;
+                            games *= 0.5;
                         }
                     }
 

@@ -23,7 +23,7 @@ file = open(os.getcwd() + "/KoishiPro_Sakura/lflist.conf","w")
 file.write("")
 file.close()
 
-if len(sys.argv)>1 and "reset" in sys.argv:
+if len(sys.argv)>1 and ("-reset" in sys.argv or "-r" in sys.argv):
 	print("Setting up cards in database")
 	#gets all the cards from the database
 	subprocess.run([os.getcwd() + "/11_SqlReader.py"],shell=True)

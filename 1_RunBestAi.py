@@ -12,7 +12,11 @@ import sqlite3
 #files = glob.glob(os.getcwd() +"/KoishiPro_Sakura/deck/*")
 #for f in files:
 #    os.remove(f)
-	
+
+subprocess.Popen([os.getcwd() + "/132_runYgoPro.py"], 
+			 shell=True, stdin=None, stdout=None,
+			 stderr=None, close_fds=True)
+				 
 AI1 = 'Random'
 deck1 = 'AI_Random.ydk'
 #subprocess.run([os.getcwd() + "/12_makeDeck.py", "AI_Random.ydk"],shell=True)

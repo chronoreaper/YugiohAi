@@ -438,10 +438,13 @@ namespace WindBot.Game.AI.Decks
             double activator = 0;
             for (int i = 0; i < score.Count; i += 2)
             {
-                gamesWon += score[i];
-                totalWon += Math.Abs(score[i]);
-                totalGames += score[i + 1];
-                activator += score[i] / score[i + 1]; //* score[i + 1];// == 1 ? Math.Sign(score[i]) * 2 : score[i];
+                if (Math.Abs(score[i]) > 1 || score[i+1] < 10) // Try and remove noise
+                {
+                    gamesWon += score[i];
+                    totalWon += Math.Abs(score[i]);
+                    totalGames += score[i + 1];
+                    activator += score[i] / score[i + 1]; //* score[i + 1];// == 1 ? Math.Sign(score[i]) * 2 : score[i];
+                }
             }
 
             //activator /= score.Count;

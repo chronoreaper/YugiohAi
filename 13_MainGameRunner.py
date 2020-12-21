@@ -142,12 +142,12 @@ def UpdateGameAi(AIName1,win1,AIName2,win2):
 			list = c.fetchone()
 			if list != None : # It exists in master
 				if row[-1] >= int(gamesToPlay):
-					#x = (1 + win1/int(gamesToPlay))/maxGames if not i else 1# Only divide the master data once
+					x = (1 + win1/int(gamesToPlay))/maxGames if not i else 1# Only divide the master data once
 					#x = 1 if (win1 == int(gamesToPlay)) else x
-					x = 0.75
+					#x = 0.75 if not i else 1
 					#y = (1 + win2/int(gamesToPlay))/maxGames if not i else 1
 					y = 1# if (win2 == int(gamesToPlay)) else y
-					#x = win1/int(gamesToPlay)
+					#x = win1/int(gamesToPlay)  if not i else 1
 					#y = 1#win2/int(gamesToPlay)
 					
 					value = (x,row[-2]*y,x,row[-1]*y,row[0],row[1],row[2],row[3],row[4],row[5],row[6])
@@ -212,7 +212,7 @@ while gameCount < int(gamesToPlay):
 	if (p1.poll() == None or p2.poll() == None):
 		time.sleep(1)
 	
-	time.sleep(0.5)
+	time.sleep(0.45)
 	
 	print("	click start")
 	subprocess.run([os.getcwd() + "/131_ClickImage.py","startBut.png"],shell=True)
@@ -242,10 +242,12 @@ while gameCount < int(gamesToPlay):
 	os.system("	TASKKILL /F /IM ygopro.exe")	   
 	
 	output, stderr = p1.communicate()
-	print("	"+output)
-	if format(output).find('win') >= 0:
+	#print("	"+output)
+	if format(output).find('[win]') >= 0:
+		print('[win]')
 		win1 += 1
-	elif format(output).find('lose') >= 0:
+	elif format(output).find('[lose]') >= 0:
+		print('[lose]')
 		win2 += 1  
 	  
 	gameCount += 1

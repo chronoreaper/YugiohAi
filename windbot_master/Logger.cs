@@ -210,8 +210,8 @@ namespace WindBot
                     {
                         if (gameResult == LOSE)
                         {
-                            wins *= 0.5;
-                            games *= 0.5;
+                            wins *= 0.1;
+                            games *= 0.1;
                         }
                     }
 

@@ -194,17 +194,15 @@ namespace WindBot
                         if (gameResult == LOSE)
                         {
                             wins = -wins;
+                            //wins = 0;
+                            //games = 0;
                         }
                         else
                         {
-                            wins *= 0.5;
-                            games *= 0.5;
+                           wins *= 0.5;
+                           games *= 0.5;
                         }
 
-                        if (wins < 0)
-                        {
-                            //wins = 0;
-                        }
                     }
                     else
                     {
@@ -213,7 +211,19 @@ namespace WindBot
                             wins *= 0.1;
                             games *= 0.1;
                         }
+                        else
+                        {
+                            //wins *= 0.0;
+                            //games *= 0.0;
+                        }
                     }
+
+                   /* if (wins < 0)
+                    {
+                        if (wins < -1)
+                            games += - wins - 1;
+                        wins = 0;
+                    }*/
 
                     // round(({Math.Sign(wins)} * 20 - wins)/5)
                     sql = $"UPDATE playCard SET wins = wins + {wins}, " +

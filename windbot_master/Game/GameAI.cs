@@ -427,8 +427,7 @@ namespace WindBot.Game
                 if (weight >= BestWeight)
                 {
                     //record previous action as not activate
-                    //RecordNotActivated(BestAction, BestCard, card, ActivateDesc);
-                    //RecordAction(BestAction, BestCard, ActivateDesc, false);
+                    //RecordAction(BestAction, BestCard, ActivateDesc, -0.1);
                     // update to be the better one
                     BestWeight = weight;
                     BestAction = action;
@@ -442,25 +441,18 @@ namespace WindBot.Game
                 {
                     Logger.WriteLine($"Did not {action.ToString()} {card?.Name} {weight} as the better choice is {BestAction.ToString()} {BestCard?.Name} {BestWeight}");
                     Dialogs.SendMessage($"Did not {action.ToString()} {card?.Name} {weight} as the better choice is {BestAction.ToString()} {BestCard?.Name} {BestWeight}");
-                    //RecordAction(action,card,desc,false);
-                    //RecordNotActivated(action, card, BestCard, desc);
+                    //RecordAction(action,card,desc, -0.1);
                 }
             }
 
-            public void RecordNotActivated(MainPhaseAction.MainAction action, ClientCard card, ClientCard betterCard, int desc)
-            {
-               RecordAction(action, card, desc, false);
-            }
-
-            public void RecordAction(MainPhaseAction.MainAction action, ClientCard card,int desc, bool execute = true)
+            public void RecordAction(MainPhaseAction.MainAction action, ClientCard card,int desc, double weight)
             {
                 if (action != MainPhaseAction.MainAction.ToBattlePhase && action != MainPhaseAction.MainAction.ToEndPhase)
                 {
                     string actionString = BuildActionString(action, card);
-                    double weight = execute ? 1 : -1;
                     string value = (desc == -1) ? "" : desc.ToString();
 
-                    if (card != null && execute)
+                    if (card != null && weight >= 0)
                         Logger.WriteToFile($"{card.Name}]{card.Id}");
 
                     Executor.SetCard((ExecutorType)(int)action, card, -1);
@@ -470,7 +462,7 @@ namespace WindBot.Game
 
             public MainPhaseAction ReturnBestAction()
             {
-                RecordAction(BestAction, BestCard, ActivateDesc, true);
+                RecordAction(BestAction, BestCard, ActivateDesc, 1);
                 if (BestAction != MainPhaseAction.MainAction.ToBattlePhase && BestAction != MainPhaseAction.MainAction.ToEndPhase)
                     return new MainPhaseAction(BestAction, BestIndex);
                 else
@@ -546,13 +538,13 @@ namespace WindBot.Game
                     default:
                         if (main.CanBattlePhase && Duel.Fields[0].HasAttackingMonster())
                         {
-                            choice.RecordAction(MainPhaseAction.MainAction.ToBattlePhase, null,-1, true);
+                            choice.RecordAction(MainPhaseAction.MainAction.ToBattlePhase, null,-1, 1);
                             return new MainPhaseAction(MainPhaseAction.MainAction.ToBattlePhase);
                         }
 
                         _dialogs.SendEndTurn();
                         _dialogs.SendMessage("Card Advantage:" + RandomExecutor.GetCardAdvantageField().ToString());
-                        choice.RecordAction(MainPhaseAction.MainAction.ToEndPhase, null,-1, true);
+                        choice.RecordAction(MainPhaseAction.MainAction.ToEndPhase, null,-1, 1);
                         return new MainPhaseAction(MainPhaseAction.MainAction.ToEndPhase);
                 }
                 return choice.ReturnBestAction();

@@ -438,23 +438,40 @@ namespace WindBot.Game.AI.Decks
             double activator = 0;
             for (int i = 0; i < score.Count; i += 2)
             {
-                if (Math.Abs(score[i]) > 1 || score[i+1] < 10) // Try and remove noise
+                if (Math.Abs(score[i]) > 1 || score[i+1] > 10) // Try and remove noise
                 {
                     gamesWon += score[i];
                     totalWon += Math.Abs(score[i]);
                     totalGames += score[i + 1];
-                    activator += score[i] / score[i + 1]; //* score[i + 1];// == 1 ? Math.Sign(score[i]) * 2 : score[i];
+                    double games = score[i + 1];
+                    double weight = score[i];
+
+                    /*if (games < 10)
+                        weight *= games / 10;
+                    if (Math.Abs(weight) < 10)
+                        weight *= Math.Abs(weight) / 10;*/
+                    activator += weight;
+                    /*double weight = (score[i]*2 - score[i + 1])/ score[i + 1]; //* score[i + 1];// == 1 ? Math.Sign(score[i]) * 2 : score[i];
+                    double confidence = 1;
+                    if (score[i + 1] < 10)//determine if the amount of games played is enough
+                    {
+                        confidence = score[i + 1] / 10;
+                    }
+                    activator += weight;*/
                 }
             }
-
+            if (activator > -20 && activator < 0)
+            {
+                activator = 0;
+            }
             //activator /= score.Count;
 
-            if (score.Count > 0 && totalGames > 10) {
+            /*if (score.Count > 0 && totalGames > 10) {
                 activator = Math.Pow(totalGames / 2 + gamesWon / 2 ,2)/totalGames/score.Count;
                 //activator = gamesWon * totalGames;
             }
             else
-                activator = 0;
+                activator = 0;*/
 
             Random rand = new Random();
 

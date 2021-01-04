@@ -131,22 +131,28 @@ def UpdateGameAi(AIName1,win1,AIName2,win2):
 		records = c.fetchall()
 		# for each record, try and update master
 		i = 0;
+		
+		maxGames = 2
+		c.execute("SELECT MAX(games) FROM playCard")
+		list = c.fetchone()
+		if list!= None:
+			maxGames = list[0]
+				
+		#x = (1 + win1/int(gamesToPlay))/maxGames
+		# c.execute('UPDATE playCard SET wins = cast(wins * (?) as int), games = cast(games* (?) as int)',(x,x))
+		
 		for row in records:
 			node = tuple(row[:-2])
-			maxGames = 2
-			c.execute("SELECT MAX(games) FROM playCard")
-			list = c.fetchone()
-			if list!= None:
-				maxGames = list[0]
 			c.execute('SELECT games FROM playCard WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"', node)
 			list = c.fetchone()
 			if list != None : # It exists in master
 				if row[-1] >= int(gamesToPlay):
-					x = (1 + win1/int(gamesToPlay))/maxGames if not i else 1# Only divide the master data once
-					#x = 1 if (win1 == int(gamesToPlay)) else x
-					#x = 0.75 if not i else 1
+					x = 1#(1 + win1/int(gamesToPlay))/maxGames if not i else 1# Only divide the master data once
+					x = 0.5 if not i else 1
+					#x = win1 /int(gamesToPlay) if not i else 1
 					#y = (1 + win2/int(gamesToPlay))/maxGames if not i else 1
-					y = 1# if (win2 == int(gamesToPlay)) else y
+					#y = win2/int(gamesToPlay)# if (win2 == int(gamesToPlay)) else y
+					y = 1#0.2 if list[0] > 50  else 1
 					#x = win1/int(gamesToPlay)  if not i else 1
 					#y = 1#win2/int(gamesToPlay)
 					

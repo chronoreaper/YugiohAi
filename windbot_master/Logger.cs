@@ -194,13 +194,13 @@ namespace WindBot
                         if (gameResult == LOSE)
                         {
                             wins = -wins;
-                            //wins = 0;
+                            //wins = 0.5;
                             //games = 0;
                         }
                         else
                         {
-                           wins *= 0.5;
-                           games *= 0.5;
+                           //wins *= 0.5;
+                           //games *= 0.5;
                         }
 
                     }
@@ -208,12 +208,12 @@ namespace WindBot
                     {
                         if (gameResult == LOSE)
                         {
-                            wins *= 0.1;
-                            games *= 0.1;
+                            wins *= 0.3;
+                            //games *= 0.1;
                         }
                         else
                         {
-                            //wins *= 0.0;
+                            wins *= 0.3;
                             //games *= 0.0;
                         }
                     }

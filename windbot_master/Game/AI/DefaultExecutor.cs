@@ -97,6 +97,8 @@ namespace WindBot.Game.AI
         /// <returns>BattlePhaseAction including the target, or null (in this situation, GameAI will check the next attacker)</returns>
         public override BattlePhaseAction OnSelectAttackTarget(ClientCard attacker, IList<ClientCard> defenders)
         {
+            ClientCard toAttack = null;
+            int greatestAttack = -1;
             foreach (ClientCard defender in defenders)
             {
                 attacker.RealPower = attacker.Attack;
@@ -104,12 +106,22 @@ namespace WindBot.Game.AI
                 if (!OnPreBattleBetween(attacker, defender))
                     continue;
 
-                if (attacker.RealPower > defender.RealPower || (attacker.RealPower >= defender.RealPower && attacker.IsLastAttacker && defender.IsAttack()))
-                    return AI.Attack(attacker, defender);
+                if (attacker.RealPower > defender.RealPower 
+                || (attacker.RealPower >= defender.RealPower && defender.IsAttack() 
+                && (Bot.GetMonsterCount() >= defenders.Count || attacker.IsLastAttacker) ))
+                {
+                    if ((defender.Attack > greatestAttack || greatestAttack == attacker.RealPower)
+                        && (toAttack == null || defender.Position != ((int)CardPosition.FaceDownDefence)))
+
+                    {
+                        toAttack = defender;
+                        greatestAttack = defender.Attack;
+                    }
+                }
             }
 
-            if (attacker.CanDirectAttack)
-                return AI.Attack(attacker, null);
+            if (toAttack != null || attacker.CanDirectAttack)
+                return AI.Attack(attacker, toAttack);//toAttack == null if it is a direct attack
 
             return null;
         }

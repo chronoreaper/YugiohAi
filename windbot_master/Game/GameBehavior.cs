@@ -28,6 +28,7 @@ namespace WindBot.Game
         private bool _debug;        
         private int _select_hint;
         private GameMessage _lastMessage;
+        private int result;
 
         public GameBehavior(GameClient game)
         {
@@ -276,6 +277,8 @@ namespace WindBot.Game
         
         private void OnDuelEnd(BinaryReader packet)
         {
+            string otherName = _room.Position == 0 ? _room.Names[1] : _room.Names[0];
+            Logger.UpdateDatabase(result, otherName, _duel.Turn);
             Connection.Close();
         }
 
@@ -364,10 +367,9 @@ namespace WindBot.Game
         private void OnWin(BinaryReader packet)
         {
             int result = GetLocalPlayer(packet.ReadByte());
-
+            this.result = result;
             string otherName = _room.Position == 0 ? _room.Names[1] : _room.Names[0];
             string textResult = (result == 2 ? "Draw" : result == 0 ? "Win" : "Lose");
-            Logger.UpdateDatabase(result, otherName);
             Logger.DebugWriteLine("Duel finished against " + otherName + ", result: " + textResult);
         }
 

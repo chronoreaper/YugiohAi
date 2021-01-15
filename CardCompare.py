@@ -6,29 +6,39 @@ def similar(a, b):
     Takes two string a, b
     returns a double from 0 - 1 that is how similar they are
     '''
-    return SequenceMatcher(None, a, b).ratio()
+    return 1 - SequenceMatcher(None, a, b).ratio()
 
-cardName = "Called by the Grave"
+Name = "Luster Dragon"
+text = ""
+attack = 0
 
 conn = sqlite3.connect(os.getcwd() +'/windbot_master/bin/Debug/cards.cdb')
 
 c = conn.cursor()
-text = ""
 
-for row in c.execute('SELECT name, desc FROM texts where name = "'+ cardName +'"'):
-    print(row[0] + ":" + row[1])
-    print("_____")
+
+for row in c.execute('SELECT texts.name, texts.desc, datas.type,datas.atk From texts Inner JOIN datas ON texts.id = datas.id where texts.name = "'+ Name +'"'):
     text = row[1]
-    cardName = row[0]
+    Name = row[0]
+    attack = int(row[3])
+    if row[2] == 17:
+       text = ""
+    print(Name + ":" + text)
+    print("_____")
 
 related = {}
 relatedText = {}
 
-for row in c.execute('SELECT name, desc FROM texts where name != "'+ cardName +'"'):
-    related[row[0]] = similar(text,row[1])
-    relatedText[row[0]] = row[1]
+for row in c.execute('SELECT texts.name, texts.desc, datas.type,datas.atk From texts Inner JOIN datas ON texts.id = datas.id where texts.name != "'+ Name +'"'):
+	cardName = row[0]
+	cardText = row[1]
+	cardAttack = int(row[3])
+	if row[2] == 17:
+		cardText = ""
+	related[cardName] = similar(text,cardText) + (abs(attack - cardAttack)/5000)
+	relatedText[cardName] = cardText
 
-related = {k: v for k, v in sorted(related.items(), key=lambda item: item[1], reverse=True)}
+related = {k: v for k, v in sorted(related.items(), key=lambda item: item[1], reverse=False)}
 
 i = 10
 for key in related:

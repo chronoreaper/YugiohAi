@@ -16,8 +16,10 @@ join cardList t1 on t1.id = t.id
 join cardList t2 on t2.id = t.otherid
 order by weight desc
 
-select * ,
-round(wins*1.0/games,3) as percentage, 
-round(wins*wins*1.0/games,2) as weight
+select * 
 FROM playCard
-ORDER by id,action,verify,value,'result', weight desc
+ORDER by id,action,verify,value desc
+
+select * 
+FROM playCard
+ORDER by action,id,location,verify,wins desc

@@ -20,6 +20,6 @@ elif format(output).find(': Lose') > 0:
 if recordDeck == '1':
     if result != 0:  
         if result  == 1:
-            print("win")
+            print("[win]")
         elif result == -1:
-            print("lose")
+            print("[lose]")

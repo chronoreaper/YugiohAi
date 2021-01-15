@@ -158,6 +158,11 @@ namespace WindBot.Game.AI
             InternalSendMessage(_chaining, card);
         }
 
+        public void SendMessage(string message)
+        {
+            InternalSendMessage(new List<string>() { message });
+        }
+
         private void InternalSendMessage(IList<string> array, params object[] opts)
         {
             if (!_game._chat)

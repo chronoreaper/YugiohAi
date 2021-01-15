@@ -11,6 +11,29 @@ namespace WindBot.Game.AI.Decks
     //[Deck("Random", "AI_Random")]
     public class RandomExecutorBase : DefaultExecutor
     {
+        protected List<PreviousAction> ActionPerformedTurn = new List<PreviousAction>();
+
+        protected class PreviousAction
+        {
+            public string Action = "";
+            public string Value = "";
+            public PreviousAction(string action,string value)
+            {
+                Action = action;
+                Value = value;
+            }
+        }
+
+        protected int CardAdvStartSelfHand = 0;
+        protected int CardAdvStartOppHand = 0;
+        protected int CardAdvStartSelfHandPre = 0;
+        protected int CardAdvStartOppHandPre = 0;
+        protected int CardAdvStartSelfField = 0;
+        protected int CardAdvStartOppField = 0;
+        protected int CardAdvStartSelfFieldPre = 0;
+        protected int CardAdvStartOppFieldPre = 0;
+        protected int ActionId = 0;
+
         public class CardId
         {
             public const int LeoWizard = 4392470;
@@ -30,11 +53,122 @@ namespace WindBot.Game.AI.Decks
 
         }
 
+        public int GetCardAdvantageHand()
+        {
+            return Bot.GetHandCount() - CardAdvStartSelfHand + CardAdvStartOppHand - Enemy.GetHandCount();
+        }
+
+        public int GetCardAdvantageHandPre()
+        {
+            return Bot.GetHandCount() - CardAdvStartSelfHandPre + CardAdvStartOppHandPre - Enemy.GetHandCount();
+        }
+
+        public int GetCardAdvantageField()
+        {
+            return Bot.GetFieldCount() - CardAdvStartSelfField + CardAdvStartOppField - Enemy.GetFieldCount();
+        }
+
+        public int GetCardAdvantageFieldPre()
+        {
+            return Bot.GetFieldCount() - CardAdvStartSelfFieldPre + CardAdvStartOppFieldPre - Enemy.GetFieldCount();
+        }
+
+        public override void OnNewTurn()
+        {
+            //update results based on previous turn
+            if (Duel.Turn > 1)
+            {
+                //int cardAdvantage = GetCardAdvantageField();
+                //int cardAdvantagePre = GetCardAdvantageFieldPre();
+                int enemyFieldLoss = CardAdvStartOppField - Enemy.GetFieldCount();
+                int enemyFieldLossPre = CardAdvStartOppFieldPre - Enemy.GetFieldCount();
+                int playerFieldLoss = CardAdvStartSelfField - Bot.GetFieldCount();
+                int playerFieldLossPre = CardAdvStartSelfFieldPre - Bot.GetFieldCount();
+                int playerHandFieldLoss = CardAdvStartSelfField + CardAdvStartSelfHand - Bot.GetFieldCount() - Bot.GetHandCount();
+                int playerHandGain = Bot.GetHandCount() - CardAdvStartSelfHand;
+                //int playerCardGainPre = Bot.GetFieldHandCount() - CardAdvStartSelfFieldPre - CardAdvStartSelfHandPre;
+                //if (Duel.Turn % 2 == (Duel.IsFirst ? 0 : 1))//do this calculation on the start of opp turn, so all actions on your turn
+                {
+                    Console.WriteLine("Field Losses");
+                    Console.WriteLine(playerFieldLoss);
+                    Console.WriteLine(enemyFieldLoss);
+                    if (GetCardAdvantageHand() + GetCardAdvantageField() == 0)
+                    {
+                        //if (enemyFieldLoss > 0)
+                            Logger.ModifyAction(Duel.Turn - 1, 1);
+                    }
+                    else if (GetCardAdvantageHand() + GetCardAdvantageField() < 0)
+                    {
+                        /*if (enemyFieldLoss == 0)
+                            Logger.ModifyAction(Duel.Turn - 1, -2);
+                        else if (enemyFieldLoss < 0)
+                            Logger.ModifyAction(Duel.Turn - 1, -2);
+                        else if (enemyFieldLoss < playerFieldLoss)*/
+                            Logger.ModifyAction(Duel.Turn - 1, -1);
+                    }
+                    else//player field loss < 0
+                    {
+                        //if (enemyFieldLoss == 0)
+                            Logger.ModifyAction(Duel.Turn - 1, 1);
+                        /*else if (enemyFieldLoss > 0)
+                            Logger.ModifyAction(Duel.Turn - 1, 2);
+                        else if (playerFieldLoss < enemyFieldLoss)
+                            Logger.ModifyAction(Duel.Turn - 1, 0.5);*/
+                    }
+                }
+                if (Duel.Turn % 2 == (Duel.IsFirst ? 1 : 0))//Calculate advatage of two turns
+                {
+                    if (GetCardAdvantageHandPre() + GetCardAdvantageFieldPre() == 0)
+                    {
+                        //if (enemyFieldLossPre > 0)
+                            Logger.ModifyAction(Duel.Turn - 2, 0.5);
+                    }
+                    else if (GetCardAdvantageHandPre() + GetCardAdvantageFieldPre() < 0)
+                    {
+                        //if (enemyFieldLossPre == 0)
+                            Logger.ModifyAction(Duel.Turn - 2, -1);
+                        /*else if (enemyFieldLossPre < 0)
+                            Logger.ModifyAction(Duel.Turn - 2, -1);
+                        else if (enemyFieldLossPre < playerFieldLossPre)
+                            Logger.ModifyAction(Duel.Turn - 2, -0.5);*/
+                    }
+                    else//player field loss < 0
+                    {
+                        /*if (enemyFieldLossPre == 0)
+                            Logger.ModifyAction(Duel.Turn - 2, 0.5);
+                        else if (enemyFieldLossPre > 0)*/
+                            Logger.ModifyAction(Duel.Turn - 2, 1);
+                        /*else if (playerFieldLossPre < enemyFieldLossPre)
+                            Logger.ModifyAction(Duel.Turn - 2, 0.25);*/
+                    }
+                }
+            }
+
+            //reset
+            base.OnNewTurn();
+            ActionPerformedTurn.Clear();
+
+            CardAdvStartSelfHandPre = CardAdvStartSelfField;
+            CardAdvStartOppHandPre = CardAdvStartOppField;
+            CardAdvStartSelfHand = Bot.GetHandCount();
+            CardAdvStartOppHand = Enemy.GetHandCount();
+
+            CardAdvStartSelfFieldPre = CardAdvStartSelfField;
+            CardAdvStartOppFieldPre = CardAdvStartOppField;
+            CardAdvStartSelfField = Bot.GetFieldCount();
+            CardAdvStartOppField = Enemy.GetFieldCount();
+            ActionId = 0;
+        }
+
         public override bool OnSelectHand()
         {
             bool choice = Program.Rand.Next(2) > 0;
+            List<double> weights =  Logger.GetData(Logger.master,action: "GoFirst");
 
-            Logger.RecordAction(action:"GoFirst",value:choice.ToString());
+            if (weights.Count > 0)
+                choice = weights[0] > 0 ? true : false;
+
+            Logger.RecordAction(action: "GoFirst", wins: choice ? 1 : -1, turn: Duel.Turn);
 
             return choice;
         }
@@ -51,15 +185,6 @@ namespace WindBot.Game.AI.Decks
             Random random = new Random();
             IList<ClientCard> selected = new List<ClientCard>();
 
-            // select random card, defalut option
-            /*for (int i = 1; i <= numberSelected; ++i)
-            {
-                int rand = random.Next(cards.Count);
-                while (selected.Contains(cards[rand]))
-                    rand = random.Next(cards.Count);
-                selected.Add(cards[rand]);
-            }*/
-
             //get number of cards to select
             for (int i = min; i <= max; i++)
             {
@@ -72,29 +197,31 @@ namespace WindBot.Game.AI.Decks
             }
 
             List<ClientCardWeight> cardWeight = new List<ClientCardWeight>();
-            //ai choice
+            //add choices
             foreach(ClientCard clientCard in cards)
             {
-                //if it doesnt exist in the list already
-                if (cardWeight.Find(cardInst => clientCard.Equals(cardInst.Card)) == null)
-                {
-                    for (int quant = 1; quant <= Math.Min(cards.GetCardCount(clientCard.Id),max); quant++) {
+                for (int quant = 1; quant <= Math.Min(cards.GetCardCountWithFaceDown(clientCard.Id),max); quant++) {
+                    //if it doesnt exist in the list already
+                    if (cardWeight.Find(cardInst => clientCard.Equals(cardInst.Card) && cardInst.Quantity == quant) == null)
+                    {
                         cardWeight.Add(new ClientCardWeight()
                         {
                             Card = clientCard,
-                            Weight = GetWeight($"Select", $"{clientCard.Name ?? "Set Monster"} x{quant}"),
+                            Weight = GetWeight($"Select", SelectStringBuilder(clientCard,quant)),
                             Quantity = quant
                         });
                     }
                 }
             }
 
-            cardWeight.Sort((pair1, pair2) => pair1.Weight.CompareTo(pair2.Weight));
+            cardWeight.Sort((pair1, pair2) => pair2.Weight.CompareTo(pair1.Weight));
 
             int count = 0;
+            // choose the cards
             for (int i = 0; i < cardWeight.Count; i++)
             {
-                if (count + cardWeight[i].Quantity < numberSelected)
+                Logger.WriteLine($"     {cardWeight[i].Weight}:{SelectStringBuilder(cardWeight[i].Card)},{cardWeight[i].Quantity}");
+                if (count + cardWeight[i].Quantity <= numberSelected)
                 {
                     for(int j = 0; j < cardWeight[i].Quantity; j++)
                     {
@@ -106,12 +233,19 @@ namespace WindBot.Game.AI.Decks
 
             foreach (ClientCard card in selected)
             {
+                RecordAction($"Select", SelectStringBuilder(card));
+                Logger.WriteLine($"Choosing {SelectStringBuilder(card)} for Action id {ActivateDescription}");
                 //RecordAction($"Select",$"{card.Name} { card.Position.ToString()}");
-                RecordAction($"Select", $"{card.Name}");
-                RecordAction("Number Selected", count.ToString());
+                //RecordAction($"Select", $"{card.Name}");
+                //RecordAction("Number Selected", count.ToString());
             }
 
             return selected;
+        }
+
+        private string SelectStringBuilder(ClientCard Card, int Quant = 1)
+        {
+            return $"{Card.Name ?? "Set Monster" } {Card?.Position.ToString()} {Card.Controller}";// x{Quant}";
         }
 
         private class ClientCardWeight
@@ -123,6 +257,9 @@ namespace WindBot.Game.AI.Decks
 
         public override CardPosition OnSelectPosition(int cardId, IList<CardPosition> positions)
         {
+            //Remove later
+            if (positions.Contains(CardPosition.FaceUpAttack))
+                return CardPosition.FaceUpAttack;
             Random random = new Random();
             CardPosition pos = positions[random.Next(positions.Count)];
             double greatestWeight = 1;
@@ -136,7 +273,7 @@ namespace WindBot.Game.AI.Decks
                     pos = position;
                 }
             }
-
+            Logger.WriteLine("Position "+pos.ToString());
             RecordAction($"Position", pos.ToString());
             return pos;
         }
@@ -186,9 +323,9 @@ namespace WindBot.Game.AI.Decks
             return ShouldPerformAction($"SummonOrSet {Duel.Phase.ToString()}");
         }
 
-        protected bool ShouldRepos()
+        public bool ShouldRepos()
         {
-            return ShouldPerformAction($"Repos from {Card.Position} {Duel.Phase.ToString()}",DefaultMonsterRepos());
+            return DefaultMonsterRepos();//ShouldPerformAction($"Repos from {Card.Position} {Duel.Phase.ToString()}",DefaultMonsterRepos());
         }
 
         protected bool ShouldSpellSet()
@@ -211,24 +348,15 @@ namespace WindBot.Game.AI.Decks
         {
             bool perform = false;
 
-            if (shouldPerform)
-            {
-                string v = Card.Name;
-                double yes = Math.Max(GetWeight(action, true.ToString()),1);
-                double no = Math.Max(GetWeight(action, false.ToString()),1);
+            string v = Card.Name;
+            double yes = GetWeight(action, "");
 
-                int minGames = 5;// must be greater than 0
-                double threshold = 0.17;
-                double diffThresh = 10;
-                double k = no/yes;
-                double m = yes - no;
-                if ((yes >= minGames && no >= minGames) && (no / yes < threshold || yes-no > diffThresh)
-                    || Program.Rand.NextDouble() >= 0.5 && (yes < minGames || no < minGames))
-                {
-                    perform =  true;
-                }
+            if (yes > 0 || (shouldPerform && Math.Abs(yes) < 0.3))
+            {
+                perform = true;
+                ActionPerformedTurn.Add(new PreviousAction("Previous " + action,Card.Name));
             }
-            RecordAction(action,perform.ToString());
+            RecordAction(action,"",perform?1:-1);
             return perform;
         }
 
@@ -239,90 +367,185 @@ namespace WindBot.Game.AI.Decks
         /// <returns>true if it should perform.</returns>
         public double ActionWeight(string action)
         {
-            string v = Card.Name;
-            double yes = GetWeight(action, true.ToString());
-            //double no = Math.Max(GetWeight(action, false.ToString()), 1);
-            return yes;
+            return GetWeight(action, "");;
         }
 
-        public void RecordAction(string action, string result)
+        public void RecordAction(string action, string result, double wins = 1)
         {
-            //TODO: fix the count.
-            //Bot
-            foreach (ClientCard CardInHand in Bot.Hand)
-            {
-                Logger.RecordAction(Card.Name, Card.Location.ToString(), action, result, "Card In Hand", CardInHand.Name.ToString(), 1);
-            }
-
-            foreach (ClientCard Monster in Bot.GetMonsters())
-            {
-                Logger.RecordAction(Card.Name, Card.Location.ToString(), action, result, "Player Monsters", Monster.Name.ToString(), 1);
-            }
-
-            Logger.RecordAction(Card.Name, Card.Location.ToString(), action, result, "Number of Monsters Bot", Bot.GetMonsterCount().ToString(), 1);
-            Logger.RecordAction(Card.Name, Card.Location.ToString(), action, result, "Cards In Bot Hand", Bot.GetHandCount().ToString(), 1);
-            //Enemy
-            foreach (ClientCard Monster in Enemy.GetMonsters())
-            {
-                Logger.RecordAction(Card.Name, Card.Location.ToString(), action, result, "Enemy Monsters", Monster.Name?.ToString() ?? "Set Monster", 1);
-            }
-
-            Logger.RecordAction(Card.Name, Card.Location.ToString(), action, result, "Cards In Opponent Hand", Enemy.GetHandCount().ToString(), 1);
-            Logger.RecordAction(Card.Name, Card.Location.ToString(), action, result, "Number of Monsters Opponent", Enemy.GetMonsterCount().ToString(), 1);
-            //Logger.RecordAction(Card.Id, Card.Location.ToString(), action, result, "Number of Spell,Trap", Enemy.GetSpellCountWithoutField().ToString(), 1);
+            DataModifier(action, result, wins, false);
+            ActionId++;
         }
 
         public double GetWeight(string action, string result)
         {
-            double weight = 0;
-            List<int> score = new List<int>();
+            Random rand = new Random();
+            double weight = DataModifier(action, result);
+            return weight;
+        }
+        
+        private double DataModifier(string action, string result, double win = 0,bool GetData = true)
+        {
+            List<double> score = new List<double>();
 
             //Bot
-            foreach (ClientCard CardInHand in Bot.Hand)
+            var cardQuant = ListToQuantity(Bot.Hand);
+            /*foreach (ClientCard CardInHand in cardQuant.Keys)
             {
-                score.AddRange(Logger.GetData(Card.Name, Card.Location.ToString(), action, result, "Card In Hand", CardInHand.Name.ToString(), 1));
+                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Card In Hand", CardInHand.Name.ToString(), cardQuant[CardInHand], win));
             }
-
-            foreach (ClientCard Monster in Bot.GetMonsters())
+            */
+            cardQuant = ListToQuantity(Bot.GetMonsters());
+            foreach (ClientCard Monster in cardQuant.Keys)
             {
-                score.AddRange(Logger.GetData(Card.Name, Card.Location.ToString(), action, result, "Player Monsters", Monster.Name.ToString(), 1));
+                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Player Monsters", Monster.Name.ToString() + Monster.Position.ToString(), cardQuant[Monster], win));
             }
+            /*
+            cardQuant = ListToQuantity(Bot.GetGraveyardMonsters());
+            foreach (ClientCard Monster in cardQuant.Keys)
+            {
+                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Player Monsters GY", Monster.Name.ToString(), cardQuant[Monster], win));
+            }*/
 
-            score.AddRange(Logger.GetData(Card.Name, Card.Location.ToString(), action, result, "Number of Monsters Bot", Bot.GetMonsterCount().ToString(), 1));
-            score.AddRange(Logger.GetData(Card.Name, Card.Location.ToString(), action, result, "Cards In Bot Hand", Bot.GetHandCount().ToString(), 1));
+            score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Number of Monsters Bot", Bot.GetMonsterCount().ToString(), 1, win));
+            score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Cards In Bot Hand", Bot.GetHandCount().ToString(), 1, win));
 
 
             //Enemy
-            foreach (ClientCard Monster in Enemy.GetMonsters())
+            cardQuant = ListToQuantity(Enemy.GetMonsters());
+            foreach (ClientCard Monster in cardQuant.Keys)
             {
-                score.AddRange(Logger.GetData(Card.Name, Card.Location.ToString(), action, result, "Enemy Monsters", Monster.Name?.ToString()??"Set Monster", 1));
+                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Enemy Monsters", Monster.Name?.ToString() ?? "Set Monster" + Monster.Position.ToString(), cardQuant[Monster], win));
             }
-            score.AddRange(Logger.GetData(Card.Name, Card.Location.ToString(), action, result, "Cards In Opponent Hand", Enemy.GetHandCount().ToString(), 1));
-            score.AddRange(Logger.GetData(Card.Name, Card.Location.ToString(), action, result, "Number of Monsters Opponent", Enemy.GetMonsterCount().ToString(), 1));
 
-            int count = 0;
-            double totalWins = 0;
-            double totalGames = 0;
-            for (int i = 0; i<score.Count; i+=2)
+            //gy monsters
+            /*cardQuant = ListToQuantity(Enemy.GetGraveyardMonsters());
+            foreach (ClientCard Monster in cardQuant.Keys)
             {
-                double wins = score[i];
-                double games = score[i + 1];
-                totalWins += score[i];
-                totalGames += score[i + 1];
-                if (score[i + 1] >= 1)
+                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Enemy Monsters GY", Monster.Name.ToString(), cardQuant[Monster], win));
+            }*/
+            score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Cards In Opponent Hand", Enemy.GetHandCount().ToString(), 1, win));
+            score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Number of Monsters Opponent", Enemy.GetMonsterCount().ToString(), 1, win));
+
+            //previous actions that turn
+            /*foreach (PreviousAction previous in ActionPerformedTurn)
+            {
+                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, previous.Action, previous.Value, 1, win));
+            }*/
+
+            //record as previous action
+            //if (wins>0)
+            //    ActionPerformedTurn.Add(new PreviousAction("Previous " + action, Card.Name));
+
+            double gamesWon = 0;
+            double totalWon = 0;
+            double totalGames = 0;
+            double activator = 0;
+            for (int i = 0; i < score.Count; i += 2)
+            {
+                if (Math.Abs(score[i]) > 1 || score[i+1] > 5) // Try and remove noise
                 {
-                    weight += wins * wins / games;
-                    count +=(int) games;
+                    gamesWon += score[i];
+                    totalWon += Math.Abs(score[i]);
+                    totalGames += score[i + 1];
+                    double games = score[i + 1];
+                    double weight = score[i];
+
+                    /*if (games < 10)
+                        weight *= games / 10;
+                    if (Math.Abs(weight) < 10)
+                        weight *= Math.Abs(weight) / 10;*/
+                    activator += weight;
+                    /*double weight = (score[i]*2 - score[i + 1])/ score[i + 1]; //* score[i + 1];// == 1 ? Math.Sign(score[i]) * 2 : score[i];
+                    double confidence = 1;
+                    if (score[i + 1] < 10)//determine if the amount of games played is enough
+                    {
+                        confidence = score[i + 1] / 10;
+                    }
+                    activator += weight;*/
                 }
             }
-            weight = totalWins / totalGames;
-            if (totalGames < 10)
-                weight = Program.Rand.NextDouble();
-            /*if (count < 10)
-                weight = Program.Rand.Next(100);*/
-            else if (totalWins / totalGames < 0.3) weight = -1;
-            
-            return weight;
+            if (activator > -10 && activator < 0)
+            {
+                activator = 0;
+            }
+            //activator /= score.Count;
+
+            /*if (score.Count > 0 && totalGames > 10) {
+                activator = Math.Pow(totalGames / 2 + gamesWon / 2 ,2)/totalGames/score.Count;
+                //activator = gamesWon * totalGames;
+            }
+            else
+                activator = 0;*/
+
+            Random rand = new Random();
+
+            if (rand.NextDouble() < 0.03 || (rand.NextDouble() < 0.1 && (totalGames < 20 || Duel.Turn > 25)))
+                if (Logger.Name != Logger.master) 
+            {
+                Logger.WriteLine("Random Variation");
+                activator = 1;
+            }
+
+            if (GetData)
+            {
+                Logger.WriteLine($"{activator} Activater");
+                //Logger.WriteLine($"{gamesWon} games won");
+                Logger.WriteLine($"{totalWon} Total won");
+                Logger.WriteLine($"Number of games: {totalGames}");
+            }
+            else //recording action
+            {
+                Logger.SaveActionWeight(Duel.Turn, ActionId, activator,Card?.Name);
+            }
+
+            return activator;
+            //return weight + totalGames * 0.001 * Math.Sign(weight);
+        }
+
+        private List<double> SQLCom(bool GetData, string id, string location, string action, string result, string verify, string value, int count, double wins)
+        {
+            if (GetData)
+            {
+                return Logger.GetData(Logger.master,id, location, action, result, verify, value, count);
+            }
+            else // record action
+            {
+                Logger.RecordAction(id, location, action, result, verify, value, count, wins, Duel.Turn, ActionId);
+                return new List<double>();
+            }
+        }
+
+        private Dictionary<ClientCard,int> ListToQuantity(IList<ClientCard> clientCards)
+        {
+            Dictionary<string, CardToQuant> cardQuant = new Dictionary<string, CardToQuant>();
+            foreach(ClientCard card in clientCards)
+            {
+                if (!cardQuant.ContainsKey(card.Name ?? "Set Monster"))
+                {
+                    cardQuant.Add(card.Name ?? "Set Monster", new CardToQuant() { card = card, quant = 1 });
+                }
+                else
+                {
+                    CardToQuant count;
+                    cardQuant.TryGetValue(card.Name ?? "Set Monster", out count);
+                    if (count != null) {
+                        count.quant++;
+                    }
+                }
+            }
+
+            Dictionary<ClientCard, int> Result = new Dictionary<ClientCard, int>();
+            foreach (CardToQuant value in cardQuant.Values)
+            {
+                Result.Add(value.card, value.quant);
+            }
+            return Result;
+        }
+
+        private class CardToQuant
+        {
+            public ClientCard card { get; set; }
+            public int quant { get; set; }
         }
     }
 }

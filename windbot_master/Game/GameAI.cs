@@ -441,7 +441,8 @@ namespace WindBot.Game
                 {
                     Logger.WriteLine($"Did not {action.ToString()} {card?.Name} {weight} as the better choice is {BestAction.ToString()} {BestCard?.Name} {BestWeight}");
                     Dialogs.SendMessage($"Did not {action.ToString()} {card?.Name} {weight} as the better choice is {BestAction.ToString()} {BestCard?.Name} {BestWeight}");
-                    //RecordAction(action,card,desc, -0.1);
+                    //if (weight < 0)
+                    //    RecordAction(action,card,desc, -0.1);
                 }
             }
 

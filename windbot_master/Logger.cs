@@ -199,7 +199,7 @@ namespace WindBot
                         }
                         else
                         {
-                           //wins *= 0.5;
+                           wins *= 0.9;
                            //games *= 0.5;
                         }
 

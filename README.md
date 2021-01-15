@@ -12,6 +12,7 @@ There are 2 Ais that need to made. A deck building Ai which is written in python
 ### How to run
 * Run 1_MainFunction.py. It will run all the other python scripts. Scripts are ran as ordered, 1, 11, 12, 13, 131, 132, 133.
 * The decks that are ran from windbot is random and random2
+* When running, you may need to update the png pictures. Specificaly the Spectate button and the STart button.
 ### Editing the ai
 * Notable files in Windbot are Logger.cs, GameAI.cs and RandomExecutorBase.cs
 * Logger.cs controls the Weights when they are updated and read

@@ -18,6 +18,7 @@ There are 2 Ais that need to made. A deck building Ai which is written in python
 * Logger.cs controls the Weights when they are updated and read
 * GameAI controls how the ai works
 * RandomExecutorBase controls all the math and decision the AI makes.
+* Make sure your computer's default to open .py files is python, or this will not work.
 ### Using 
 * Windbot: https://github.com/IceYGO/windbot
 * KoishiPro: https://github.com/purerosefallen/ygopro/releases

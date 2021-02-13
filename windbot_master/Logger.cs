@@ -57,7 +57,8 @@ namespace WindBot
         /// <param name="actionId">the Id of the action</param>
         /// <param name="weight">The confidence weight of the action performed</param>
         /// <param name="id">The card id that performs this action</param>
-        public static void SaveActionWeight(int turn, int actionId, double weight, string id)
+        /// <param name="action">The action the card is performing</param>
+        public static void SaveActionWeight(int turn, int actionId, double weight, string id, string action)
         {
             //check if the turn is in the dictonary
             if (!actionWeight.ContainsKey(turn))
@@ -72,7 +73,7 @@ namespace WindBot
             }
             else
             {
-                actionWeight[turn].Add(actionId, new ActionWeightCard(id,weight));
+                actionWeight[turn].Add(actionId, new ActionWeightCard(id, weight, action));
             }
         }
 
@@ -81,13 +82,14 @@ namespace WindBot
         /// </summary>
         /// <param name="turn">The turn to modify</param>
         /// <param name="weight">The weight to multiply by</param>
-        public static void ModifyAction(int turn, double weight)
+        /// <param name="changeTag"> the tag of the change</param>
+        public static void ModifyAction(int turn, double weight, int changeTag)
         {
             List<Data> toAdd = new List<Data>();
             foreach (var node in data.FindAll(x => x.turn == turn))
             {
                 Data newNode = new Data(node);
-                newNode.modified = true;
+                newNode.modified = changeTag;
                 newNode.wins = weight;
                 toAdd.Add(newNode);
                 //node.modified = true;
@@ -137,8 +139,6 @@ namespace WindBot
                     using (SqliteDataReader rdr = cmd.ExecuteReader())
                         while (rdr.Read())
                         {
-                            row.Add(rdr.GetDouble(0));
-                            row.Add(rdr.GetDouble(1));
                             wins += rdr.GetDouble(0);
                             games += rdr.GetDouble(1);
                         }
@@ -146,6 +146,8 @@ namespace WindBot
                 Console.WriteLine(string.Format($"{wins,-5},{games,-3},{id,-3},{location,-3},{action,-3},{result,-3},{verify,-3},{value,-3},{count,-3}"));
                 SQLCon.Close();
             }
+            row.Add(wins);
+            row.Add(games);
             return row;
         }
 
@@ -168,7 +170,26 @@ namespace WindBot
                 string sql =
                       $"SELECT id,location,action,result,verify,value,count,wins,games FROM playCard " +
                       $"WHERE inprogress = \"{Name}\"";
-                foreach(Data info in data) {
+
+                //Removes all duplicates
+                List<Data> temp = new List<Data>();
+
+                foreach (Data d in data)
+                {
+                    int index = temp.FindIndex(x => x.id == d.id && x.location == d.location && x.action == d.action
+                                    && x.result == d.result && x.verify == d.verify && x.value == d.value
+                                    && x.count == d.count && x.wins == d.wins && x.modified == d.modified);
+                    if (index < 0)
+                    {
+                        temp.Add(d);
+                    }
+                }
+
+                data = temp;
+
+                for (int i = 0; i < data.Count; i++)
+                {
+                    Data info = data[i];
                     string id = info.id;
                     string location = info.location;
                     string action = info.action;
@@ -176,58 +197,144 @@ namespace WindBot
                     string verify = info.verify;
                     string value = info.value;
                     int count = info.count;
-                    double wins = Math.Sign(info.wins);
-                    double games = info.turn; //stored as games since the database column is named games
+                    double wins = info.wins;
+                    //double games = info.turn; //stored as games since the database column is named games
+                    double confidence = -1;
 
-                    if (!info.modified)
+                    double originalwins = 0;
+                    double originalgames = 0;
+
+                    sql =
+                      $"SELECT wins, games FROM playCard WHERE id = \"{id}\" AND location = \"{location}\" " +
+                      $"AND action = \"{action}\" AND result = \"{result}\" AND verify = \"{verify}\" " +
+                      $"AND value = \"{value}\" AND count = {count} AND " +
+                      $"inprogress =  \"{master}\"";
+                    using (SqliteCommand cmd = new SqliteCommand(sql, SQLCon))
                     {
-                        if (info.turn != 0)
+                        using (SqliteDataReader rdr = cmd.ExecuteReader())
+                            while (rdr.Read())
+                            {
+                                originalwins += rdr.GetDouble(0);
+                                originalgames += rdr.GetDouble(1);
+                            }
+                    }
+
+                    if (info.turn != 0)
+                    {
+                        // Checks how confident this is a good move 
+                        if (actionWeight.ContainsKey(info.turn))
                         {
-                            // Checks how confident this is a good move 
-                            double confidence = 1;
-                            if (actionWeight[info.turn].ContainsKey(info.actionId + 1))
+                            // See if any future actions contain the select action
+                            foreach (int actionId in actionWeight[info.turn].Keys)
+                            {
+                                ActionWeightCard selectAction = actionWeight[info.turn][actionId];
+                                if (selectAction.action == "Select"// check for select action
+                                && actionId > info.actionId  //make sure the action is after
+                                && selectAction.id == id) // make sure its the same card
+                                {
+                                    if ((Math.Abs(selectAction.weight) < 5 // If not confident
+                                    || selectAction.weight == 999))// Check if its the random variation
+                                    {
+                                        wins = 0;
+                                    }
+                                    // If select action is bad
+                                    if (selectAction.weight <= -5)
+                                    {
+                                        wins = -1;
+                                        info.modified = 3;
+                                    }
+                                    break;
+                                }
+                            }
+                            /*if (actionWeight[info.turn].ContainsKey(info.actionId + 1))
+                            {
+                                ActionWeightCard nextAction = actionWeight[info.turn][info.actionId + 1];
+                                if (nextAction.action == "Select"// check for select action
+                                && nextAction.id == id //make sure its the same id
+                                && (Math.Abs(nextAction.weight) < 5 // If not confident
+                                || nextAction.weight == 999))// Check if its the random variation
+                                {
+                                    wins = 0;
+                                }
+                            }*/
+                            if (actionWeight[info.turn].ContainsKey(info.actionId))
                                 confidence = Math.Abs(actionWeight[info.turn][info.actionId].weight);
-                            //if (confidence !=0 )
-                            //wins *= confidence;
+                        }
+
+                        //confidence = Math.Abs(actionWeight[info.turn][info.actionId].weight);
+                        //if (confidence !=0 )
+                        //wins *= confidence;
+                    }
+
+                    if (info.modified == 0)
+                    {
+                        if (wins != 0)
+                        {
+                            wins = Math.Sign(wins);
                         }
 
                         if (gameResult == LOSE)
                         {
                             wins = -wins;
-                            //wins = 0.5;
+                            if (Math.Sign(wins) == Math.Sign(originalwins) && originalwins != 0)
+                            //if (Math.Abs(originalwins) >= 5)
+                            //if (confidence != 0)
+                            {
+                              // wins = 0;
+                            }
+                            //wins *= 0.5;
                             //games = 0;
                         }
                         else
                         {
-                           wins *= 0.9;
+                            if (wins < 0)
+                            {
+                                wins = 0;
+                            }
+
+                           if (Math.Abs(originalwins) > 30)
+                            {
+                                //wins *= 0.1;
+                            }
+                            if (Math.Sign(wins) == Math.Sign(originalwins) && Math.Abs(wins) < 10)
+                                wins *= 1;
                            //games *= 0.5;
                         }
-
+                        //if (action != "Select")
+                            //wins = 0;
                     }
                     else
                     {
-                        if (gameResult == LOSE)
+                        if (Math.Sign(wins) == Math.Sign(originalwins) && Math.Abs(wins) < 10)
+                            wins *= 1.5;
+                        if (gameResult == WIN)
                         {
-                            wins *= 0.3;
-                            //games *= 0.1;
+                            if (wins > 0)
+                                wins *= 1.5;
                         }
-                        else
+                        if (Math.Abs(originalwins) > 10)
                         {
-                            wins *= 0.3;
-                            //games *= 0.0;
+                            //wins *= 0.3;
                         }
                     }
 
-                   /* if (wins < 0)
+                    if (originalgames > 30)
+                        if (Math.Sign(wins) == Math.Sign(originalwins) && originalwins != 0)
                     {
-                        if (wins < -1)
-                            games += - wins - 1;
-                        wins = 0;
-                    }*/
+                            wins *= 0.1;
+                    }
+
+                    /* if (wins < 0)
+                     {
+                         if (wins < -1)
+                             games += - wins - 1;
+                         wins = 0;
+                     }*/
+                    double ratio = 1;
 
                     // round(({Math.Sign(wins)} * 20 - wins)/5)
-                    sql = $"UPDATE playCard SET wins = wins + {wins}, " +
-                        $"games = games + 1 WHERE " +
+                    sql = $"UPDATE playCard SET wins = wins * {ratio} + {wins}, " +
+                        $"games = games * {ratio} + {Math.Abs(wins)} WHERE " +
                             $"id = \"{id}\" AND location = \"{location}\" AND action = \"{action}\"  AND result LIKE \"{result}\" " +
                             $"AND verify = \"{verify}\" AND value = \"{value}\" AND count = {count} " +
                             $"AND inprogress =  \"{Name}\" ";// +
@@ -235,28 +342,43 @@ namespace WindBot
                            // $"AND wins + {wins} <= 10 AND wins + {wins} >= -10";
 
                     int rowsUpdated = 0;
-                    
-                    using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon, transaction))
+                    if (wins != 0)
                     {
-                        rowsUpdated = cmd2.ExecuteNonQuery();
-                        //WriteLine($"{rowsUpdated} Rows Were updated." );
-                    }
-                    // If there was no update, add it instead
-                    if (rowsUpdated <= 0)
-                    {
-                        //The master data isnt in the database yet so add it
-                        sql = $"INSERT INTO playCard (id,location,action,result,verify,value,count,wins,games,inprogress) VALUES (\"{id}\",\"{location}\",\"{action}\",\"{result}\",\"{verify}\",\"{value}\",{count},{wins},1,\"{Name}\")";
                         using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon, transaction))
                         {
-                            rowsUpdated = cmd2.ExecuteNonQuery();
-                            //WriteLine($"{rowsUpdated} Rows were inserted.");
+                           rowsUpdated = cmd2.ExecuteNonQuery();
+                            //WriteLine($"{rowsUpdated} Rows Were updated." );
+                        }
+                        // If there was no update, add it instead
+                        if (rowsUpdated <= 0)
+                        {
+                            //The master data isnt in the database yet so add it
+                            sql = $"INSERT INTO playCard (id,location,action,result,verify,value,count,wins,games,inprogress) VALUES (\"{id}\",\"{location}\",\"{action}\",\"{result}\",\"{verify}\",\"{value}\",{count},{wins}," +
+                                $"{Math.Abs(wins)},\"{Name}\")";
+                            using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon, transaction))
+                            {
+                                rowsUpdated = cmd2.ExecuteNonQuery();
+                                //WriteLine($"{rowsUpdated} Rows were inserted.");
+                            }
                         }
                     }
                 }
                 transaction.Commit();
                 SQLCon.Close();
             }
-        }
+
+            //Print Game log
+            if (true)
+            foreach(int turn in actionWeight.Keys)
+            {
+                Console.WriteLine($"Turn {turn} -----------");
+                foreach(int actionId in actionWeight[turn].Keys)
+                {
+                        ActionWeightCard action = actionWeight[turn][actionId];
+                        Console.WriteLine($"   {actionId}:{action.weight} - {action.id}, {action.action}");
+                }
+            }
+         }
 
         public static void DeleteFile()
         {
@@ -299,10 +421,12 @@ namespace WindBot
         public class ActionWeightCard{
             public string id;
             public double weight;
-            public ActionWeightCard(string id, double weight)
+            public string action;
+            public ActionWeightCard(string id, double weight, string action)
             {
                 this.id = id;
                 this.weight = weight;
+                this.action = action;
             }
         }
 
@@ -317,7 +441,7 @@ namespace WindBot
             public double wins;
             public int turn;
             public int actionId;
-            public bool modified = false;
+            public int modified = 0; // 1 last turn, 2 turn before last, 3 other
             public Data(string id, string location, string action, string result, string verify, string value, int count, double wins, int turn, int actionId)
             {
                 this.id = id;

@@ -53,6 +53,15 @@ namespace WindBot.Game.AI.Decks
 
         }
 
+        public string BuildActionString(MainPhaseAction.MainAction action, ClientCard card, string Phase)
+        {
+            string actionString = action.ToString();
+            if (action == MainPhaseAction.MainAction.Repos && card != null)
+                actionString += $" {card.Position.ToString()}";
+            actionString += Phase;
+            return actionString;
+        }
+
         public int GetCardAdvantageHand()
         {
             return Bot.GetHandCount() - CardAdvStartSelfHand + CardAdvStartOppHand - Enemy.GetHandCount();
@@ -76,7 +85,7 @@ namespace WindBot.Game.AI.Decks
         public override void OnNewTurn()
         {
             //update results based on previous turn
-            if (Duel.Turn > 1)
+            if (Duel.Turn > 3)
             {
                 //int cardAdvantage = GetCardAdvantageField();
                 //int cardAdvantagePre = GetCardAdvantageFieldPre();
@@ -92,54 +101,29 @@ namespace WindBot.Game.AI.Decks
                     Console.WriteLine("Field Losses");
                     Console.WriteLine(playerFieldLoss);
                     Console.WriteLine(enemyFieldLoss);
-                    if (GetCardAdvantageHand() + GetCardAdvantageField() == 0)
+                    if (Math.Abs(GetCardAdvantageHand() + GetCardAdvantageField()) > 1)
+                        Logger.ModifyAction(Duel.Turn - 1, Math.Sign(GetCardAdvantageHand() + GetCardAdvantageField()),1);
+
+                    if (playerFieldLoss > 1)
                     {
-                        //if (enemyFieldLoss > 0)
-                            Logger.ModifyAction(Duel.Turn - 1, 1);
+                            Logger.ModifyAction(Duel.Turn - 1, - playerFieldLoss, 1);
                     }
-                    else if (GetCardAdvantageHand() + GetCardAdvantageField() < 0)
+                    if (enemyFieldLoss > 1)
                     {
-                        /*if (enemyFieldLoss == 0)
-                            Logger.ModifyAction(Duel.Turn - 1, -2);
-                        else if (enemyFieldLoss < 0)
-                            Logger.ModifyAction(Duel.Turn - 1, -2);
-                        else if (enemyFieldLoss < playerFieldLoss)*/
-                            Logger.ModifyAction(Duel.Turn - 1, -1);
-                    }
-                    else//player field loss < 0
-                    {
-                        //if (enemyFieldLoss == 0)
-                            Logger.ModifyAction(Duel.Turn - 1, 1);
-                        /*else if (enemyFieldLoss > 0)
-                            Logger.ModifyAction(Duel.Turn - 1, 2);
-                        else if (playerFieldLoss < enemyFieldLoss)
-                            Logger.ModifyAction(Duel.Turn - 1, 0.5);*/
+                            Logger.ModifyAction(Duel.Turn - 1, enemyFieldLoss, 1);
                     }
                 }
                 if (Duel.Turn % 2 == (Duel.IsFirst ? 1 : 0))//Calculate advatage of two turns
                 {
-                    if (GetCardAdvantageHandPre() + GetCardAdvantageFieldPre() == 0)
+                    if (Math.Abs(GetCardAdvantageHandPre() + GetCardAdvantageFieldPre()) > 2)
+                        Logger.ModifyAction(Duel.Turn - 2, Math.Sign(GetCardAdvantageHandPre() + GetCardAdvantageFieldPre()),2);
+                    if (playerFieldLossPre > 1)
                     {
-                        //if (enemyFieldLossPre > 0)
-                            Logger.ModifyAction(Duel.Turn - 2, 0.5);
+                        Logger.ModifyAction(Duel.Turn - 2, -playerFieldLossPre, 2);
                     }
-                    else if (GetCardAdvantageHandPre() + GetCardAdvantageFieldPre() < 0)
+                    if (enemyFieldLossPre > 1)
                     {
-                        //if (enemyFieldLossPre == 0)
-                            Logger.ModifyAction(Duel.Turn - 2, -1);
-                        /*else if (enemyFieldLossPre < 0)
-                            Logger.ModifyAction(Duel.Turn - 2, -1);
-                        else if (enemyFieldLossPre < playerFieldLossPre)
-                            Logger.ModifyAction(Duel.Turn - 2, -0.5);*/
-                    }
-                    else//player field loss < 0
-                    {
-                        /*if (enemyFieldLossPre == 0)
-                            Logger.ModifyAction(Duel.Turn - 2, 0.5);
-                        else if (enemyFieldLossPre > 0)*/
-                            Logger.ModifyAction(Duel.Turn - 2, 1);
-                        /*else if (playerFieldLossPre < enemyFieldLossPre)
-                            Logger.ModifyAction(Duel.Turn - 2, 0.25);*/
+                        Logger.ModifyAction(Duel.Turn - 2, enemyFieldLossPre, 2);
                     }
                 }
             }
@@ -184,6 +168,7 @@ namespace WindBot.Game.AI.Decks
 
             Random random = new Random();
             IList<ClientCard> selected = new List<ClientCard>();
+            IList<double> selected_weight = new List<double>();
 
             //get number of cards to select
             for (int i = min; i <= max; i++)
@@ -226,6 +211,7 @@ namespace WindBot.Game.AI.Decks
                     for(int j = 0; j < cardWeight[i].Quantity; j++)
                     {
                         selected.Add(cardWeight[i].Card);
+                        selected_weight.Add(cardWeight[i].Weight);
                     }
                     count += cardWeight[i].Quantity;
                 }
@@ -233,7 +219,8 @@ namespace WindBot.Game.AI.Decks
 
             foreach (ClientCard card in selected)
             {
-                RecordAction($"Select", SelectStringBuilder(card));
+                double weight = selected_weight[selected.IndexOf(card)];
+                RecordAction($"Select", SelectStringBuilder(card), weight);
                 Logger.WriteLine($"Choosing {SelectStringBuilder(card)} for Action id {ActivateDescription}");
                 //RecordAction($"Select",$"{card.Name} { card.Position.ToString()}");
                 //RecordAction($"Select", $"{card.Name}");
@@ -245,7 +232,7 @@ namespace WindBot.Game.AI.Decks
 
         private string SelectStringBuilder(ClientCard Card, int Quant = 1)
         {
-            return $"{Card.Name ?? "Set Monster" } {Card?.Position.ToString()} {Card.Controller}";// x{Quant}";
+            return $"{Card.Name ?? "Set Monster" };{Card?.Location.ToString()};{Card?.Position.ToString()};{Card.Controller}";// x{Quant}";
         }
 
         private class ClientCardWeight
@@ -305,17 +292,17 @@ namespace WindBot.Game.AI.Decks
 
         protected bool ShouldNormalSummon()
         {
-            return ShouldPerformAction($"Normal Summon {Duel.Phase.ToString()}");
+            return ShouldPerformAction(BuildActionString(MainPhaseAction.MainAction.Summon,Card,Duel.Phase.ToString()));
         }
 
         protected bool ShouldSpSummon()
         {
-            return ShouldPerformAction($"Special Summon {Duel.Phase.ToString()}");
+            return ShouldPerformAction(BuildActionString(MainPhaseAction.MainAction.SpSummon, Card, Duel.Phase.ToString()));
         }
 
         protected bool ShouldActivate()
         {
-            return ShouldPerformAction($"Activate {Duel.Phase.ToString()}", DefaultDontChainMyself());
+            return ShouldPerformAction(BuildActionString(MainPhaseAction.MainAction.Activate, Card, Duel.Phase.ToString()), DefaultDontChainMyself());
         }
 
         protected bool ShouldSummonOrSet()
@@ -330,12 +317,12 @@ namespace WindBot.Game.AI.Decks
 
         protected bool ShouldSpellSet()
         {
-            return ShouldPerformAction($"Set Spell Trap {Duel.Phase.ToString()}");
+            return ShouldPerformAction(BuildActionString(MainPhaseAction.MainAction.SetSpell, Card, Duel.Phase.ToString()));
         }
 
         protected bool ShouldMonsterSet()
         {
-            return ShouldPerformAction($"Set Monster {Duel.Phase.ToString()}");
+            return ShouldPerformAction(BuildActionString(MainPhaseAction.MainAction.SetMonster, Card, Duel.Phase.ToString()));
         }
 
         /// <summary>
@@ -407,7 +394,7 @@ namespace WindBot.Game.AI.Decks
             }*/
 
             score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Number of Monsters Bot", Bot.GetMonsterCount().ToString(), 1, win));
-            score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Cards In Bot Hand", Bot.GetHandCount().ToString(), 1, win));
+            //score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Cards In Bot Hand", Bot.GetHandCount().ToString(), 1, win));
 
 
             //Enemy
@@ -423,7 +410,7 @@ namespace WindBot.Game.AI.Decks
             {
                 score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Enemy Monsters GY", Monster.Name.ToString(), cardQuant[Monster], win));
             }*/
-            score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Cards In Opponent Hand", Enemy.GetHandCount().ToString(), 1, win));
+            //score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Cards In Opponent Hand", Enemy.GetHandCount().ToString(), 1, win));
             score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Number of Monsters Opponent", Enemy.GetMonsterCount().ToString(), 1, win));
 
             //previous actions that turn
@@ -440,21 +427,51 @@ namespace WindBot.Game.AI.Decks
             double totalWon = 0;
             double totalGames = 0;
             double activator = 0;
+
+            List<double> greatest = new List<double>();
+            List<double> least = new List<double>();
+            int top = 1;
+
             for (int i = 0; i < score.Count; i += 2)
             {
-                if (Math.Abs(score[i]) > 1 || score[i+1] > 5) // Try and remove noise
+                //if (Math.Abs(score[i]) > 3 || score[i+1] > 5) // Try and remove noise
                 {
                     gamesWon += score[i];
                     totalWon += Math.Abs(score[i]);
                     totalGames += score[i + 1];
                     double games = score[i + 1];
                     double weight = score[i];
+                    // try and play cards you haven't played yet
+                    //if (games < 4)
+                    //    weight = 99;
+                    activator += weight;
+
+                    // get the top few abs weights.
+                    if (greatest.Count < top)
+                    {
+                        greatest.Add(weight);
+                    }
+                    else if (greatest.Min() < weight)
+                    {
+                        greatest.Remove(greatest.Min());
+                        greatest.Add(weight);
+                    }
+
+                    if (least.Count < top)
+                    {
+                        least.Add(weight);
+                    }
+                    else if (least.Max() > weight)
+                    {
+                        least.Remove(least.Max());
+                        least.Add(weight);
+                    }
 
                     /*if (games < 10)
                         weight *= games / 10;
                     if (Math.Abs(weight) < 10)
                         weight *= Math.Abs(weight) / 10;*/
-                    activator += weight;
+                    //activator += weight;
                     /*double weight = (score[i]*2 - score[i + 1])/ score[i + 1]; //* score[i + 1];// == 1 ? Math.Sign(score[i]) * 2 : score[i];
                     double confidence = 1;
                     if (score[i + 1] < 10)//determine if the amount of games played is enough
@@ -464,9 +481,20 @@ namespace WindBot.Game.AI.Decks
                     activator += weight;*/
                 }
             }
+            //concat the two list
+            greatest.AddRange(least);
+
+            //activator = 0;
+            foreach(double x in greatest)
+            {
+                Console.Write(x + ",");
+                //activator += x;
+            }
+            Console.WriteLine();
+
             if (activator > -10 && activator < 0)
             {
-                activator = 0;
+                //activator = 0;
             }
             //activator /= score.Count;
 
@@ -476,14 +504,16 @@ namespace WindBot.Game.AI.Decks
             }
             else
                 activator = 0;*/
+            //if (totalGames < 10)
+            //    activator = 0;
 
             Random rand = new Random();
 
-            if (rand.NextDouble() < 0.03 || (rand.NextDouble() < 0.1 && (totalGames < 20 || Duel.Turn > 25)))
+            if (rand.NextDouble() < 0.01 || (rand.NextDouble() < 0.05 && (totalGames < 10 || Duel.Turn > 25)))
                 if (Logger.Name != Logger.master) 
             {
-                Logger.WriteLine("Random Variation");
-                activator = 1;
+                //Logger.WriteLine("Random Variation");
+                //activator = 999;
             }
 
             if (GetData)
@@ -495,11 +525,20 @@ namespace WindBot.Game.AI.Decks
             }
             else //recording action
             {
-                Logger.SaveActionWeight(Duel.Turn, ActionId, activator,Card?.Name);
+                //only if you activated it or its a select action
+                if (action == "Select" || win >= 0)
+                    Logger.SaveActionWeight(Duel.Turn, ActionId, win, Card?.Name, action);
             }
 
             return activator;
             //return weight + totalGames * 0.001 * Math.Sign(weight);
+        }
+
+        private double GetPotentialBestChoice()
+        {
+            string cardName = Card?.Name;
+            string cardLocation = Card?.Location.ToString() + " " + Card?.Position.ToString();
+            return 0;
         }
 
         private List<double> SQLCom(bool GetData, string id, string location, string action, string result, string verify, string value, int count, double wins)

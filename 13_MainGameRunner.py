@@ -143,12 +143,16 @@ def UpdateGameAi(AIName1,win1,AIName2,win2):
 		
 		for row in records:
 			node = tuple(row[:-2])
-			c.execute('SELECT games FROM playCard WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"', node)
+			c.execute('SELECT games,wins FROM playCard WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"', node)
 			list = c.fetchone()
 			if list != None : # It exists in master
 				if row[-1] >= int(gamesToPlay):
 					x = 1#(1 + win1/int(gamesToPlay))/maxGames if not i else 1# Only divide the master data once
-					x = 0.5 if not i else 1
+					if (abs(list[1] < 10)):
+						x = 0.5 if not i else 1
+					else:
+						x = 0.8 if not i else 1
+					x = 1
 					#x = win1 /int(gamesToPlay) if not i else 1
 					#y = (1 + win2/int(gamesToPlay))/maxGames if not i else 1
 					#y = win2/int(gamesToPlay)# if (win2 == int(gamesToPlay)) else y

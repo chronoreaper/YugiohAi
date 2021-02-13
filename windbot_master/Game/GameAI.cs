@@ -415,7 +415,7 @@ namespace WindBot.Game
             public void SetBest(MainPhaseAction.MainAction action, ClientCard card, int index = -1, int desc = -1)
             {
                 Executor.SetCard((ExecutorType)(int)action, card, index);
-                string actionString = BuildActionString(action, card);
+                string actionString = Executor.BuildActionString(action, card, Phase.ToString());
                 double weight = Executor.ActionWeight(actionString);
 
                 if (action == MainPhaseAction.MainAction.Repos)
@@ -441,8 +441,8 @@ namespace WindBot.Game
                 {
                     Logger.WriteLine($"Did not {action.ToString()} {card?.Name} {weight} as the better choice is {BestAction.ToString()} {BestCard?.Name} {BestWeight}");
                     Dialogs.SendMessage($"Did not {action.ToString()} {card?.Name} {weight} as the better choice is {BestAction.ToString()} {BestCard?.Name} {BestWeight}");
-                    //if (weight < 0)
-                    //    RecordAction(action,card,desc, -0.1);
+                    if (weight < 0)
+                        RecordAction(action,card,desc,-1);
                 }
             }
 
@@ -450,7 +450,7 @@ namespace WindBot.Game
             {
                 if (action != MainPhaseAction.MainAction.ToBattlePhase && action != MainPhaseAction.MainAction.ToEndPhase)
                 {
-                    string actionString = BuildActionString(action, card);
+                    string actionString = Executor.BuildActionString(action, card, Phase.ToString());
                     string value = (desc == -1) ? "" : desc.ToString();
 
                     if (card != null && weight >= 0)
@@ -463,20 +463,13 @@ namespace WindBot.Game
 
             public MainPhaseAction ReturnBestAction()
             {
-                RecordAction(BestAction, BestCard, ActivateDesc, 1);
+                if (BestWeight <= 0)
+                    BestWeight = 1;
+                RecordAction(BestAction, BestCard, ActivateDesc, BestWeight);
                 if (BestAction != MainPhaseAction.MainAction.ToBattlePhase && BestAction != MainPhaseAction.MainAction.ToEndPhase)
                     return new MainPhaseAction(BestAction, BestIndex);
                 else
                     return new MainPhaseAction(BestAction);
-            }
-
-            private string BuildActionString(MainPhaseAction.MainAction action, ClientCard card)
-            {
-                string actionString = action.ToString();
-                if (action == MainPhaseAction.MainAction.Repos && card != null)
-                    actionString += $" {card.Position.ToString()}";
-                actionString += Phase.ToString();
-                return actionString;
             }
         }
 

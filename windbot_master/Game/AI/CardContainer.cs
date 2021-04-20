@@ -85,6 +85,11 @@ namespace WindBot.Game.AI
             return cards.Where(card => card?.Data != null).Any(card => card.IsCode(id));
         }
 
+        public static bool ContainsCardWithName(this IEnumerable<ClientCard> cards, string name)
+        {
+            return cards.Where(card => card?.Data != null).Any(card => card.Name == name);
+        }
+
         public static int GetCardCount(this IEnumerable<ClientCard> cards, int id)
         {
             return cards.Where(card => card?.Data != null).Count(card => card.IsCode(id));

@@ -1,6 +1,7 @@
 import sys, os, subprocess, time, glob
 import datetime
 import argparse
+import sqlite3
 
 def Log(string):
     file = open("log.txt","a")
@@ -45,64 +46,77 @@ startNoSetup = time.time()
 print("done set up")
 #makes the two random decks
 repeatFor = 3
+matches = 1
 gamesToPlay = 1
 count = 1
 if "--repeat" in sys.argv:
 	repeatFor = int(sys.argv[sys.argv.index("--repeat")+1])
 	
+if "--matches" in sys.argv:
+	matches = int(sys.argv[sys.argv.index("--matches")+1])
+	
 if "--games" in sys.argv:
 	gamesToPlay = int(sys.argv[sys.argv.index("--games")+1])
 	
-print("Running " + str(repeatFor) + " times X " + str(gamesToPlay) + " games")
-while ((count <= repeatFor) and (error == 0) and (warning < 3)):
-	file = open("log.txt","a")
-	print("Game:"+str(count))
-	file.write("Game:"+str(count)+"\n")
-	print("making decks")
+print("Running " + str(repeatFor) + " times X "+ str(matches) + " matches X " + str(gamesToPlay) + " games")
 
-	#subprocess.run([os.getcwd() + "/12_makeDeck.py", "AI_Random.ydk"],shell=True)
-	#subprocess.run([os.getcwd() + "/12_makeDeck.py", "AI_Random2.ydk"],shell=True)
+while (count <= repeatFor):
+	print("Running:"+str(count))
+	matchNum = 1
+	while ((matchNum <= matches) and (error == 0) and (warning < 3)):
+		file = open("log.txt","a")
+		print("Match:"+str(matchNum))
+		file.write("Match:"+str(matchNum)+"\n")
+		print("making decks")
 
-	#Runs the game
+		#subprocess.run([os.getcwd() + "/12_makeDeck.py", "AI_Random.ydk"],shell=True)
+		#subprocess.run([os.getcwd() + "/12_makeDeck.py", "AI_Random2.ydk"],shell=True)
 
-	print("running game")
+		#Runs the game
 
-	#subprocess.run([os.getcwd() + "/13_MainGameRunner.py",str(generation),str(count),str(gamesToPlay)],shell=True)
-	p = subprocess.Popen([os.getcwd() + "/13_MainGameRunner.py",str(generation),str(count),str(gamesToPlay)],
-							shell=True,stdout=subprocess.PIPE,stderr=None,
-							universal_newlines=True)
+		print("running game")
 
-	output = p.stdout.read()
-	#print(output)
-	winCount.append(output.count('[win]'))
-	loseCount.append(output.count('[lose]'))
+		#subprocess.run([os.getcwd() + "/13_MainGameRunner.py",str(generation),str(count),str(gamesToPlay)],shell=True)
+		p = subprocess.Popen([os.getcwd() + "/13_MainGameRunner.py",str(count),str(matchNum),str(gamesToPlay)],
+								shell=True,stdout=subprocess.PIPE,stderr=None,
+								universal_newlines=True)
 
-	# print stats
-	wins = 0
-	losses = 0
-	for i in range(count - 1 ,-1,-1):
-		wins += winCount[i]
-		losses += loseCount[i]
-	print(f"{output.count('[win]')} / {output.count('[win]') + output.count('[lose]')} this round")
-	percentage = (wins/(losses + wins)) * 100
-	print(f"{percentage}% {wins}/{wins + losses} Total Win rate")
-	
-	if count > 10:
+		output = p.stdout.read()
+		#print(output)
+		winCount.append(output.count('[win]'))
+		loseCount.append(output.count('[lose]'))
+
+		# print stats
 		wins = 0
 		losses = 0
-		for i in range(count - 1 ,count - 11,-1):
+		for i in range(matchNum - 1 ,-1,-1):
 			wins += winCount[i]
 			losses += loseCount[i]
-			
+		print(f"{output.count('[win]')} / {output.count('[win]') + output.count('[lose]')} this round")
 		percentage = (wins/(losses + wins)) * 100
-		print(f"{percentage}% {wins}/{wins + losses} Total Win rate last 10 cycles")
-	#if output.find("!ERROR!"):
-		#error = 1
-	#if output.find("WARNING!"):
-		#warning += 1
+		print(f"{percentage}% {wins}/{wins + losses} Total Win rate")
+		
+		if matchNum > 10:
+			wins = 0
+			losses = 0
+			for i in range(matchNum - 1 ,matchNum - 11,-1):
+				wins += winCount[i]
+				losses += loseCount[i]
+				
+			percentage = (wins/(losses + wins)) * 100
+			print(f"{percentage}% {wins}/{wins + losses} Total Win rate last 10 cycles")
+		#if output.find("!ERROR!"):
+			#error = 1
+		#if output.find("WARNING!"):
+			#warning += 1
 
-	count+=1
-	file.close()
+		matchNum += 1
+		file.close()
+	#conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
+	#c = conn.cursor()
+	#c.execute('UPDATE playCard SET inprogress = (?) WHERE inprogress = \"master\"', ("master"+str(count),))
+	#conn.commit()
+	count += 1
 
 file = open("log.txt","a")
 end = time.time()

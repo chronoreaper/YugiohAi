@@ -89,7 +89,8 @@ namespace WindBot.Game
             _dialogs.SendMessage($"Turn {Duel.Turn} ------------------------------------------------");
             if (Executor is RandomExecutorBase RandomExecutor)
             {
-                _dialogs.SendMessage("Card Advantage Turn:" + RandomExecutor.GetCardAdvantageField().ToString());
+                _dialogs.SendMessage("Card Advantage Field:" + RandomExecutor.GetCardAdvantageField().ToString());
+                _dialogs.SendMessage("Card Advantage Hand:" + RandomExecutor.GetCardAdvantageHand().ToString());
             }
             Executor.OnNewTurn();
         }
@@ -392,13 +393,32 @@ namespace WindBot.Game
             return false;
         }
 
-        private class ChoiceWeight
+        public class ChoiceWeight
         {
-            public int ActivateDesc { get; set; } = -1;
-            public MainPhaseAction.MainAction BestAction { get; private set; } = MainPhaseAction.MainAction.ToEndPhase;
-            public ClientCard BestCard { get; private set; } = null;
-            public int BestIndex { get; private set; } = 0;
-            public double BestWeight { get; private set; } = 0;//threshold
+            public class ActionWeight
+            {
+                public int ActivateDesc { get; set; } = -1;
+                public MainPhaseAction.MainAction Action { get; private set; } = MainPhaseAction.MainAction.ToEndPhase;
+                public ClientCard Card { get; private set; } = null;
+                public int Index { get; private set; } = 0;
+                public double Weight { get; private set; } = 0;//threshold
+
+                public ActionWeight()
+                {
+                }
+
+                public ActionWeight(int desc, MainPhaseAction.MainAction action, ClientCard card, int index, double weight)
+                {
+                    ActivateDesc = desc;
+                    Action = action;
+                    Card = card;
+                    Index = index;
+                    Weight = weight;
+                }
+            }
+
+            public ActionWeight BestAction = null;
+            private List<ActionWeight> ActionList;
             public RandomExecutorBase Executor { get; private set; }
             public DuelPhase Phase {get; private set;}
             public int Turn { get; set; }
@@ -410,47 +430,47 @@ namespace WindBot.Game
                 Phase = phase;
                 Turn = turn;
                 Dialogs = dialogs;
+                BestAction = new ActionWeight();
+                ActionList = new List<ActionWeight>();
             }
 
             public void SetBest(MainPhaseAction.MainAction action, ClientCard card, int index = -1, int desc = -1)
             {
                 Executor.SetCard((ExecutorType)(int)action, card, index);
-                string actionString = Executor.BuildActionString(action, card, Phase.ToString());
+                string phase = Phase.ToString();
+                if (Phase == DuelPhase.Main2)
+                    phase = DuelPhase.Main1.ToString();
+                string actionString = Executor.BuildActionString(action, card, phase);
                 double weight = Executor.ActionWeight(actionString);
 
                 if (action == MainPhaseAction.MainAction.Repos)
-                {
-                    //weight -= 1;//set default to not repos
                     weight = Executor.ShouldRepos() ? 1 : -1;
-                }
 
-                if (weight >= BestWeight)
+                if (weight >= BestAction.Weight)
                 {
-                    //record previous action as not activate
-                    //RecordAction(BestAction, BestCard, ActivateDesc, -0.1);
                     // update to be the better one
-                    BestWeight = weight;
-                    BestAction = action;
-                    BestCard = card;
-                    BestIndex = index;
-                    ActivateDesc = desc;
+                    ActionList.Add(BestAction);
+                    BestAction = new ActionWeight(desc, action, card, index, weight);
                     Dialogs.SendMessage($"Setting Best Action as {action.ToString()} {card?.Name} {weight}");
                     Logger.WriteLine($"Setting Best Action as {action.ToString()} {card?.Name} {weight}");
                 }
                 else //if (weight < 0)
                 {
-                    Logger.WriteLine($"Did not {action.ToString()} {card?.Name} {weight} as the better choice is {BestAction.ToString()} {BestCard?.Name} {BestWeight}");
-                    Dialogs.SendMessage($"Did not {action.ToString()} {card?.Name} {weight} as the better choice is {BestAction.ToString()} {BestCard?.Name} {BestWeight}");
-                    if (weight < 0)
-                        RecordAction(action,card,desc,-1);
+                    ActionList.Add(new ActionWeight(desc, action, card, index, weight));
+                    Logger.WriteLine($"Did not {action.ToString()} {card?.Name} {weight} as the better choice is {BestAction.Action.ToString()} {BestAction.Card?.Name} {BestAction.Weight}");
+                    Dialogs.SendMessage($"Did not {action.ToString()} {card?.Name} {weight} as the better choice is {BestAction.Action.ToString()} {BestAction.Card?.Name} {BestAction.Weight}");
                 }
             }
 
-            public void RecordAction(MainPhaseAction.MainAction action, ClientCard card,int desc, double weight)
+            public void RecordAction(MainPhaseAction.MainAction action, ClientCard card, int desc, double weight)
             {
-                if (action != MainPhaseAction.MainAction.ToBattlePhase && action != MainPhaseAction.MainAction.ToEndPhase)
+                if (action != MainPhaseAction.MainAction.ToBattlePhase && action != MainPhaseAction.MainAction.ToEndPhase
+                    && action != MainPhaseAction.MainAction.Repos)
                 {
-                    string actionString = Executor.BuildActionString(action, card, Phase.ToString());
+                    string phase = Phase.ToString();
+                    if (Phase == DuelPhase.Main2)
+                        phase = DuelPhase.Main2.ToString();
+                    string actionString = Executor.BuildActionString(action, card, phase);
                     string value = (desc == -1) ? "" : desc.ToString();
 
                     if (card != null && weight >= 0)
@@ -463,13 +483,44 @@ namespace WindBot.Game
 
             public MainPhaseAction ReturnBestAction()
             {
-                if (BestWeight <= 0)
-                    BestWeight = 1;
-                RecordAction(BestAction, BestCard, ActivateDesc, BestWeight);
-                if (BestAction != MainPhaseAction.MainAction.ToBattlePhase && BestAction != MainPhaseAction.MainAction.ToEndPhase)
-                    return new MainPhaseAction(BestAction, BestIndex);
+                int ActivateDesc = BestAction.ActivateDesc;
+                MainPhaseAction.MainAction Action = BestAction.Action;
+                ClientCard Card = BestAction.Card;
+                int Index = BestAction.Index;
+                double Weight = BestAction.Weight;
+
+                // Filter out duplicates
+                /*List<ActionWeight> distinct = new List<ActionWeight>();
+                foreach (ActionWeight a in ActionList)
+                    if (distinct.FindIndex(x => x.Action == a.Action
+                                          && x.ActivateDesc == a.ActivateDesc
+                                          && x.Card == a.Card
+                                          && x.Index == x.Index) < 0)
+                        distinct.Add(a);
+                ActionList = distinct;*/
+
+                string Name = Card?.Name;
+                if (Action != MainPhaseAction.MainAction.ToEndPhase)
+                    RecordAction(Action, Card, ActivateDesc, Weight);
+                //else
+                {
+                    // If all the choices are bad
+                    foreach (ActionWeight actionWeight in ActionList)
+                    {
+                        string n = actionWeight.Card?.Name;
+                        if (actionWeight.Weight < 0)
+                        {
+                            RecordAction(actionWeight.Action, actionWeight.Card, actionWeight.ActivateDesc, actionWeight.Weight);
+                        }
+                    }
+                   
+                    ActionList.Clear();
+                }
+                Executor.SetCard((ExecutorType)(int)Action, Card, ActivateDesc);
+                if (Action != MainPhaseAction.MainAction.ToBattlePhase && Action != MainPhaseAction.MainAction.ToEndPhase)
+                    return new MainPhaseAction(Action, Index);
                 else
-                    return new MainPhaseAction(BestAction);
+                    return new MainPhaseAction(Action);
             }
         }
 
@@ -511,7 +562,7 @@ namespace WindBot.Game
                     choice.SetBest(MainPhaseAction.MainAction.Activate, card, card.ActionActivateIndex[main.ActivableDescs[i]]);
                 }
 
-                switch (choice.BestAction)
+                switch (choice.BestAction.Action)
                 {
                     case MainPhaseAction.MainAction.Activate:
                        // _dialogs.SendActivate(choice.BestCard.Name);

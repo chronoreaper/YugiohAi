@@ -117,13 +117,21 @@ namespace WindBot.Game.AI.Decks
 
                 int cardDiffPre = CardAdvStartSelfHand + CardAdvStartSelfField - CardAdvStartOppHand + CardAdvStartOppField;
 
+                int turnActions = 1;
+                int preTurnActions = 1;
+                if (Logger.actionWeight.ContainsKey(Duel.Turn - 1))
+                    turnActions = Logger.actionWeight[Duel.Turn - 1].Count(x => x.Key != -1);
+                if (Logger.actionWeight.ContainsKey(Duel.Turn - 2))
+                    preTurnActions = Logger.actionWeight[Duel.Turn - 2].Count(x => x.Key != -1);
+
                 //int playerCardGainPre = Bot.GetFieldHandCount() - CardAdvStartSelfFieldPre - CardAdvStartSelfHandPre;
                 if (Duel.Turn % 2 == (Duel.IsFirst ? 0 : 1))//do this calculation on the start of opp turn, so all actions on your turn
                 {
-                    if (oppLpLoss > 0)
-                        Logger.ModifyAction(Duel.Turn - 1, oppLpLoss / 1000.0, 1);
-                    double weight = (-playerFieldLoss + 2 * enemyFieldLoss + advantageGain)/2.0;
+                    //if (oppLpLoss > 0)
+                    //    Logger.ModifyAction(Duel.Turn - 1, oppLpLoss / 1000.0, 1);
+                    double weight = (-playerFieldLoss + 2 * enemyFieldLoss + advantageGain);///2.0;
                     if (Duel.Turn > 2) weight--;
+                    weight /= turnActions;
                     Logger.ModifyAction(Duel.Turn - 1, weight, 1);
                     //Logger.ModifyAction(Duel.Turn - 1, advantageGain, 1);
                     //if (playerGain < enemyGain)
@@ -136,6 +144,7 @@ namespace WindBot.Game.AI.Decks
 
                     //Logger.ModifyAction(Duel.Turn - 2, advGainPre, 2);
                     double weight = advantageGain + 1;
+                    weight /= preTurnActions;
                     Logger.ModifyAction(Duel.Turn - 2, weight, 2);
                     //if (playerLpLoss > 0)
                     //    Logger.ModifyAction(Duel.Turn - 2, -playerLpLoss / 2000.0, 1);

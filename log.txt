@@ -28,6 +28,6 @@ Match:27
 Match:28
 Match:29
 Match:30
-Time Past:0:40:43
-Time Past Excluding Setup:0:40:43
-Average Game Time:0:40:43
+Time Past:0:43:55
+Time Past Excluding Setup:0:43:54
+Average Game Time:0:43:54

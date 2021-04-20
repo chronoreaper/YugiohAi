@@ -241,7 +241,7 @@ namespace WindBot
                     }
                 }
 
-                //data = temp;
+                data = temp;
 
                 for (int i = 0; i < data.Count; i++)
                 {
@@ -261,8 +261,8 @@ namespace WindBot
 
                     double turnActions = 0;
 
-                    if (action.Contains("Activate"))
-                        wins = 0;
+                    //if (action.Contains("Activate"))
+                    //    wins = 0;
 
                     if (info.turn != 0 && (info.turn < turns - 1 || gameResult == WIN))
                     {
@@ -279,12 +279,12 @@ namespace WindBot
 
                                 if (selectAction.action == "Select"// check for select action
                                 && actionId > info.actionId  //make sure the action is after
-                                && selectAction.id == id) // make sure its the same card
+                                && selectAction.id.Equals(id)) // make sure its the same card
                                 {
                                     //wins *= selectAction.activatePercent;
                                     //if (Math.Abs(selectAction.weight) < 5 // If not confident
                                     //)// Check if its the random variation
-                                    if (action != "Select")
+                                    if (action == "Activate")
                                     {
                                         wins = 0;
                                     }

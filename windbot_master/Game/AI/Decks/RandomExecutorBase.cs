@@ -129,9 +129,12 @@ namespace WindBot.Game.AI.Decks
                 {
                     //if (oppLpLoss > 0)
                     //    Logger.ModifyAction(Duel.Turn - 1, oppLpLoss / 1000.0, 1);
-                    double weight = (-playerFieldLoss + 2 * enemyFieldLoss + advantageGain);///2.0;
+                    double weight = 0;// -playerFieldLoss
+                    weight += 2 * enemyFieldLoss;
+                    weight += advantageGain;
+                    //weight += cardDiff;
                     if (Duel.Turn > 2) weight--;
-                    weight /= turnActions;
+                    //weight /= turnActions;
                     Logger.ModifyAction(Duel.Turn - 1, weight, 1);
                     //Logger.ModifyAction(Duel.Turn - 1, advantageGain, 1);
                     //if (playerGain < enemyGain)
@@ -143,13 +146,18 @@ namespace WindBot.Game.AI.Decks
                 {
 
                     //Logger.ModifyAction(Duel.Turn - 2, advGainPre, 2);
-                    double weight = advantageGain + 1;
-                    weight /= preTurnActions;
-                    Logger.ModifyAction(Duel.Turn - 2, weight, 2);
-                    //if (playerLpLoss > 0)
-                    //    Logger.ModifyAction(Duel.Turn - 2, -playerLpLoss / 2000.0, 1);
-                    // Save weight for debugging
-                    Logger.SaveActionWeight(Duel.Turn - 1, -1, weight, "Result", "", 0);
+                    if (cardDiff >= 0)
+                    {
+                        double weight = advantageGain + 1;
+                        //if (Math.Abs(cardDiff) > 1)
+                        //weight /= preTurnActions;
+                        Logger.ModifyAction(Duel.Turn - 2, weight, 2);
+                        Logger.ModifyAction(Duel.Turn - 1, weight, 2);
+                        //if (playerLpLoss > 0)
+                        //    Logger.ModifyAction(Duel.Turn - 2, -playerLpLoss / 2000.0, 1);
+                        // Save weight for debugging
+                        Logger.SaveActionWeight(Duel.Turn - 1, -1, weight, "Result", "", 0);
+                    }
                 }
             }
 
@@ -542,7 +550,7 @@ namespace WindBot.Game.AI.Decks
                     double potential = GetPotentialBestChoice(win, GetData);
                     Console.WriteLine("Potential best choice:" + potential);
                     if (Math.Abs(potential) > 1)
-                        activator = activator * 0.5 + potential;
+                        activator = activator * 0.0 + potential;
                 }
             }
             Random rand = new Random();

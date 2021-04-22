@@ -241,7 +241,7 @@ namespace WindBot
                     }
                 }
 
-                data = temp;
+                //data = temp;
 
                 for (int i = 0; i < data.Count; i++)
                 {
@@ -275,7 +275,8 @@ namespace WindBot
                             foreach (int actionId in actionWeight[info.turn].Keys)
                             {
                                 ActionWeightCard selectAction = actionWeight[info.turn][actionId];
-                                actual = selectAction.weight;
+                                if (info.actionId == actionId)
+                                    actual = selectAction.weight;
 
                                 if (selectAction.action == "Select"// check for select action
                                 && actionId > info.actionId  //make sure the action is after
@@ -284,7 +285,7 @@ namespace WindBot
                                     //wins *= selectAction.activatePercent;
                                     //if (Math.Abs(selectAction.weight) < 5 // If not confident
                                     //)// Check if its the random variation
-                                    if (action == "Activate")
+                                    if (action.Contains("Activate"))
                                     {
                                         wins = 0;
                                     }
@@ -315,10 +316,14 @@ namespace WindBot
 
                     if (info.modified == 0)
                     {
-                        if (wins != 0)
-                            wins = 0.2 * (1 - 2 * gameResult) * (Math.Sign(actual) - 0.1 * actual);//actual?
-                       
-                        wins = 0;
+                        double weight = (1 - 2 * gameResult);
+                        if (!(actual < 0 && weight > 0))
+                        {
+                            if (actual == 0)
+                                actual = 1;
+                            wins = 0.2 * weight * (Math.Sign(actual) - 0.1 * actual);//Math.Sign(actual) * weight;
+                        }
+                        //wins = 0;
                     }
                     else
                     {

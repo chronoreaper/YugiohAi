@@ -107,7 +107,7 @@ namespace WindBot
                 {
                     if (actual == 0)
                         actual = 1;
-                    newNode.wins = 0.2 * weight * (Math.Sign(actual) - 0.1 * actual);//Math.Sign(actual) * weight;
+                    newNode.wins = 0.2 * (weight * Math.Sign(actual) - 0.1 * actual);//Math.Sign(actual) * weight;
                     toAdd.Add(newNode);
                 }
             }
@@ -321,7 +321,7 @@ namespace WindBot
                         {
                             if (actual == 0)
                                 actual = 1;
-                            wins = 0.2 * weight * (Math.Sign(actual) - 0.1 * actual);//Math.Sign(actual) * weight;
+                            wins = 0.2 * (weight * Math.Sign(actual) - 0.1 * actual);//Math.Sign(actual) * weight;
                         }
                         //wins = 0;
                     }
@@ -379,7 +379,7 @@ namespace WindBot
                         Console.WriteLine($"   {actionId}:{action.weight} - {action.id}, {action.action}");
                 }
             }
-         }
+          }
 
         public static void DeleteFile()
         {

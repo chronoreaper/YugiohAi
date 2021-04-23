@@ -146,7 +146,7 @@ namespace WindBot.Game.AI.Decks
                 {
 
                     //Logger.ModifyAction(Duel.Turn - 2, advGainPre, 2);
-                    if (cardDiff >= 0)
+                    //if (cardDiff >= 0)
                     {
                         double weight = advantageGain + 1;
                         //if (Math.Abs(cardDiff) > 1)

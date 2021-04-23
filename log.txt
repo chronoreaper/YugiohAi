@@ -21,13 +21,3 @@ Match:20
 Match:21
 Match:22
 Match:23
-Match:24
-Match:25
-Match:26
-Match:27
-Match:28
-Match:29
-Match:30
-Time Past:0:38:29
-Time Past Excluding Setup:0:38:25
-Average Game Time:0:38:25

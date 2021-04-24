@@ -151,10 +151,10 @@ namespace WindBot.Game.AI.Decks
                         double weight = advantageGain + 1;
                         //if (Math.Abs(cardDiff) > 1)
                         //weight /= preTurnActions;
+                        //if (playerLpLoss > 0)
+                        //    weight += -playerLpLoss / 2000.0;
                         Logger.ModifyAction(Duel.Turn - 2, weight, 2);
                         Logger.ModifyAction(Duel.Turn - 1, weight, 2);
-                        //if (playerLpLoss > 0)
-                        //    Logger.ModifyAction(Duel.Turn - 2, -playerLpLoss / 2000.0, 1);
                         // Save weight for debugging
                         Logger.SaveActionWeight(Duel.Turn - 1, -1, weight, "Result", "", 0);
                     }

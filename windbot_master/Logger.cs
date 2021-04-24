@@ -323,7 +323,8 @@ namespace WindBot
                                 actual = 1;
                             wins = 0.2 * (weight * Math.Sign(actual) - 0.1 * actual);//Math.Sign(actual) * weight;
                         }
-                        //wins = 0;
+                        else
+                            wins = 0;
                     }
                     else
                     {

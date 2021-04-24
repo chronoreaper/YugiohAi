@@ -123,15 +123,14 @@ def UpdateGameAi(AIName1,win1,AIName2,win2):
 	c = conn.cursor()
 	aiList = [AIName1,AIName2]
 	aiResult = [win1,win2]
-	
+	n = 0
+	err = 0
 	
 	# Select all unique node for an ai
 	for ai in aiList:
 		c.execute('SELECT id,location,action,result,verify,value,count,wins,games FROM playCard where inprogress = (?)',(ai,))
 		records = c.fetchall()
 		# for each record, try and update master
-		i = 0;
-		error = 0;
 		
 		maxGames = 2
 		c.execute("SELECT MAX(games) FROM playCard")
@@ -148,21 +147,9 @@ def UpdateGameAi(AIName1,win1,AIName2,win2):
 			list = c.fetchone()
 			if list != None : # It exists in master
 				if row[-1] >= int(gamesToPlay):
-					x = 1#(1 + win1/int(gamesToPlay))/maxGames if not i else 1# Only divide the master data once
-					if (abs(list[1] < 12)):
-						x = 1 if not i else 1
-					elif (abs(list[1] < 20)):
-						x = 0.5 if not i else 1
-					else:
-						x = 0.2 if not i else 1
 					x = 1
-					#x = win1 /int(gamesToPlay) if not i else 1
-					#y = (1 + win2/int(gamesToPlay))/maxGames if not i else 1
-					#y = win2/int(gamesToPlay)# if (win2 == int(gamesToPlay)) else y
-					y = 1#0.2 if list[0] > 50  else 1
-					#x = win1/int(gamesToPlay)  if not i else 1
-					#y = 1#win2/int(gamesToPlay)
-					error += abs(row[-2])
+					y = 1
+					err += abs(row[-2])
 					value = (x,row[-2]*y,x,row[-1]*y,row[0],row[1],row[2],row[3],row[4],row[5],row[6])
 					c.execute('UPDATE playCard SET wins = cast(wins * (?) as double) + (?), games = cast(games * (?) as double) + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
 					#value = (row[-2],row[-1],row[0],row[1],row[2],row[3],row[4],row[5],row[6])
@@ -170,11 +157,17 @@ def UpdateGameAi(AIName1,win1,AIName2,win2):
 			else: # add it to master
 				value = tuple(row)
 				c.execute('INSERT INTO playCard VALUES (?,?,?,?,?,?,?,?,?,\"master\")', value)
-			i += 1
+			n += 1
 		
 		c.execute('DELETE FROM playCard WHERE inprogress = (?)',(ai,))
 	conn.commit()
 	c.close()
+	print('n:' + str(n))
+	print('err:'+str(err))
+	if (n == 0):
+		n = 1
+	print('[mlerr]'+str(err/n)+'[mlerr]')
+	
 	
 AIName1 = 'bot1'
 AIName2 = 'bot2'	

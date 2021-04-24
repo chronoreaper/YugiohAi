@@ -95,6 +95,8 @@ while (count <= repeatFor):
 		print(f"{output.count('[win]')} / {output.count('[win]') + output.count('[lose]')} this round")
 		percentage = (wins/(losses + wins)) * 100
 		print(f"{percentage}% {wins}/{wins + losses} Total Win rate")
+		err = output.split('[mlerr]')[1]
+		print(f"{err} Squared error")
 		
 		if matchNum > 10:
 			wins = 0

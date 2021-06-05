@@ -22,12 +22,3 @@ Match:21
 Match:22
 Match:23
 Match:24
-Match:25
-Match:26
-Match:27
-Match:28
-Match:29
-Match:30
-Time Past:0:42:41
-Time Past Excluding Setup:0:42:41
-Average Game Time:0:42:41

@@ -56,6 +56,19 @@ def GetGameLog(deck):
 	deckFile.close()
 	
 	return file
+
+def GetCardWins(cardid):
+	conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
+	c = conn.cursor()
+	c.execute("SELECT name FROM cardList where id = (?)", (cardid,))
+	result = c.fetchone()
+	if result:
+		name = result[0]
+		c.execute("select avg(wins) from playCard where id = (?) group by wins order by avg(wins) desc", (name,))
+		result = c.fetchone()
+		if result:
+			return float(result[0])
+	return 0
 	
 def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result,name,compressMaster):
 	# Takes in two list and a dictonary
@@ -67,25 +80,30 @@ def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result,name,compre
 	c = conn.cursor()
 	#record the relationship in the deck
 	for card in deckQuant:
+		#result = GetCardWins(card)
 		for related in deckQuant:
-			if (related not in deckQuantOther or deckQuant[related] != deckQuantOther[related]) and (card not in deckQuantOther or deckQuant[card] != deckQuantOther[card]):
-				c.execute('SELECT wins,gamesPlayed, games FROM cardRelated where id = (?) and relatedid = (?) and idQuant = (?) and relatedQuant = (?) and inprogress = (?)', 
-					(int(card),int(related),deckQuant[card],deckQuant[related],name))
-				list = c.fetchone()
-				if list != None:
-					wins = int(list[0])
-					gamesPlayed = int(list[1])
-					games = int(list[2]) + 1
-					x = gamesToPlay if compressMaster else 1 # checks if master value needs to be compressed
-					if card in deck: # Run only if played
+			#if related not in deckQuantOther \
+			#or deckQuant[related] != deckQuantOther[related]) \
+			#and (card not in deckQuantOther \
+			#or deckQuant[card] != deckQuantOther[card]):
+			c.execute('SELECT wins,gamesPlayed, games FROM cardRelated where id = (?) and relatedid = (?) and idQuant = (?) and relatedQuant = (?) and inprogress = (?)', 
+				(int(card),int(related),deckQuant[card],deckQuant[related],name))
+			list = c.fetchone()
+			if list != None:
+				# Get card name
+				wins = float(list[0])
+				gamesPlayed = int(list[1])
+				games = int(list[2]) + int(gamesToPlay)
+				if card in deck: # Run only if played
+					if GetCardWins(card) != 0:
 						gamesPlayed += 1
-						wins = result #+ wins / x
-					value = (wins, gamesPlayed ,games, int(card),int(related),deckQuant[card],deckQuant[related],name)
-					c.execute('UPDATE cardRelated SET wins = (?), gamesPlayed = (?), games = (?) WHERE id = (?) and relatedid = (?) and idQuant = (?) and relatedQuant = (?) and inprogress = (?)', 
-					value)
-				else:
-					value = (card,related,deckQuant[card],deckQuant[related],result,1,1,name)
-					c.execute('INSERT INTO cardRelated VALUES (?,?,?,?,?,?,?,?)', value)				
+						wins = wins + result
+				value = (wins, gamesPlayed ,games, int(card),int(related),deckQuant[card],deckQuant[related],name)
+				c.execute('UPDATE cardRelated SET wins = (?), gamesPlayed = (?), games = (?) WHERE id = (?) and relatedid = (?) and idQuant = (?) and relatedQuant = (?) and inprogress = (?)', 
+				value)
+			elif GetCardWins(card) != 0:
+				value = (card,related,deckQuant[card],deckQuant[related],result,1,gamesToPlay,name)
+				c.execute('INSERT INTO cardRelated VALUES (?,?,?,?,?,?,?,?)', value)				
 	conn.commit()
 	
 	# Record the relationship against the other deck
@@ -93,23 +111,23 @@ def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result,name,compre
 	j = 0
 	for card in deck:
 		j=0
+		#result = GetCardWins(card)
 		for related in deckOther:
-			if related != card:
-				if related not in deck:
-					if card not in deckOther:
-						if card not in deck[i+1:]:
-							if related not in deckOther[j+1:]:
-								c.execute('SELECT wins,games FROM cardCounter where id = (?) and otherid = (?) and inprogress = (?)', (int(card),int(related),name))
-								list = c.fetchone()
-								if list != None:
-									x = gamesToPlay if compressMaster else 1 # checks if master value needs to be compressed
-									wins = result #+ int(list[0]) / x 
-									games = int(list[1]) + 1
-									value = (wins ,games,int(card),int(related),name)
-									c.execute('UPDATE cardCounter SET wins = (?), games = (?) WHERE id = (?) and otherid = (?) and inprogress = (?)', value)
-								else:
-									value = (card,related,result,1, name)
-									c.execute('INSERT INTO cardCounter VALUES (?,?,?,?,?)', value)
+			#if related != card \
+			#and related not in deck \
+			#and card not in deckOther \
+			#and card not in deck[i+1:] \
+			#and related not in deckOther[j+1:]:
+			c.execute('SELECT wins,games FROM cardCounter where id = (?) and otherid = (?) and inprogress = (?)', (int(card),int(related),name))
+			list = c.fetchone()
+			if list != None:
+				wins = result + float(list[0]) 
+				games = int(list[1]) + 1
+				value = (wins ,games,int(card),int(related),name)
+				c.execute('UPDATE cardCounter SET wins = (?), games = (?) WHERE id = (?) and otherid = (?) and inprogress = (?)', value)
+			else:
+				value = (card,related,result,int(gamesToPlay), name)
+				c.execute('INSERT INTO cardCounter VALUES (?,?,?,?,?)', value)
 			j +=1
 		i +=1
 	conn.commit()
@@ -252,30 +270,32 @@ while gameCount < int(gamesToPlay):
 	#print("	"+output)
 	if format(output).find('[win]') >= 0:
 		print('[win]')
-		win1 += 1
+		win1 = 1
+		win = -1
 	elif format(output).find('[lose]') >= 0:
 		print('[lose]')
-		win2 += 1  
+		win2 = 1  
+		win1 = -1
 	  
 	gameCount += 1
 	
-print("	Saving deck to database")
-# Save to database
-deckList = GetGameLog(AIName1)
-deckListOther = GetGameLog(AIName2)
+	print("	Saving deck to database")
+	# Save to database
+	deckList = GetGameLog(AIName1)
+	deckListOther = GetGameLog(AIName2)
 
-deckQuant = GetCardQuantity(deck1)	
-deckQuantOther = GetCardQuantity(deck2)
+	deckQuant = GetCardQuantity(deck1)	
+	deckQuantOther = GetCardQuantity(deck2)
 
-time.sleep(1)
+	time.sleep(1)
 
-print("	Saving Deck 1 Results")
-UpdateDatabase(deckList,deckQuant,deckListOther,deckQuantOther, win1, AIName1,True)
+	print("	Saving Deck 1 Results")
+	UpdateDatabase(deckList,deckQuant,deckListOther,deckQuantOther, win1, AIName1,True)
 
-print("	Saving Deck 2 Results")
-UpdateDatabase(deckListOther,deckQuantOther,deckList,deckQuant, win2, AIName2,False)
-	
-UpdateGameAi(AIName1,win1,AIName2,win2)
+	print("	Saving Deck 2 Results")
+	#UpdateDatabase(deckListOther,deckQuantOther,deckList,deckQuant, win2, AIName2,False)
+			
+	UpdateGameAi(AIName1,win1,AIName2,win2)
 
 # Copy decks
 newDeckname = str(generation) + "_"+ str(subGen) + "_"+ str(win1)+ deck1 

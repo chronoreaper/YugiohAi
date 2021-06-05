@@ -107,7 +107,7 @@ namespace WindBot
                 {
                     if (actual == 0)
                         actual = 1;
-                    newNode.wins = 0.2 * (weight * Math.Sign(actual) - 0.1 * actual);//Math.Sign(actual) * weight;
+                    newNode.wins = 0.5 * (weight * Math.Sign(actual) - 0.1 * actual);//Math.Sign(actual) * weight;
                     toAdd.Add(newNode);
                 }
             }
@@ -264,7 +264,7 @@ namespace WindBot
                     //if (action.Contains("Activate"))
                     //    wins = 0;
 
-                    if (info.turn != 0 && (info.turn < turns - 1 || gameResult == WIN))
+                    //if (info.turn != 0 && (info.turn < turns - 1 || gameResult == WIN))
                     {
                         // Checks how confident this is a good move 
                        
@@ -316,7 +316,7 @@ namespace WindBot
 
                     if (info.modified == 0)
                     {
-                        double weight = (1 - 2 * gameResult);
+                        double weight = 1 * (1 - 2 * gameResult);
                         if (!(actual < 0 && weight > 0))
                         {
                             if (actual == 0)
@@ -324,16 +324,18 @@ namespace WindBot
                             wins = 0.2 * (weight * Math.Sign(actual) - 0.1 * actual);//Math.Sign(actual) * weight;
                         }
                         else
-                            wins = 0;
+                            wins = 0.1 * Math.Sign(wins);
                     }
                     else
                     {
 
                     }
                     games = 1;
-                   
+
                     // Random chance to update
-                    wins *= 0.5;//rand.NextDouble() > 0.5 ? 1 : 0;
+                    wins *= 0.5;
+                    //if (turnActions > 0)
+                    //    wins *= 1/ turnActions;//rand.NextDouble() > 0.5 ? 1 : 0;
                     double ratio = 1;
 
 

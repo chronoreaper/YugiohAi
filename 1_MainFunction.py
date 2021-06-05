@@ -92,6 +92,7 @@ while (count <= repeatFor):
 		for i in range(matchNum - 1 ,-1,-1):
 			wins += winCount[i]
 			losses += loseCount[i]
+
 		print(f"{output.count('[win]')} / {output.count('[win]') + output.count('[lose]')} this round")
 		percentage = (wins/(losses + wins)) * 100
 		print(f"{percentage}% {wins}/{wins + losses} Total Win rate")

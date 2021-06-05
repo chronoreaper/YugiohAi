@@ -10,7 +10,7 @@ def AddToDeck(cards, limit, deck_main ):
 	while (count < limit and len(cards) > 0):
 		#index = random.randint(0,len(cards)-1)
 		card = cards[index][0]
-		quant = cards[index][1]
+		quant = 3#cards[index][1]
 		if deck_main.count(str(card))==0:#if not in list
 			# make sure you dont exceed the limit
 			if count + quant > limit:
@@ -57,15 +57,15 @@ deck_extr = []
 deck_side = []
 
 deckSize = 40
-topCards = 20
+topCards = 30
 topCardsRange = min(topCards, 40)
 
 #adds random card to main 
 
-c.execute('select id, idQuant, wins*wins*1.0/games as weight '+
+c.execute('select id, idQuant, sum(wins)/sum(games) as weight '+
 	'from cardRelated '+
 	'where id = relatedid '+
-	#'group by id '+
+	'group by id '+
 	'order by weight desc '+
 	'LIMIT (?)', (topCards,))
 cards = c.fetchall()

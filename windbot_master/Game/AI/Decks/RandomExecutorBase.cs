@@ -97,8 +97,9 @@ namespace WindBot.Game.AI.Decks
             //update results based on previous turn
             if (Duel.Turn > 1)
             {
-                int cardAdvantage = GetCardAdvantageField();
-                int cardAdvantagePre = GetCardAdvantageFieldPre();
+                int cardAdvantage = Bot.GetFieldHandCount() - Enemy.GetFieldHandCount();
+                int fieldAdvantage = Bot.GetFieldCount() - Enemy.GetFieldCount();
+                int cardAdvantagePre = GetCardAdvantageFieldPre() - GetCardAdvantageHandPre();
                 int enemyHandLoss = CardAdvStartOppHand - Enemy.GetHandCount();
                 int enemyHandLossPre = CardAdvStartOppHandPre - Enemy.GetHandCount();
                 int enemyFieldLoss = CardAdvStartOppField - Enemy.GetFieldCount();
@@ -107,9 +108,11 @@ namespace WindBot.Game.AI.Decks
                 int playerFieldLossPre = CardAdvStartSelfFieldPre - Bot.GetFieldCount();
                 int playerHandFieldLoss = CardAdvStartSelfField + CardAdvStartSelfHand - Bot.GetFieldCount() - Bot.GetHandCount();
                 int playerHandGain = Bot.GetHandCount() - CardAdvStartSelfHand;
-                int advantageGain = GetCardAdvantageHand() + GetCardAdvantageField();
+                int v = GetCardAdvantageHand();
+                int vv = GetCardAdvantageField();
+                double advantageGain = GetCardAdvantageHand()/2.0 + GetCardAdvantageField();
+                int advantageGain2 = GetCardAdvantageHand() + GetCardAdvantageField();
                 int advGainPre = GetCardAdvantageFieldPre() + GetCardAdvantageHandPre();
-                int cardDiff = Bot.GetFieldHandCount() - Enemy.GetFieldHandCount();
                 int playerGain = playerHandGain - playerFieldLoss;
                 int enemyGain = -enemyHandLoss - enemyFieldLoss;
                 double playerLpLoss = PlayerLpPre - Bot.LifePoints;
@@ -131,16 +134,27 @@ namespace WindBot.Game.AI.Decks
                     //    Logger.ModifyAction(Duel.Turn - 1, oppLpLoss / 1000.0, 1);
                     double weight = 0;// -playerFieldLoss
                     weight += 2 * enemyFieldLoss;
-                    weight += advantageGain;
+                    weight += advantageGain / 2.0;
+                    /*if (cardAdvantagePre > 0)
+                        weight += advantageGain / Math.Abs(cardAdvantagePre);
+                    else
+                        weight += advantageGain;*/
+                    //weight += (Bot.GetFieldCount() - Enemy.GetFieldCount())/2.0;
+                    //if (oppLpLoss > 0)
+                    //    weight += -(playerFieldLoss + 1)/2.0;
+
                     //weight += cardDiff;
                     if (Duel.Turn > 2) weight--;
-                    //weight /= turnActions;
-                    Logger.ModifyAction(Duel.Turn - 1, weight, 1);
-                    //Logger.ModifyAction(Duel.Turn - 1, advantageGain, 1);
-                    //if (playerGain < enemyGain)
-                    //    Logger.ModifyAction(Duel.Turn - 1, -1, 1);
-                    // Save weight for debugging
-                    Logger.SaveActionWeight(Duel.Turn - 1, -1 , weight, "Result", "", 0);
+                    if (Math.Abs(weight) >= 1)
+                     {
+                        //weight /= turnActions;
+                        Logger.ModifyAction(Duel.Turn - 1, weight, 1);
+                        //Logger.ModifyAction(Duel.Turn - 1, advantageGain, 1);
+                        //if (playerGain < enemyGain)
+                        //    Logger.ModifyAction(Duel.Turn - 1, -1, 1);
+                        // Save weight for debugging
+                        Logger.SaveActionWeight(Duel.Turn - 1, -1, weight, "Result", "", 0);
+                    }
                 }
                 if (Duel.Turn % 2 == (Duel.IsFirst ? 1 : 0))//Calculate advatage of two turns
                 {
@@ -148,15 +162,21 @@ namespace WindBot.Game.AI.Decks
                     //Logger.ModifyAction(Duel.Turn - 2, advGainPre, 2);
                     //if (cardDiff >= 0)
                     {
-                        double weight = advantageGain + 1;
+                        double weight =  (advantageGain2 + 1);
+                        //if (cardAdvantage > 0)
+                        //weight += cardAdvantage;
+                        //weight /= 2;
                         //if (Math.Abs(cardDiff) > 1)
                         //weight /= preTurnActions;
                         //if (playerLpLoss > 0)
-                        //    weight += -playerLpLoss / 2000.0;
-                        Logger.ModifyAction(Duel.Turn - 2, weight, 2);
-                        Logger.ModifyAction(Duel.Turn - 1, weight, 2);
-                        // Save weight for debugging
-                        Logger.SaveActionWeight(Duel.Turn - 1, -1, weight, "Result", "", 0);
+                        // weight += -playerLpLoss / 2000.0;
+                        if (Math.Abs(weight) >=0)
+                        {
+                            Logger.ModifyAction(Duel.Turn - 2, weight, 2);
+                            Logger.ModifyAction(Duel.Turn - 1, weight, 2);
+                            // Save weight for debugging
+                            Logger.SaveActionWeight(Duel.Turn - 1, -1, weight, "Result", "", 0);
+                        }
                     }
                 }
             }
@@ -319,7 +339,7 @@ namespace WindBot.Game.AI.Decks
         {
             int option = -1;
             double greatestWeight = 1;
-            foreach (int choice in options)
+            for (int choice = 0; choice < options.Count; choice++)
             {
                 double weight = GetWeight($"Option", choice.ToString());
                 if (weight > greatestWeight)
@@ -332,7 +352,7 @@ namespace WindBot.Game.AI.Decks
             if (option == -1)
             {
                 Random random = new Random();
-                option = random.Next(options.Count);
+                option = Program.Rand.Next(options.Count);
             }
 
             RecordAction($"Option", option.ToString());
@@ -426,6 +446,12 @@ namespace WindBot.Game.AI.Decks
 
             // Add self to the weights
             score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Self", "", 0, win));
+
+            if (result != "" && result.Split(';').Length == 4)
+            {
+                var owner = result.Split(';')[3];
+                score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, owner, "Owner", "", 0, win));
+            }
 
             //Bot
             var cardQuant = ListToQuantity(Bot.Hand);
@@ -621,17 +647,22 @@ namespace WindBot.Game.AI.Decks
         /// <returns></returns>
         private bool IsValidResult(string result)
         {
-            bool valid = false;
+            bool valid = true;
 
             if (result == "") return false;
 
             var parsed = result.Split(';');
             //Error will occur if the result is not 4!
-
-            string id = parsed[0];
-            string location = parsed[1];
-            string position = parsed[2]; // unused
-            string owner = parsed[3];
+            string id = "", location = "", position = "", owner = "";
+            if (parsed.Length == 4)
+            {
+                id = parsed[0];
+                location = parsed[1];
+                position = parsed[2]; // unused
+                owner = parsed[3];
+            }
+            else
+                owner = result;
 
             if (owner == "0") // player card
             {

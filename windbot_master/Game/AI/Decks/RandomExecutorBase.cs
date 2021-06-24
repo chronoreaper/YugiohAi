@@ -112,11 +112,24 @@ namespace WindBot.Game.AI.Decks
                 int vv = GetCardAdvantageField();
                 double advantageGain = GetCardAdvantageHand()/2.0 + GetCardAdvantageField();
                 int advantageGain2 = GetCardAdvantageHand() + GetCardAdvantageField();
+                int w = GetCardAdvantageFieldPre();
+                int ww = GetCardAdvantageHandPre();
                 int advGainPre = GetCardAdvantageFieldPre() + GetCardAdvantageHandPre();
                 int playerGain = playerHandGain - playerFieldLoss;
                 int enemyGain = -enemyHandLoss - enemyFieldLoss;
                 double playerLpLoss = PlayerLpPre - Bot.LifePoints;
                 double oppLpLoss = OppLpPre - Enemy.LifePoints;
+
+                Logger.RecordUpdateAction("cardAdvantage", cardAdvantage, (Duel.Turn % 2).ToString());
+                Logger.RecordUpdateAction("cardAdvantagePre", cardAdvantagePre, (Duel.Turn % 2).ToString());
+                Logger.RecordUpdateAction("fieldAdvantage", fieldAdvantage, (Duel.Turn % 2).ToString());
+                Logger.RecordUpdateAction("enemyFieldLoss", enemyFieldLoss, (Duel.Turn % 2).ToString());
+                Logger.RecordUpdateAction("playerFieldLoss", playerFieldLoss, (Duel.Turn % 2).ToString());
+                Logger.RecordUpdateAction("advantageGain", advantageGain, (Duel.Turn % 2).ToString());
+                Logger.RecordUpdateAction("advantageGain2", advantageGain2, (Duel.Turn % 2).ToString());
+                Logger.RecordUpdateAction("advGainPre", advGainPre, (Duel.Turn % 2).ToString());
+                Logger.RecordUpdateAction("playerGain", playerGain, (Duel.Turn % 2).ToString());
+                Logger.RecordUpdateAction("enemyGain", enemyGain, (Duel.Turn % 2).ToString());
 
                 int cardDiffPre = CardAdvStartSelfHand + CardAdvStartSelfField - CardAdvStartOppHand + CardAdvStartOppField;
 
@@ -133,17 +146,12 @@ namespace WindBot.Game.AI.Decks
                     //if (oppLpLoss > 0)
                     //    Logger.ModifyAction(Duel.Turn - 1, oppLpLoss / 1000.0, 1);
                     double weight = 0;// -playerFieldLoss
-                    weight += 2 * enemyFieldLoss;
+                    //weight += 2 * enemyFieldLoss;
+                    weight += enemyFieldLoss - playerFieldLoss * 0.5;
                     weight += advantageGain / 2.0;
-                    /*if (cardAdvantagePre > 0)
-                        weight += advantageGain / Math.Abs(cardAdvantagePre);
-                    else
-                        weight += advantageGain;*/
-                    //weight += (Bot.GetFieldCount() - Enemy.GetFieldCount())/2.0;
-                    //if (oppLpLoss > 0)
-                    //    weight += -(playerFieldLoss + 1)/2.0;
+                   // if (cardAdvantage < 0 && cardAdvantagePre > 0)
+                     //   weight += advantageGain;
 
-                    //weight += cardDiff;
                     if (Duel.Turn > 2) weight--;
                     if (Math.Abs(weight) >= 1)
                      {
@@ -162,14 +170,13 @@ namespace WindBot.Game.AI.Decks
                     //Logger.ModifyAction(Duel.Turn - 2, advGainPre, 2);
                     //if (cardDiff >= 0)
                     {
-                        double weight =  (advantageGain2 + 1);
-                        //if (cardAdvantage > 0)
-                        //weight += cardAdvantage;
-                        //weight /= 2;
-                        //if (Math.Abs(cardDiff) > 1)
-                        //weight /= preTurnActions;
-                        //if (playerLpLoss > 0)
-                        // weight += -playerLpLoss / 2000.0;
+                        double weight = 1;
+                        weight += advantageGain2;
+                        if (enemyGain > 0)
+                            weight /= enemyGain;
+                        //if (cardAdvantage < 0 && cardAdvantagePre > 0)
+                          //  weight += advantageGain;
+
                         if (Math.Abs(weight) >=0)
                         {
                             Logger.ModifyAction(Duel.Turn - 2, weight, 2);

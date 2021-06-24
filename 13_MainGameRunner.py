@@ -271,7 +271,7 @@ while gameCount < int(gamesToPlay):
 	if format(output).find('[win]') >= 0:
 		print('[win]')
 		win1 = 1
-		win = -1
+		win2 = -1
 	elif format(output).find('[lose]') >= 0:
 		print('[lose]')
 		win2 = 1  
@@ -279,23 +279,26 @@ while gameCount < int(gamesToPlay):
 	  
 	gameCount += 1
 	
-	print("	Saving deck to database")
-	# Save to database
-	deckList = GetGameLog(AIName1)
-	deckListOther = GetGameLog(AIName2)
+	if win1 == -1 or True:
+		print("	Saving deck to database")
+		# Save to database
+		deckList = GetGameLog(AIName1)
+		deckListOther = GetGameLog(AIName2)
 
-	deckQuant = GetCardQuantity(deck1)	
-	deckQuantOther = GetCardQuantity(deck2)
+		deckQuant = GetCardQuantity(deck1)	
+		deckQuantOther = GetCardQuantity(deck2)
 
-	time.sleep(1)
+		time.sleep(1)
 
-	print("	Saving Deck 1 Results")
-	UpdateDatabase(deckList,deckQuant,deckListOther,deckQuantOther, win1, AIName1,True)
+		print("	Saving Deck 1 Results")
+		UpdateDatabase(deckList,deckQuant,deckListOther,deckQuantOther, win1, AIName1,True)
 
-	print("	Saving Deck 2 Results")
-	#UpdateDatabase(deckListOther,deckQuantOther,deckList,deckQuant, win2, AIName2,False)
-			
-	UpdateGameAi(AIName1,win1,AIName2,win2)
+		print("	Saving Deck 2 Results")
+		#UpdateDatabase(deckListOther,deckQuantOther,deckList,deckQuant, win2, AIName2,False)
+				
+		UpdateGameAi(AIName1,win1,AIName2,win2)
+	else:
+		print('[mlerr]0[mlerr]')
 
 # Copy decks
 newDeckname = str(generation) + "_"+ str(subGen) + "_"+ str(win1)+ deck1 

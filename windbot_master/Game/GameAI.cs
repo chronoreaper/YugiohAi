@@ -512,8 +512,10 @@ namespace WindBot.Game
                         {
                             RecordAction(actionWeight.Action, actionWeight.Card, actionWeight.ActivateDesc, actionWeight.Weight);
                         }
-                        //else
-                         //   RecordAction(actionWeight.Action, actionWeight.Card, actionWeight.ActivateDesc, -1);
+                        else
+                        {
+                            //RecordAction(actionWeight.Action, actionWeight.Card, actionWeight.ActivateDesc, -actionWeight.Weight/2);
+                        }
                     }
                    
                     ActionList.Clear();

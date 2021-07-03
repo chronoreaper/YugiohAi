@@ -153,7 +153,7 @@ namespace WindBot.Game.AI.Decks
                      //   weight += advantageGain;
 
                     if (Duel.Turn > 2) weight--;
-                    if (Math.Abs(weight) >= 1)
+                    if (Math.Abs(weight) >0)
                      {
                         //weight /= turnActions;
                         Logger.ModifyAction(Duel.Turn - 1, weight, 1);
@@ -176,8 +176,8 @@ namespace WindBot.Game.AI.Decks
                             weight /= enemyGain;
                         //if (cardAdvantage < 0 && cardAdvantagePre > 0)
                           //  weight += advantageGain;
-
-                        if (Math.Abs(weight) >=0)
+                        
+                        if (Math.Abs(weight) >0)
                         {
                             Logger.ModifyAction(Duel.Turn - 2, weight, 2);
                             Logger.ModifyAction(Duel.Turn - 1, weight, 2);
@@ -632,6 +632,12 @@ namespace WindBot.Game.AI.Decks
                         if (result_weights.ContainsKey(data.result))
                         {
                             result_weights[data.result] += data.wins;
+
+                            if (data.result != "" && data.result.Split(';').Length == 4)
+                            {
+                                var owner = data.result.Split(';')[3];
+                                result_weights[data.result] += SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), "Select", owner, "Owner", "", 0, win)[0];
+                            }
                         }
                         else
                         {
@@ -642,6 +648,7 @@ namespace WindBot.Game.AI.Decks
                     }
                 }
             }
+
             if (result_weights.Count == 0)
                 return 0;
             return result_weights.Values.Max();
@@ -742,7 +749,7 @@ namespace WindBot.Game.AI.Decks
             else // record action
             {
                 Logger.RecordAction(id, location, action, result, verify, value, count, wins, Duel.Turn, ActionId);
-                return new List<double>();
+                return new List<double>() { 0, 0 };
             }
         }
 

@@ -324,6 +324,7 @@ namespace WindBot
 
                     if (info.modified == 0)
                     {
+                        double multip = 0.2;
                         //if (Math.Abs(actual) < 3)
                         {
                             double weight = 1 * (1 - 2 * gameResult);
@@ -331,19 +332,20 @@ namespace WindBot
                             {
                                 if (actual == 0)
                                     actual = 1;
-                                wins = 0.2 * weight;// (weight * Math.Sign(actual) - 0.1 * actual);
+
+
+                                wins = multip * weight;// (weight * Math.Sign(actual) - 0.1 * actual);
                             }
                             else
-                                wins = 0.1 * Math.Sign(wins);
+                                wins = 0.0 * weight;
                         }
                         //else wins = 0;
                     }
                     else if (info.modified == -2) // update weights modifiers
                     {
-                        //double weight = 1 * (1 - 2 * gameResult);
-                        //wins = weight * Math.Sign(wins);
                         if (gameResult == 1)
                             result = "l";
+                        wins = 0;
                     }
                     else
                     {

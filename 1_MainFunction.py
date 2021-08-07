@@ -96,6 +96,7 @@ while (count <= repeatFor):
 		print(f"{output.count('[win]')} / {output.count('[win]') + output.count('[lose]')} this round")
 		percentage = (wins/(losses + wins)) * 100
 		print(f"{percentage}% {wins}/{wins + losses} Total Win rate")
+		#if '[mlerr]' in output:
 		err = output.split('[mlerr]')[1]
 		print(f"{err} Squared error")
 		
@@ -108,6 +109,8 @@ while (count <= repeatFor):
 				
 			percentage = (wins/(losses + wins)) * 100
 			print(f"{percentage}% {wins}/{wins + losses} Total Win rate last 10 cycles")
+			#if percentage > 65:
+			#	exit(0)
 		#if output.find("!ERROR!"):
 			#error = 1
 		#if output.find("WARNING!"):

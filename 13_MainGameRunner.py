@@ -152,9 +152,9 @@ def UpdateGameAi(AIName1,win1,AIName2,win2):
 		
 		maxGames = 2
 		c.execute("SELECT MAX(games) FROM playCard")
-		list = c.fetchone()
-		if list!= None:
-			maxGames = list[0]
+		lst = c.fetchone()
+		if lst!= None:
+			maxGames = lst[0]
 				
 		#x = (1 + win1/int(gamesToPlay))/maxGames
 		# c.execute('UPDATE playCard SET wins = cast(wins * (?) as int), games = cast(games* (?) as int)',(x,x))
@@ -162,22 +162,25 @@ def UpdateGameAi(AIName1,win1,AIName2,win2):
 		for row in records:
 			node = tuple(row[:-2])
 			c.execute('SELECT games,wins FROM playCard WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"', node)
-			list = c.fetchone()
-			if list != None : # It exists in master
-				if row[-1] >= int(gamesToPlay):
-					x = 1
-					y = 1
-					err += abs(row[-2])
-					value = (x,row[-2]*y,x,row[-1]*y,row[0],row[1],row[2],row[3],row[4],row[5],row[6])
-					c.execute('UPDATE playCard SET wins = cast(wins * (?) as double) + (?), games = cast(games * (?) as double) + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
-					#value = (row[-2],row[-1],row[0],row[1],row[2],row[3],row[4],row[5],row[6])
-					#c.execute('UPDATE playCard SET wins = (?), games = (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
+			lst = c.fetchone()
+			if lst != None : # It exists in master
+				#if row[-1] >= int(gamesToPlay):
+				err += abs(row[-2])
+				value = (row[-2] ,row[-1],row[0],row[1],row[2],row[3],row[4],row[5],row[6])
+				#value = (row[-2],row[-1],row[0],row[1],row[2],row[3],row[4],row[5],row[6])
+				c.execute('UPDATE playCard SET wins = wins + (?), games = games + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
+				#c.execute('UPDATE playCard SET wins = (?), games = games + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
+				value = (row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[-2],row[-1])
+				c.execute('INSERT INTO playCard VALUES (?,?,?,?,?,?,?,?,?,\"Update:'+ai + ','+subGen+','+str(gameCount)+'\")', value)
 			else: # add it to master
 				value = tuple(row)
 				c.execute('INSERT INTO playCard VALUES (?,?,?,?,?,?,?,?,?,\"master\")', value)
 			n += 1
 		
 		c.execute('DELETE FROM playCard WHERE inprogress = (?)',(ai,))
+	# Copy table
+	#if (int(subGen)%10 == 0):
+		#c.execute('SELECT '+subGen+' as inprogress, * INTO playCard IN "CardDataHistory.cdb" FROM playCard  ')
 	conn.commit()
 	c.close()
 	print('n:' + str(n))

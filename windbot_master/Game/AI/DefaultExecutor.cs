@@ -107,15 +107,15 @@ namespace WindBot.Game.AI
                     continue;
 
                 if (attacker.RealPower > defender.RealPower 
-                || (attacker.RealPower >= defender.RealPower && defender.IsAttack() 
-                && (Bot.GetMonsterCount() >= defenders.Count || attacker.IsLastAttacker) ))
+                || attacker.RealPower >= defender.RealPower && defender.IsAttack())
                 {
                     if ((defender.Attack > greatestAttack || greatestAttack == attacker.RealPower)
-                        && (toAttack == null || defender.Position != ((int)CardPosition.FaceDownDefence)))
+                        && (toAttack == null || defender.Position != ((int)CardPosition.FaceDownDefence))
+                        )
 
                     {
                         toAttack = defender;
-                        greatestAttack = defender.Attack;
+                        greatestAttack = Math.Max(defender.Attack, defender.Defense);
                     }
                 }
             }

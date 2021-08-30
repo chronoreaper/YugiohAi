@@ -969,7 +969,7 @@ namespace WindBot.Game.AI.Decks
             return 0;
         }
 
-        public override bool OnSelectYesNo(int desc)
+        public override bool OnSelectYesNo(long desc)
         {
             if (desc == Util.GetStringId(CardId.Sanctuary, 0))
             {
@@ -1096,6 +1096,7 @@ namespace WindBot.Game.AI.Decks
         {
             if (Duel.Phase != DuelPhase.Main1) return false;
             if (Duel.Turn == 1) return false;
+            if (wasStallioActivated) return false;
 
             List<ClientCard> material_list = new List<ClientCard>();
             List<ClientCard> bot_monster = Bot.GetMonsters();
@@ -1166,7 +1167,7 @@ namespace WindBot.Game.AI.Decks
             base.OnChainEnd();
         }
 
-        public override int OnSelectPlace(int cardId, int player, CardLocation location, int available)
+        public override int OnSelectPlace(long cardId, int player, CardLocation location, int available)
         {
             if (player == 0)
             {

@@ -1,6 +1,6 @@
 {
   "welcome": [
-    "Hi, I'm WindBot."
+    "Hi, I'm WindBot Ignite but I'm not very smart."
   ],
   "deckerror": [
     "Sorry, it seems that I have too much {0} in my deck."
@@ -39,7 +39,7 @@
   ],
   "ondirectattack": [
     "Argh...!",
-    "Just {0}...",
+    "I'm not afraid of {0}!",
     "You think that's enough to defeat me?",
     "It's just a scratch!"
   ],

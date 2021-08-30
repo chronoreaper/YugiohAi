@@ -1,4 +1,4 @@
-﻿using YGOSharp.OCGWrapper.Enums;
+using YGOSharp.OCGWrapper.Enums;
 using System.Collections.Generic;
 using WindBot;
 using WindBot.Game;
@@ -211,7 +211,7 @@ namespace WindBot.Game.AI.Decks
             return false;
         }
 
-        public bool isAltergeist(int id)
+        public bool isAltergeist(long id)
         {
             return (id == CardId.Marionetter || id == CardId.Hexstia || id == CardId.Protocol
                 || id == CardId.Multifaker || id == CardId.Meluseek || id == CardId.Kunquery
@@ -324,12 +324,7 @@ namespace WindBot.Game.AI.Decks
 
         public int SelectSTPlace(ClientCard card=null, bool avoid_Impermanence = false)
         {
-            List<int> list = new List<int>();
-            list.Add(0);
-            list.Add(1);
-            list.Add(2);
-            list.Add(3);
-            list.Add(4);
+            List<int> list = new List<int> { 0, 1, 2, 3, 4 };
             int n = list.Count;
             while (n-- > 1)
             {
@@ -811,6 +806,8 @@ namespace WindBot.Game.AI.Decks
 
         public bool Hand_act_eff()
         {
+            if (Card.IsCode(CardId.AB_JS) && Util.GetLastChainCard().HasSetcode(0x11e) && Util.GetLastChainCard().Location == CardLocation.Hand) // Danger! archtype hand effect
+                return false;
             if (Card.IsCode(CardId.GO_SR) && Card.Location == CardLocation.Hand && Bot.HasInMonstersZone(CardId.GO_SR)) return false;
             return (Duel.LastChainPlayer == 1);
         }
@@ -2743,10 +2740,8 @@ namespace WindBot.Game.AI.Decks
             return null;
         }
 
-        public override IList<ClientCard> OnSelectCard(IList<ClientCard> cards, int min, int max, int hint, bool cancelable)
+        public override IList<ClientCard> OnSelectCard(IList<ClientCard> cards, int min, int max, long hint, bool cancelable)
         {
-
-            int HIINT_TOGRAVE = 504;
             if (max == 1 && cards[0].Location == CardLocation.Deck 
                 && Util.GetLastChainCard() != null && Util.GetLastChainCard().IsCode(23002292) && Bot.GetRemainingCount(CardId.WakingtheDragon,1) > 0)
             {
@@ -2767,7 +2762,7 @@ namespace WindBot.Game.AI.Decks
                 Logger.DebugWriteLine("EvenlyMatched: min=" + min.ToString() + ", max=" + max.ToString());
             }
             else if (cards[0].Location == CardLocation.Hand && cards[cards.Count - 1].Location == CardLocation.Hand
-                && (hint == 501 || hint == HIINT_TOGRAVE) && min == max)
+                && (hint == HintMsg.Discard || hint == HintMsg.ToGrave) && min == max)
             {
                 if (Duel.LastChainPlayer == 0 && Util.GetLastChainCard().IsCode(CardId.OneForOne)) return null;
                 Logger.DebugWriteLine("Hand drop except OneForOne");
@@ -2815,7 +2810,7 @@ namespace WindBot.Game.AI.Decks
             return 0;
         }
 
-        public override int OnSelectPlace(int cardId, int player, CardLocation location, int available)
+        public override int OnSelectPlace(long cardId, int player, CardLocation location, int available)
         {
             if (player == 0)
             {

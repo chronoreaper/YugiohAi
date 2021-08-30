@@ -106,7 +106,7 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.Activate, CardId.Lumina, Luminaeff);
             //activate
             AddExecutor(ExecutorType.Activate, CardId.GlowUpBulb, GlowUpBulbeff);            
-            AddExecutor(ExecutorType.Activate, CardId.TG_WonderMagician);
+            AddExecutor(ExecutorType.Activate, CardId.TG_WonderMagician, TG_WonderMagicianeff);
             AddExecutor(ExecutorType.Activate, CardId.CoralDragon, CoralDragoneff);
             AddExecutor(ExecutorType.Activate, CardId.RedWyvern, RedWyverneff);
             AddExecutor(ExecutorType.Activate, CardId.CrystalWingSynchroDragon, CrystalWingSynchroDragoneff);
@@ -572,7 +572,10 @@ namespace WindBot.Game.AI.Decks
             return false;   
         }       
        
-        
+        private bool TG_WonderMagicianeff()
+        {
+            return true;
+        }
         private bool AllureofDarkness()
         {
             IList<ClientCard> materials = Bot.Hand;

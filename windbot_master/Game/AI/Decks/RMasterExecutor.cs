@@ -1,4 +1,4 @@
-﻿using YGOSharp.OCGWrapper.Enums;
+using YGOSharp.OCGWrapper.Enums;
 using System.Collections.Generic;
 using WindBot;
 using WindBot.Game;
@@ -117,7 +117,7 @@ namespace WindBot.Game.AI.Decks
                 ||(Util.Enemy.HasInMonstersZone(defTarg) && !Bot.HasInHand(CardId.StopDefence));
         }
 
-        public override IList<ClientCard> OnSelectCard(IList<ClientCard> cards, int min, int max, int hint, bool cancelable)
+        public override IList<ClientCard> OnSelectCard(IList<ClientCard> cards, int min, int max, long hint, bool cancelable)
         {
             if (Duel.Phase == DuelPhase.BattleStart)
                 return null;
@@ -131,7 +131,7 @@ namespace WindBot.Game.AI.Decks
             return selected;
         }
 
-        public override int OnSelectOption(IList<int> options)
+        public override int OnSelectOption(IList<long> options)
         {
             return Program.Rand.Next(options.Count);
         }

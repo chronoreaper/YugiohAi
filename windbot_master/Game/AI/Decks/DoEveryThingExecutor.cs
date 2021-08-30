@@ -20,12 +20,12 @@ namespace WindBot.Game.AI.Decks
         {
             AddExecutor(ExecutorType.SpSummon);
             AddExecutor(ExecutorType.Activate, DefaultDontChainMyself);
-            AddExecutor(ExecutorType.SummonOrSet);
+            AddExecutor(ExecutorType.SummonOrSet, DefaultMonsterSummon);
             AddExecutor(ExecutorType.Repos, DefaultMonsterRepos);
             AddExecutor(ExecutorType.SpellSet);
         }
 
-        public override IList<ClientCard> OnSelectCard(IList<ClientCard> cards, int min, int max, int hint, bool cancelable)
+        public override IList<ClientCard> OnSelectCard(IList<ClientCard> cards, int min, int max, long hint, bool cancelable)
         {
             if (Duel.Phase == DuelPhase.BattleStart)
                 return null;
@@ -39,7 +39,7 @@ namespace WindBot.Game.AI.Decks
             return selected;
         }
 
-        public override int OnSelectOption(IList<int> options)
+        public override int OnSelectOption(IList<long> options)
         {
             return Program.Rand.Next(options.Count);
         }

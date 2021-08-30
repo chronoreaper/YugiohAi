@@ -4,6 +4,17 @@ import shutil
 import sqlite3
 import math
 
+def isrespondingPID(PID):
+		#https://stackoverflow.com/questions/16580285/how-to-tell-if-process-is-responding-in-python-on-windows
+    os.system('tasklist /FI "PID eq %d" /FI "STATUS eq running" > tmp.txt' % PID)
+    tmp = open('tmp.txt', 'r')
+    a = tmp.readlines()
+    tmp.close()
+    if int(a[-1].split()[1]) == PID:
+        return True
+    else:
+        return False
+
 def writeDict(d, filename, sep):
 	with open(filename, "w") as f:
 		for i in d.keys():			  
@@ -218,9 +229,15 @@ while gameCount < int(gamesToPlay):
 	print("	running game " + str(gameCount))
 	#subprocess.Popen - does not wait to finish
 	#subprocess.run - waits to finish
-	subprocess.Popen([os.getcwd() + "/132_runYgoPro.py"], 
-				 shell=True, stdin=None, stdout=None,
-				 stderr=None, close_fds=True)
+	#subprocess.Popen([os.getcwd() + "/132_runYgoPro.py"], 
+	#			 shell=True, stdin=None, stdout=None,
+	#			 stderr=None, close_fds=True)
+
+	g = subprocess.Popen([os.getcwd() + "/ProjectIgnis/ygopro.exe","-c"])
+
+	while(g.poll() == None and not isrespondingPID(g.pid)):
+		time.sleep(1)
+
 	check = 0
 	
 	hostGame()

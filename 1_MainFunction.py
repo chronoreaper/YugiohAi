@@ -22,10 +22,8 @@ file = open("log.txt","w")
 file.write("")
 file.close()
 
-#Erase FLList or there will be errors
-file = open(os.getcwd() + "/KoishiPro_Sakura/lflist.conf","w")
-file.write("")
-file.close()
+#TODO Copy config file
+
 
 if len(sys.argv)>1 and ("-reset" in sys.argv or "-r" in sys.argv):
 	print("Setting up cards in database")

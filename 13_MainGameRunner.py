@@ -1,4 +1,4 @@
-import sys, string, os, time
+import sys, string, os, time, keyboard
 import subprocess
 import shutil
 import sqlite3
@@ -22,15 +22,18 @@ def readDict(filename, sep):
 	
 def hostGame(): 
 	print("	hosting game")
-	time.sleep(3)
 	
-	subprocess.run([os.getcwd() + "/131_ClickImage.py","spectateBut.png"],
-				   shell=True)
+	time.sleep(10)
+	keyboard.press_and_release("1")
+	#time.sleep(3)
+	
+	#subprocess.run([os.getcwd() + "/131_ClickImage.py","spectateBut.png"],
+	#			   shell=True)
 				   
-	time.sleep(0.1)
+	#time.sleep(0.1)
 	
-	subprocess.run([os.getcwd() + "/131_ClickImage.py","spectateBut.png"],
-			   shell=True)
+	#subprocess.run([os.getcwd() + "/131_ClickImage.py","spectateBut.png"],
+	#		   shell=True)
 def GetCardQuantity(deck):
 	dict = {}
 	deckFile = open(os.getcwd() 
@@ -244,6 +247,7 @@ while gameCount < int(gamesToPlay):
 	
 	print("	click start")
 	subprocess.run([os.getcwd() + "/131_ClickImage.py","startBut.png"],shell=True)
+	keyboard.press_and_release("2")
 	
 	if (not (p1.poll() == None or p2.poll() == None)) and check == 0:
 		print("	WARNING! ai is not running")
@@ -285,16 +289,16 @@ while gameCount < int(gamesToPlay):
 	if win1 == -1 or True:
 		print("	Saving deck to database")
 		# Save to database
-		deckList = GetGameLog(AIName1)
-		deckListOther = GetGameLog(AIName2)
+		# deckList = GetGameLog(AIName1)
+		# deckListOther = GetGameLog(AIName2)
 
-		deckQuant = GetCardQuantity(deck1)	
-		deckQuantOther = GetCardQuantity(deck2)
+		# deckQuant = GetCardQuantity(deck1)	
+		# deckQuantOther = GetCardQuantity(deck2)
 
 		time.sleep(1)
 
 		print("	Saving Deck 1 Results")
-		UpdateDatabase(deckList,deckQuant,deckListOther,deckQuantOther, win1, AIName1,True)
+		#UpdateDatabase(deckList,deckQuant,deckListOther,deckQuantOther, win1, AIName1,True)
 
 		print("	Saving Deck 2 Results")
 		#UpdateDatabase(deckListOther,deckQuantOther,deckList,deckQuant, win2, AIName2,False)

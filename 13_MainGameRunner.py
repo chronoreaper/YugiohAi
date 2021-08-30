@@ -19,11 +19,10 @@ def readDict(filename, sep):
 				d[values[0]] = int(values[1])
 		f.close()
 		return(d)
-	
 def hostGame(): 
 	print("	hosting game")
 	
-	time.sleep(10)
+	time.sleep(20)
 	keyboard.press_and_release("1")
 	#time.sleep(3)
 	
@@ -60,14 +59,14 @@ def GetGameLog(deck):
 	
 	return file
 
-def GetCardWins(cardid):
+def GetCardactivation(cardid):
 	conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
 	c = conn.cursor()
 	c.execute("SELECT name FROM cardList where id = (?)", (cardid,))
 	result = c.fetchone()
 	if result:
 		name = result[0]
-		c.execute("select avg(wins) from playCard where id = (?) group by wins order by avg(wins) desc", (name,))
+		c.execute("select avg(activation) from playCard where id = (?) group by activation order by avg(activation) desc", (name,))
 		result = c.fetchone()
 		if result:
 			return float(result[0])
@@ -83,28 +82,28 @@ def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result,name,compre
 	c = conn.cursor()
 	#record the relationship in the deck
 	for card in deckQuant:
-		#result = GetCardWins(card)
+		#result = GetCardactivation(card)
 		for related in deckQuant:
 			#if related not in deckQuantOther \
 			#or deckQuant[related] != deckQuantOther[related]) \
 			#and (card not in deckQuantOther \
 			#or deckQuant[card] != deckQuantOther[card]):
-			c.execute('SELECT wins,gamesPlayed, games FROM cardRelated where id = (?) and relatedid = (?) and idQuant = (?) and relatedQuant = (?) and inprogress = (?)', 
+			c.execute('SELECT activation,gamesPlayed, games FROM cardRelated where id = (?) and relatedid = (?) and idQuant = (?) and relatedQuant = (?) and inprogress = (?)', 
 				(int(card),int(related),deckQuant[card],deckQuant[related],name))
 			list = c.fetchone()
 			if list != None:
 				# Get card name
-				wins = float(list[0])
+				activation = float(list[0])
 				gamesPlayed = int(list[1])
 				games = int(list[2]) + int(gamesToPlay)
 				if card in deck: # Run only if played
-					if GetCardWins(card) != 0:
+					if GetCardactivation(card) != 0:
 						gamesPlayed += 1
-						wins = wins + result
-				value = (wins, gamesPlayed ,games, int(card),int(related),deckQuant[card],deckQuant[related],name)
-				c.execute('UPDATE cardRelated SET wins = (?), gamesPlayed = (?), games = (?) WHERE id = (?) and relatedid = (?) and idQuant = (?) and relatedQuant = (?) and inprogress = (?)', 
+						activation = activation + result
+				value = (activation, gamesPlayed ,games, int(card),int(related),deckQuant[card],deckQuant[related],name)
+				c.execute('UPDATE cardRelated SET activation = (?), gamesPlayed = (?), games = (?) WHERE id = (?) and relatedid = (?) and idQuant = (?) and relatedQuant = (?) and inprogress = (?)', 
 				value)
-			elif GetCardWins(card) != 0:
+			elif GetCardactivation(card) != 0:
 				value = (card,related,deckQuant[card],deckQuant[related],result,1,gamesToPlay,name)
 				c.execute('INSERT INTO cardRelated VALUES (?,?,?,?,?,?,?,?)', value)				
 	conn.commit()
@@ -114,20 +113,20 @@ def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result,name,compre
 	j = 0
 	for card in deck:
 		j=0
-		#result = GetCardWins(card)
+		#result = GetCardactivation(card)
 		for related in deckOther:
 			#if related != card \
 			#and related not in deck \
 			#and card not in deckOther \
 			#and card not in deck[i+1:] \
 			#and related not in deckOther[j+1:]:
-			c.execute('SELECT wins,games FROM cardCounter where id = (?) and otherid = (?) and inprogress = (?)', (int(card),int(related),name))
+			c.execute('SELECT activation,games FROM cardCounter where id = (?) and otherid = (?) and inprogress = (?)', (int(card),int(related),name))
 			list = c.fetchone()
 			if list != None:
-				wins = result + float(list[0]) 
+				activation = result + float(list[0]) 
 				games = int(list[1]) + 1
-				value = (wins ,games,int(card),int(related),name)
-				c.execute('UPDATE cardCounter SET wins = (?), games = (?) WHERE id = (?) and otherid = (?) and inprogress = (?)', value)
+				value = (activation ,games,int(card),int(related),name)
+				c.execute('UPDATE cardCounter SET activation = (?), games = (?) WHERE id = (?) and otherid = (?) and inprogress = (?)', value)
 			else:
 				value = (card,related,result,int(gamesToPlay), name)
 				c.execute('INSERT INTO cardCounter VALUES (?,?,?,?,?)', value)
@@ -149,7 +148,7 @@ def UpdateGameAi(AIName1,win1,AIName2,win2):
 	
 	# Select all unique node for an ai
 	for ai in aiList:
-		c.execute('SELECT id,location,action,result,verify,value,count,wins,games FROM playCard where inprogress = (?)',(ai,))
+		c.execute('SELECT id,location,action,result,verify,value,count,activation,games FROM playCard where inprogress = (?)',(ai,))
 		records = c.fetchall()
 		# for each record, try and update master
 		
@@ -160,19 +159,19 @@ def UpdateGameAi(AIName1,win1,AIName2,win2):
 			maxGames = lst[0]
 				
 		#x = (1 + win1/int(gamesToPlay))/maxGames
-		# c.execute('UPDATE playCard SET wins = cast(wins * (?) as int), games = cast(games* (?) as int)',(x,x))
+		# c.execute('UPDATE playCard SET activation = cast(activation * (?) as int), games = cast(games* (?) as int)',(x,x))
 		
 		for row in records:
 			node = tuple(row[:-2])
-			c.execute('SELECT games,wins FROM playCard WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"', node)
+			c.execute('SELECT games,activation FROM playCard WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"', node)
 			lst = c.fetchone()
 			if lst != None : # It exists in master
 				#if row[-1] >= int(gamesToPlay):
 				err += abs(row[-2])
 				value = (row[-2] ,row[-1],row[0],row[1],row[2],row[3],row[4],row[5],row[6])
 				#value = (row[-2],row[-1],row[0],row[1],row[2],row[3],row[4],row[5],row[6])
-				c.execute('UPDATE playCard SET wins = wins + (?), games = games + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
-				#c.execute('UPDATE playCard SET wins = (?), games = games + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
+				c.execute('UPDATE playCard SET activation = activation + (?), games = games + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
+				#c.execute('UPDATE playCard SET activation = (?), games = games + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
 				value = (row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[-2],row[-1])
 				c.execute('INSERT INTO playCard VALUES (?,?,?,?,?,?,?,?,?,\"Update:'+ai + ','+subGen+','+str(gameCount)+'\")', value)
 			else: # add it to master
@@ -310,10 +309,10 @@ while gameCount < int(gamesToPlay):
 # Copy decks
 newDeckname = str(generation) + "_"+ str(subGen) + "_"+ str(win1)+ deck1 
 src_dir=os.getcwd()+"/windbot_master/bin/Debug/Decks/"+ deck1
-dst_dir=os.getcwd()+"/KoishiPro_Sakura/deck/"+ newDeckname
+dst_dir=os.getcwd()+"/ProjectIgnis/deck/"+ newDeckname
 shutil.copy(src_dir,dst_dir)
 
 newDeckname = str(generation) + "_"+ str(subGen) + "_"+ str(win2)+ deck2
 src_dir=os.getcwd()+"/windbot_master/bin/Debug/Decks/"+ deck2
-dst_dir=os.getcwd()+"/KoishiPro_Sakura/deck/"+ newDeckname
+dst_dir=os.getcwd()+"/ProjectIgnis/deck/"+ newDeckname
 shutil.copy(src_dir,dst_dir)

@@ -61,15 +61,17 @@ print("Running " + str(repeatFor) + " times X "+ str(matches) + " matches X " + 
 while (count <= repeatFor):
 	print("Running:"+str(count))
 	matchNum = 1
+	#subprocess.run([os.getcwd() + "/12_makeDeck.py", "AI_Random.ydk"],shell=True)
+	#subprocess.run([os.getcwd() + "/12_makeDeck.py", "AI_Random2.ydk"],shell=True)
 	while ((matchNum <= matches) and (error == 0) and (warning < 3)):
 		file = open("log.txt","a")
 		print("Match:"+str(matchNum))
 		file.write("Match:"+str(matchNum)+"\n")
 		print("making decks")
 
-		#subprocess.run([os.getcwd() + "/12_makeDeck.py", "AI_Random.ydk"],shell=True)
-		#subprocess.run([os.getcwd() + "/12_makeDeck.py", "AI_Random2.ydk"],shell=True)
 
+		subprocess.run([os.getcwd() + "/ShuffleDeck.py", "AI_Random.ydk"],shell=True)
+		subprocess.run([os.getcwd() + "/ShuffleDeck.py", "AI_Random2.ydk"],shell=True)
 		#Runs the game
 
 		print("running game")

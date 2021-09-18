@@ -5,15 +5,18 @@ import sqlite3
 import math
 
 def isrespondingPID(PID):
-		#https://stackoverflow.com/questions/16580285/how-to-tell-if-process-is-responding-in-python-on-windows
-    os.system('tasklist /FI "PID eq %d" /FI "STATUS eq running" > tmp.txt' % PID)
-    tmp = open('tmp.txt', 'r')
-    a = tmp.readlines()
-    tmp.close()
-    if int(a[-1].split()[1]) == PID:
-        return True
-    else:
-        return False
+	#https://stackoverflow.com/questions/16580285/how-to-tell-if-process-is-responding-in-python-on-windows
+	os.system('tasklist /FI "PID eq %d" /FI "STATUS eq running" > tmp.txt' % PID)
+	tmp = open('tmp.txt', 'r')
+	a = tmp.readlines()
+	tmp.close()
+	try:
+		if int(a[-1].split()[1]) == PID:
+			return True
+		else:
+			return False
+	except:
+		return False
 
 def writeDict(d, filename, sep):
 	with open(filename, "w") as f:
@@ -235,7 +238,7 @@ while gameCount < int(gamesToPlay):
 	#			 shell=True, stdin=None, stdout=None,
 	#			 stderr=None, close_fds=True)
 
-	g = subprocess.Popen([os.getcwd() + "/ProjectIgnis/ygopro.exe","-c"])
+	g = subprocess.Popen([os.getcwd() + "/ProjectIgnis/ygopro.exe"])
 
 	while(g.poll() == None and not isrespondingPID(g.pid)):
 		time.sleep(1)
@@ -259,10 +262,10 @@ while gameCount < int(gamesToPlay):
 	if (p1.poll() == None or p2.poll() == None):
 		time.sleep(1)
 	
-	time.sleep(0.45)
+	time.sleep(2)
 	
 	print("	click start")
-	subprocess.run([os.getcwd() + "/131_ClickImage.py","startBut.png"],shell=True)
+	#subprocess.run([os.getcwd() + "/131_ClickImage.py","startBut.png"],shell=True)
 	keyboard.press_and_release("2")
 	
 	if (not (p1.poll() == None or p2.poll() == None)) and check == 0:

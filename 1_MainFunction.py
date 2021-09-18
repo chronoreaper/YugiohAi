@@ -2,12 +2,20 @@ import sys, os, subprocess, time, glob
 import datetime
 import argparse
 import sqlite3
+import shutil
 
 def Log(string):
     file = open("log.txt","a")
     print(string)
     file.write(string+"\n")
     file.close()
+	
+def ResetTree():
+	conn2 = sqlite3.connect(os.getcwd() +'/cardData.cdb')
+	c2 = conn2.cursor()
+	c2.execute('DELETE FROM playCardTree')
+	conn2.commit()
+	c2.close()
 	
 generation = 0
 	
@@ -24,19 +32,19 @@ file.close()
 
 #TODO Copy config file
 
-
-if len(sys.argv)>1 and ("-reset" in sys.argv or "-r" in sys.argv):
+reset = len(sys.argv)>1 and ("-reset" in sys.argv or "-r" in sys.argv)
+if reset:
 	print("Setting up cards in database")
 	#gets all the cards from the database
 	subprocess.run([os.getcwd() + "/11_SqlReader.py"],shell=True)
 
 print("deleting old deck files from ygopro")
-files = glob.glob(os.getcwd() +"/KoishiPro_Sakura/deck/*")
+files = glob.glob(os.getcwd() +"/ProjectIgnis/deck/*")
 for f in files:
     os.remove(f)
 	
 print("deleting old replays from ygopro")
-files = glob.glob(os.getcwd() +"/KoishiPro_Sakura/replay/*")
+files = glob.glob(os.getcwd() +"/ProjectIgnis/replay/*")
 for f in files:
     os.remove(f)
 
@@ -71,10 +79,16 @@ while (count <= repeatFor):
 
 
 		subprocess.run([os.getcwd() + "/ShuffleDeck.py", "AI_Random.ydk"],shell=True)
-		subprocess.run([os.getcwd() + "/ShuffleDeck.py", "AI_Random2.ydk"],shell=True)
+		src_dir=os.getcwd() + '/windbot_master/bin/Debug/Decks/' + "AI_Random.ydk"
+		dst_dir=os.getcwd() + '/windbot_master/bin/Debug/Decks/' + "AI_Random2.ydk"
+		shutil.copy(src_dir,dst_dir)
+		#subprocess.run([os.getcwd() + "/ShuffleDeck.py", "AI_Random2.ydk"],shell=True)
 		#Runs the game
 
 		print("running game")
+		
+		if (reset):
+			ResetTree()
 
 		#subprocess.run([os.getcwd() + "/13_MainGameRunner.py",str(generation),str(count),str(gamesToPlay)],shell=True)
 		p = subprocess.Popen([os.getcwd() + "/13_MainGameRunner.py",str(count),str(matchNum),str(gamesToPlay)],

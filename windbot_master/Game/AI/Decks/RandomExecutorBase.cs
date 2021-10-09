@@ -346,6 +346,7 @@ namespace WindBot.Game.AI.Decks
             PreGameState = gameState;
 
             ActionId = 0;
+            Console.WriteLine("-------------Turn:" + Duel.Turn + "-------------");
         }
 
         public override void OnChainEnd()
@@ -387,10 +388,14 @@ namespace WindBot.Game.AI.Decks
         public override bool OnSelectHand()
         {
             bool choice = Program.Rand.Next(2) > 0;
+
             List<double> weights = SqlComm.GetData(SqlComm.master, action: "GoFirst");
 
             if (weights.Count > 0)
                 choice = weights[0] > 0 ? true : false;
+
+            if (SqlComm.IsTraining)
+                choice = true;
 
             SqlComm.RecordAction(action: "GoFirst", activation: choice ? 1 : -1, turn: Duel.Turn);
 

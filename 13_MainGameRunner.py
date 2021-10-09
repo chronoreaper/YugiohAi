@@ -187,7 +187,7 @@ def UpdateGameAi(AIName1,win1,AIName2,win2):
 				c.execute('UPDATE playCard SET activation = activation + (?), games = games + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
 				#c.execute('UPDATE playCard SET activation = (?), games = games + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
 				value = (row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[-2],row[-1])
-				c.execute('INSERT INTO playCard VALUES (?,?,?,?,?,?,?,?,?,\"Update:'+ai + ','+subGen+','+str(gameCount)+'\")', value)
+				#c.execute('INSERT INTO playCard VALUES (?,?,?,?,?,?,?,?,?,\"Update:'+ai + ','+subGen+','+str(gameCount)+'\")', value)
 			else: # add it to master
 				value = tuple(row)
 				c.execute('INSERT INTO playCard VALUES (?,?,?,?,?,?,?,?,?,\"master\")', value)
@@ -250,13 +250,13 @@ while gameCount < int(gamesToPlay):
 	time.sleep(0.2)
 	
 	print("	runningAi1")
-	p1 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI1Deck,AIName1,'1'],
+	p1 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI1Deck,AIName1,'1','1'],
 						  shell=True,stdout=subprocess.PIPE, 
 						  stderr = subprocess.PIPE,
 						  universal_newlines=True)
 	time.sleep(1)
 	print("	runningAi2")
-	p2 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI2Deck,AIName2,'0'],
+	p2 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI2Deck,AIName2,'2','0'],
 						  shell=True)
 	
 	if (p1.poll() == None or p2.poll() == None):
@@ -290,7 +290,7 @@ while gameCount < int(gamesToPlay):
 		
 	print("	Game took "+str(count)+" seconds.")
 		
-	os.system("	TASKKILL /F /IM ygopro.exe")	   
+	os.system("	TASKKILL /F /IM ygopro.exe")
 	
 	output, stderr = p1.communicate()
 	#print("	"+output)

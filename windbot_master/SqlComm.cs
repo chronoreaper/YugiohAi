@@ -48,6 +48,7 @@ namespace WindBot
             public string id;
             public string action;
             public double? weight;
+            public double? originalWeight { get; private set; }
             public int turn;
             public int actionId;
             public bool isFirst;
@@ -56,6 +57,7 @@ namespace WindBot
                 this.id = id;
                 this.action = action;
                 this.weight = weight;
+                this.originalWeight = weight;
                 this.turn = turn;
                 this.actionId = actionId;
                 this.isFirst = isFirst;
@@ -191,8 +193,23 @@ namespace WindBot
             data.AddRange(toAdd);
         }
 
-        public static void SetTreeNodeResult(int turn, double result, bool all = false)
+        public static void SetTreeNodeResult(int turn, double? result, bool all = false)
         {
+            int preTurn = turn - 1;
+            while (preTurn > 0)
+            {
+                if (treeActivation.Keys.Contains(preTurn))
+                {
+                    double? activation = treeActivation[preTurn][0].originalWeight;
+                    if (activation == null)
+                    {
+                        result = null;
+                        break;
+                    }
+                }
+                preTurn--;
+            }
+
             if (treeActivation.Keys.Contains(turn))
             {
                 for(int i = treeActivation[turn].Count - 1; i >= 0; i --)
@@ -202,11 +219,15 @@ namespace WindBot
                     {
                         node.weight = result;
                         if (!all)
+                        {
+                            // Remove all in data for this turn
+                            data.RemoveAll(x => x.turn == turn);
                             return;
+                        }
                     }
                     else if (node.weight != result)
                     {
-                        node.weight = Math.Max(node.weight ?? result, result);//Math.Round((node.weight ?? 0 + result) / 2);
+                        node.weight = result;// Math.Max(node.weight ?? result, result);//Math.Round((node.weight ?? 0 + result) / 2);
                     }
                 }
             }
@@ -228,7 +249,7 @@ namespace WindBot
                 lastAction = treeActivation[turn].Last();
             string preId = "";
             string preAction = "";
-            if (lastAction != null)
+            if (lastAction != null && false)
             {
                 preId = lastAction.id;
                 preAction = lastAction.action;
@@ -243,7 +264,7 @@ namespace WindBot
 
                 string sql = $"SELECT activation, games FROM playCardTree WHERE id = \"{id}\" " +
                       $"AND action = \"{action}\" AND preId = \"{preId}\" AND preAction = \"{preAction}\" AND isFirst = \"{isFirst}\" " +
-                      $"AND turn = \"{turn}\"";// and actionID = \"{actionId}\"";
+                      $"AND turn = \"{turn}\" and actionID = \"{actionId}\"";
                 using (SqliteCommand cmd = new SqliteCommand(sql, SQLCon))
                 {
                     using (SqliteDataReader rdr = cmd.ExecuteReader())
@@ -354,12 +375,13 @@ namespace WindBot
         {
             if (treeActivation.Count > 0)
             {
-                if (gameResult == WIN && false)
+                if (gameResult == WIN)
                 {
-                    foreach (var turn in treeActivation.Keys)
+                    var turn = treeActivation.Keys.Max();
+                    //foreach (var turn in treeActivation.Keys)
                         SetTreeNodeResult(turn, 5, true);
                 }
-                //else if (gameResult == LOSE)
+                else if (gameResult == LOSE)
                     SetTreeNodeResult(treeActivation.Keys.Max(), -5);
             }
                 
@@ -380,7 +402,7 @@ namespace WindBot
                         TreeNode node = treeActivation[turn][i];
                         string preId = "";
                         string preAction = "";
-                        if (i > 0)
+                        if (i > 0 && false)
                         {
                             preId = treeActivation[turn][i - 1].id;
                             preAction = treeActivation[turn][i - 1].action;
@@ -389,7 +411,7 @@ namespace WindBot
                             $"games = games + 1 WHERE " +
                                 $"id = \"{node.id}\" AND action = \"{node.action}\" AND " +
                                 $"preId = \"{preId}\" AND preAction = \"{preAction}\" AND " +
-                                $"turn = \"{turn}\""+// AND actionId = \"{node.actionId}\"" +
+                                $"turn = \"{turn}\" AND actionId = \"{node.actionId}\"" +
                                 $" AND isFirst = \"{node.isFirst}\"";
 
                         int rowsUpdated = 0;
@@ -402,7 +424,7 @@ namespace WindBot
                             // If there was no update, add it instead
                             if (rowsUpdated <= 0)
                             {
-                                node.actionId = 0;
+                                //node.actionId = 0;
                                 //The master data isnt in the database yet so add it
                                 sql = $"INSERT INTO playCardTree (id,action,preId,preAction,turn,actionId,isFirst,activation,games) VALUES (\"{node.id}\",\"{node.action}\",\"{preId}\",\"{preAction}\",\"{turn}\",\"{node.actionId}\",\"{node.isFirst}\",\"{node.weight}\",\"1\")";
                                 using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon, transaction))
@@ -456,7 +478,7 @@ namespace WindBot
                 toAdd.Clear();
 
                 // Only get the last action done
-                foreach(var turn in actionWeight)
+                /*foreach(var turn in actionWeight)
                 {
                     int lastActionId = turn.Value.Keys.Max();
                     var turnActions = data.FindAll(x => x.turn == turn.Key);
@@ -477,7 +499,7 @@ namespace WindBot
                     }
                 }
                 data = toAdd;
-                toAdd.Clear();
+                toAdd.Clear();*/
                 // Merge all the weights together
                 foreach (Data d in data)
                 {

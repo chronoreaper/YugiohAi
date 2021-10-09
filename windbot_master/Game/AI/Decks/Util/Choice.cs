@@ -58,26 +58,31 @@ namespace WindBot.Game.AI.Decks.Util
             }
             else
             {
-                if (BestAction != null && BestAction.Weight != 5)
+                //if (BestAction != null && BestAction.Weight  < 3)
                 {
                     List<double> weights = SqlComm.GetTreeNode(Executor.Duel.Turn, Executor.ActionId, card?.Name, actionString, Executor.Duel.IsFirst);
                     Console.WriteLine(string.Format($"    {Executor.ActionId} {(weights.Count > 0 ? weights[0].ToString() : "null")} | {action} {card?.Name} | {index}"));
-                    if (weights.Count == 0)
+                    if (weights.Count == 0 && action != ExecutorType.Repos)
                     {
-                        if (action == ExecutorType.Repos)
+                        if (BestAction != null)
+                            NotActivated.Add(BestAction);
+                        IsBestSet = true;
+                        BestAction = new ActionWeight(desc, action, card, index, null);
+                    }
+                    else
+                    {
+                        double weight = 0;
+                        if (action == ExecutorType.Repos)  weight = Executor.ShouldRepos() ? 1 : -1;
+                        if (weights.Count > 0)
+                            weight = weights[0];
+
+                        if (!IsBestSet && (BestAction == null || BestAction.Weight <= weight))
                         {
-                            if (!IsBestSet && (BestAction == null || BestAction.Weight <= (Executor.ShouldRepos() ? 1 : -1)))
-                                BestAction = new ActionWeight(desc, action, card, index, Executor.ShouldRepos() ? 1 : -1);
+                            NotActivated.Add(BestAction);
+                            BestAction = new ActionWeight(desc, action, card, index, weight);
                         }
                         else
-                        {
-                            IsBestSet = true;
-                            BestAction = new ActionWeight(desc, action, card, index, null);
-                        }
-                    }
-                    else if (!IsBestSet && (BestAction == null || BestAction.Weight <= weights[0]))
-                    {
-                        BestAction = new ActionWeight(desc, action, card, index, weights[0]);
+                            NotActivated.Add(new ActionWeight(desc, action, card, index, weight));
                     }
                 }   
             }
@@ -122,7 +127,7 @@ namespace WindBot.Game.AI.Decks.Util
                 }
                 RecordAction(Action, Card, ActivateDesc, Weight);
             }
-            if (Action == ExecutorType.GoToEndPhase &&  !SqlComm.IsTraining)
+            //if (Action == ExecutorType.GoToEndPhase)
             //else
             {
                 // Record only the bad choices

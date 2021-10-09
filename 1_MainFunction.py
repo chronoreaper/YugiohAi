@@ -78,10 +78,11 @@ while (count <= repeatFor):
 		print("making decks")
 
 
-		subprocess.run([os.getcwd() + "/ShuffleDeck.py", "AI_Random.ydk"],shell=True)
-		src_dir=os.getcwd() + '/windbot_master/bin/Debug/Decks/' + "AI_Random.ydk"
-		dst_dir=os.getcwd() + '/windbot_master/bin/Debug/Decks/' + "AI_Random2.ydk"
-		shutil.copy(src_dir,dst_dir)
+		if (reset):
+			subprocess.run([os.getcwd() + "/ShuffleDeck.py", "AI_Random.ydk"],shell=True)
+			src_dir=os.getcwd() + '/windbot_master/bin/Debug/Decks/' + "AI_Random.ydk"
+			dst_dir=os.getcwd() + '/windbot_master/bin/Debug/Decks/' + "AI_Random2.ydk"
+			shutil.copy(src_dir,dst_dir)
 		#subprocess.run([os.getcwd() + "/ShuffleDeck.py", "AI_Random2.ydk"],shell=True)
 		#Runs the game
 

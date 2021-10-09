@@ -1,4 +1,4 @@
 
 Image Name                     PID Session Name        Session#    Mem Usage
 ========================= ======== ================ =========== ============
-ygopro.exe                    8544 Console                    1     20,184 K
+ygopro.exe                     792 Console                    1     25,224 K

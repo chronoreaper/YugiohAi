@@ -223,7 +223,7 @@ namespace WindBot.Game.AI
             Main = main;
         }
 
-        public void SetBattle(BattlePhase battle)
+        public virtual void SetBattle(BattlePhase battle)
         {
             Battle = battle;
         }

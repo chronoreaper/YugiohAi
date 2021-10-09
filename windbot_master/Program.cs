@@ -114,6 +114,7 @@ namespace WindBot
         {
             WindBotInfo Info = new WindBotInfo();
             Info.Name = Config.GetString("Name", Info.Name);
+            SqlComm.Name = Info.Name;
             Info.Deck = Config.GetString("Deck", Info.Deck);
             Info.DeckFile = Config.GetString("DeckFile", Info.DeckFile);
             Info.Dialog = Config.GetString("Dialog", Info.Dialog);
@@ -235,6 +236,7 @@ namespace WindBot
 #endif
             WindBotInfo Info = (WindBotInfo)o;
             GameClient client = new GameClient(Info);
+            SqlComm.IsTraining = Info.IsTraining;
             client.Start();
             Logger.DebugWriteLine(client.Username + " started.");
             while (client.Connection.IsConnected)

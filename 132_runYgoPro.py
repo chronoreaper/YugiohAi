@@ -1,7 +1,7 @@
-import sys, string, os, time, subprocess
+import sys, string, os, time, subprocess, keyboard
 
 print("		running ygppro")
-os.chdir(os.getcwd()+'/KoishiPro_Sakura')
+os.chdir(os.getcwd()+'/ProjectIgnis')
 
 #os.system(os.getcwd() + '/ygopro.exe')
-subprocess.run([os.getcwd() + "/ygopro.exe","-c"],shell=True)
+subprocess.run([os.getcwd() + "/ygopro.exe"],shell=True)

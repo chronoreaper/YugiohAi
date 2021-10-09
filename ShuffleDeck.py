@@ -1,7 +1,7 @@
 import os
 import random, os, sys
 
-filePath = "AI_Random.ydk"#os.getcwd() + '/ProjectIgnis/bin/Debug/Decks/'+ sys.argv[1] 
+filePath = os.getcwd() + '/windbot_master/bin/Debug/Decks/'+ sys.argv[1] 
 
 f = open(filePath,"r")
 main = []

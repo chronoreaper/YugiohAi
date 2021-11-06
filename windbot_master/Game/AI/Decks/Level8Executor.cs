@@ -235,7 +235,7 @@ namespace WindBot.Game.AI.Decks
             return 0;
         }
 
-        public override int OnSelectPlace(int cardId, int player, CardLocation location, int available)
+        public override int OnSelectPlace(long cardId, int player, CardLocation location, int available)
         {
             if (location == CardLocation.SpellZone)
             {
@@ -843,12 +843,14 @@ namespace WindBot.Game.AI.Decks
             }
             else
             {
+                if (Duel.LastChainPlayer == 0)
+                    return false;
                 AI.SelectCard(new[] {
                     CardId.BlackRoseMoonlightDragon,
                     CardId.ScrapDragon,
                     CardId.PSYFramelordOmega
                 });
-                return Duel.LastChainPlayer != 0;
+                return true;
             }
         }
 

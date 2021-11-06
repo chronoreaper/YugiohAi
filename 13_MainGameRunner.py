@@ -1,8 +1,22 @@
-import sys, string, os, time
+import sys, string, os, time, keyboard
 import subprocess
 import shutil
 import sqlite3
 import math
+
+def isrespondingPID(PID):
+	#https://stackoverflow.com/questions/16580285/how-to-tell-if-process-is-responding-in-python-on-windows
+	os.system('tasklist /FI "PID eq %d" /FI "STATUS eq running" > tmp.txt' % PID)
+	tmp = open('tmp.txt', 'r')
+	a = tmp.readlines()
+	tmp.close()
+	try:
+		if int(a[-1].split()[1]) == PID:
+			return True
+		else:
+			return False
+	except:
+		return False
 
 def writeDict(d, filename, sep):
 	with open(filename, "w") as f:
@@ -19,18 +33,20 @@ def readDict(filename, sep):
 				d[values[0]] = int(values[1])
 		f.close()
 		return(d)
-	
 def hostGame(): 
 	print("	hosting game")
-	time.sleep(3)
 	
-	subprocess.run([os.getcwd() + "/131_ClickImage.py","spectateBut.png"],
-				   shell=True)
+	time.sleep(20)
+	keyboard.press_and_release("1")
+	#time.sleep(3)
+	
+	#subprocess.run([os.getcwd() + "/131_ClickImage.py","spectateBut.png"],
+	#			   shell=True)
 				   
-	time.sleep(0.1)
+	#time.sleep(0.1)
 	
-	subprocess.run([os.getcwd() + "/131_ClickImage.py","spectateBut.png"],
-			   shell=True)
+	#subprocess.run([os.getcwd() + "/131_ClickImage.py","spectateBut.png"],
+	#		   shell=True)
 def GetCardQuantity(deck):
 	dict = {}
 	deckFile = open(os.getcwd() 
@@ -56,6 +72,19 @@ def GetGameLog(deck):
 	deckFile.close()
 	
 	return file
+
+def GetCardactivation(cardid):
+	conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
+	c = conn.cursor()
+	c.execute("SELECT name FROM cardList where id = (?)", (cardid,))
+	result = c.fetchone()
+	if result:
+		name = result[0]
+		c.execute("select avg(activation) from playCard where id = (?) group by activation order by avg(activation) desc", (name,))
+		result = c.fetchone()
+		if result:
+			return float(result[0])
+	return 0
 	
 def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result,name,compressMaster):
 	# Takes in two list and a dictonary
@@ -67,25 +96,30 @@ def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result,name,compre
 	c = conn.cursor()
 	#record the relationship in the deck
 	for card in deckQuant:
+		#result = GetCardactivation(card)
 		for related in deckQuant:
-			if (related not in deckQuantOther or deckQuant[related] != deckQuantOther[related]) and (card not in deckQuantOther or deckQuant[card] != deckQuantOther[card]):
-				c.execute('SELECT wins,gamesPlayed, games FROM cardRelated where id = (?) and relatedid = (?) and idQuant = (?) and relatedQuant = (?) and inprogress = (?)', 
-					(int(card),int(related),deckQuant[card],deckQuant[related],name))
-				list = c.fetchone()
-				if list != None:
-					wins = int(list[0])
-					gamesPlayed = int(list[1])
-					games = int(list[2]) + 1
-					x = gamesToPlay if compressMaster else 1 # checks if master value needs to be compressed
-					if card in deck: # Run only if played
+			#if related not in deckQuantOther \
+			#or deckQuant[related] != deckQuantOther[related]) \
+			#and (card not in deckQuantOther \
+			#or deckQuant[card] != deckQuantOther[card]):
+			c.execute('SELECT activation,gamesPlayed, games FROM cardRelated where id = (?) and relatedid = (?) and idQuant = (?) and relatedQuant = (?) and inprogress = (?)', 
+				(int(card),int(related),deckQuant[card],deckQuant[related],name))
+			list = c.fetchone()
+			if list != None:
+				# Get card name
+				activation = float(list[0])
+				gamesPlayed = int(list[1])
+				games = int(list[2]) + int(gamesToPlay)
+				if card in deck: # Run only if played
+					if GetCardactivation(card) != 0:
 						gamesPlayed += 1
-						wins = result #+ wins / x
-					value = (wins, gamesPlayed ,games, int(card),int(related),deckQuant[card],deckQuant[related],name)
-					c.execute('UPDATE cardRelated SET wins = (?), gamesPlayed = (?), games = (?) WHERE id = (?) and relatedid = (?) and idQuant = (?) and relatedQuant = (?) and inprogress = (?)', 
-					value)
-				else:
-					value = (card,related,deckQuant[card],deckQuant[related],result,1,1,name)
-					c.execute('INSERT INTO cardRelated VALUES (?,?,?,?,?,?,?,?)', value)				
+						activation = activation + result
+				value = (activation, gamesPlayed ,games, int(card),int(related),deckQuant[card],deckQuant[related],name)
+				c.execute('UPDATE cardRelated SET activation = (?), gamesPlayed = (?), games = (?) WHERE id = (?) and relatedid = (?) and idQuant = (?) and relatedQuant = (?) and inprogress = (?)', 
+				value)
+			elif GetCardactivation(card) != 0:
+				value = (card,related,deckQuant[card],deckQuant[related],result,1,gamesToPlay,name)
+				c.execute('INSERT INTO cardRelated VALUES (?,?,?,?,?,?,?,?)', value)				
 	conn.commit()
 	
 	# Record the relationship against the other deck
@@ -93,23 +127,23 @@ def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result,name,compre
 	j = 0
 	for card in deck:
 		j=0
+		#result = GetCardactivation(card)
 		for related in deckOther:
-			if related != card:
-				if related not in deck:
-					if card not in deckOther:
-						if card not in deck[i+1:]:
-							if related not in deckOther[j+1:]:
-								c.execute('SELECT wins,games FROM cardCounter where id = (?) and otherid = (?) and inprogress = (?)', (int(card),int(related),name))
-								list = c.fetchone()
-								if list != None:
-									x = gamesToPlay if compressMaster else 1 # checks if master value needs to be compressed
-									wins = result #+ int(list[0]) / x 
-									games = int(list[1]) + 1
-									value = (wins ,games,int(card),int(related),name)
-									c.execute('UPDATE cardCounter SET wins = (?), games = (?) WHERE id = (?) and otherid = (?) and inprogress = (?)', value)
-								else:
-									value = (card,related,result,1, name)
-									c.execute('INSERT INTO cardCounter VALUES (?,?,?,?,?)', value)
+			#if related != card \
+			#and related not in deck \
+			#and card not in deckOther \
+			#and card not in deck[i+1:] \
+			#and related not in deckOther[j+1:]:
+			c.execute('SELECT activation,games FROM cardCounter where id = (?) and otherid = (?) and inprogress = (?)', (int(card),int(related),name))
+			list = c.fetchone()
+			if list != None:
+				activation = result + float(list[0]) 
+				games = int(list[1]) + 1
+				value = (activation ,games,int(card),int(related),name)
+				c.execute('UPDATE cardCounter SET activation = (?), games = (?) WHERE id = (?) and otherid = (?) and inprogress = (?)', value)
+			else:
+				value = (card,related,result,int(gamesToPlay), name)
+				c.execute('INSERT INTO cardCounter VALUES (?,?,?,?,?)', value)
 			j +=1
 		i +=1
 	conn.commit()
@@ -123,50 +157,54 @@ def UpdateGameAi(AIName1,win1,AIName2,win2):
 	c = conn.cursor()
 	aiList = [AIName1,AIName2]
 	aiResult = [win1,win2]
-	if win1 == int(gamesToPlay):
-		print("won all games")
+	n = 0
+	err = 0
+	
 	# Select all unique node for an ai
 	for ai in aiList:
-		c.execute('SELECT id,location,action,result,verify,value,count,wins,games FROM playCard where inprogress = (?)',(ai,))
+		c.execute('SELECT id,location,action,result,verify,value,count,activation,games FROM playCard where inprogress = (?)',(ai,))
 		records = c.fetchall()
 		# for each record, try and update master
-		i = 0;
 		
 		maxGames = 2
 		c.execute("SELECT MAX(games) FROM playCard")
-		list = c.fetchone()
-		if list!= None:
-			maxGames = list[0]
+		lst = c.fetchone()
+		if lst!= None:
+			maxGames = lst[0]
 				
 		#x = (1 + win1/int(gamesToPlay))/maxGames
-		# c.execute('UPDATE playCard SET wins = cast(wins * (?) as int), games = cast(games* (?) as int)',(x,x))
+		# c.execute('UPDATE playCard SET activation = cast(activation * (?) as int), games = cast(games* (?) as int)',(x,x))
 		
 		for row in records:
 			node = tuple(row[:-2])
-			c.execute('SELECT games FROM playCard WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"', node)
-			list = c.fetchone()
-			if list != None : # It exists in master
-				if row[-1] >= int(gamesToPlay):
-					x = 1#(1 + win1/int(gamesToPlay))/maxGames if not i else 1# Only divide the master data once
-					x = 0.5 if not i else 1
-					#x = win1 /int(gamesToPlay) if not i else 1
-					#y = (1 + win2/int(gamesToPlay))/maxGames if not i else 1
-					#y = win2/int(gamesToPlay)# if (win2 == int(gamesToPlay)) else y
-					y = 1#0.2 if list[0] > 50  else 1
-					#x = win1/int(gamesToPlay)  if not i else 1
-					#y = 1#win2/int(gamesToPlay)
-					
-					value = (x,row[-2]*y,x,row[-1]*y,row[0],row[1],row[2],row[3],row[4],row[5],row[6])
-					c.execute('UPDATE playCard SET wins = cast(wins * (?) as int) + (?), games = cast(games* (?) as int) + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
-					#value = (row[-2],row[-1],row[0],row[1],row[2],row[3],row[4],row[5],row[6])
-					#c.execute('UPDATE playCard SET wins = (?), games = (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
+			c.execute('SELECT games,activation FROM playCard WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"', node)
+			lst = c.fetchone()
+			if lst != None : # It exists in master
+				#if row[-1] >= int(gamesToPlay):
+				err += abs(row[-2])
+				value = (row[-2] ,row[-1],row[0],row[1],row[2],row[3],row[4],row[5],row[6])
+				#value = (row[-2],row[-1],row[0],row[1],row[2],row[3],row[4],row[5],row[6])
+				c.execute('UPDATE playCard SET activation = activation + (?), games = games + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
+				#c.execute('UPDATE playCard SET activation = (?), games = games + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
+				value = (row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[-2],row[-1])
+				#c.execute('INSERT INTO playCard VALUES (?,?,?,?,?,?,?,?,?,\"Update:'+ai + ','+subGen+','+str(gameCount)+'\")', value)
 			else: # add it to master
 				value = tuple(row)
 				c.execute('INSERT INTO playCard VALUES (?,?,?,?,?,?,?,?,?,\"master\")', value)
-			i += 1
+			n += 1
+		
 		c.execute('DELETE FROM playCard WHERE inprogress = (?)',(ai,))
+	# Copy table
+	#if (int(subGen)%10 == 0):
+		#c.execute('SELECT '+subGen+' as inprogress, * INTO playCard IN "CardDataHistory.cdb" FROM playCard  ')
 	conn.commit()
 	c.close()
+	print('n:' + str(n))
+	print('err:'+str(err))
+	if (n == 0):
+		n = 1
+	print('[mlerr]'+str(err/n)+'[mlerr]')
+	
 	
 AIName1 = 'bot1'
 AIName2 = 'bot2'	
@@ -196,9 +234,15 @@ while gameCount < int(gamesToPlay):
 	print("	running game " + str(gameCount))
 	#subprocess.Popen - does not wait to finish
 	#subprocess.run - waits to finish
-	subprocess.Popen([os.getcwd() + "/132_runYgoPro.py"], 
-				 shell=True, stdin=None, stdout=None,
-				 stderr=None, close_fds=True)
+	#subprocess.Popen([os.getcwd() + "/132_runYgoPro.py"], 
+	#			 shell=True, stdin=None, stdout=None,
+	#			 stderr=None, close_fds=True)
+
+	g = subprocess.Popen([os.getcwd() + "/ProjectIgnis/ygopro.exe"])
+
+	while(g.poll() == None and not isrespondingPID(g.pid)):
+		time.sleep(1)
+
 	check = 0
 	
 	hostGame()
@@ -206,22 +250,23 @@ while gameCount < int(gamesToPlay):
 	time.sleep(0.2)
 	
 	print("	runningAi1")
-	p1 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI1Deck,AIName1,'1'],
+	p1 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI1Deck,AIName1,'1','1'],
 						  shell=True,stdout=subprocess.PIPE, 
 						  stderr = subprocess.PIPE,
 						  universal_newlines=True)
 	time.sleep(1)
 	print("	runningAi2")
-	p2 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI2Deck,AIName2,'0'],
+	p2 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI2Deck,AIName2,'2','0'],
 						  shell=True)
 	
 	if (p1.poll() == None or p2.poll() == None):
 		time.sleep(1)
 	
-	time.sleep(0.45)
+	time.sleep(2)
 	
 	print("	click start")
-	subprocess.run([os.getcwd() + "/131_ClickImage.py","startBut.png"],shell=True)
+	#subprocess.run([os.getcwd() + "/131_ClickImage.py","startBut.png"],shell=True)
+	keyboard.press_and_release("2")
 	
 	if (not (p1.poll() == None or p2.poll() == None)) and check == 0:
 		print("	WARNING! ai is not running")
@@ -245,44 +290,49 @@ while gameCount < int(gamesToPlay):
 		
 	print("	Game took "+str(count)+" seconds.")
 		
-	os.system("	TASKKILL /F /IM ygopro.exe")	   
+	os.system("	TASKKILL /F /IM ygopro.exe")
 	
 	output, stderr = p1.communicate()
 	#print("	"+output)
 	if format(output).find('[win]') >= 0:
 		print('[win]')
-		win1 += 1
+		win1 = 1
+		win2 = -1
 	elif format(output).find('[lose]') >= 0:
 		print('[lose]')
-		win2 += 1  
+		win2 = 1  
+		win1 = -1
 	  
 	gameCount += 1
 	
-print("	Saving deck to database")
-# Save to database
-deckList = GetGameLog(AIName1)
-deckListOther = GetGameLog(AIName2)
+	if win1 == -1 or True:
+		print("	Saving deck to database")
+		# Save to database
+		# deckList = GetGameLog(AIName1)
+		# deckListOther = GetGameLog(AIName2)
 
-deckQuant = GetCardQuantity(deck1)	
-deckQuantOther = GetCardQuantity(deck2)
+		# deckQuant = GetCardQuantity(deck1)	
+		# deckQuantOther = GetCardQuantity(deck2)
 
-time.sleep(1)
+		time.sleep(1)
 
-print("	Saving Deck 1 Results")
-UpdateDatabase(deckList,deckQuant,deckListOther,deckQuantOther, win1, AIName1,True)
+		print("	Saving Deck 1 Results")
+		#UpdateDatabase(deckList,deckQuant,deckListOther,deckQuantOther, win1, AIName1,True)
 
-print("	Saving Deck 2 Results")
-UpdateDatabase(deckListOther,deckQuantOther,deckList,deckQuant, win2, AIName2,False)
-	
-UpdateGameAi(AIName1,win1,AIName2,win2)
+		print("	Saving Deck 2 Results")
+		#UpdateDatabase(deckListOther,deckQuantOther,deckList,deckQuant, win2, AIName2,False)
+				
+		UpdateGameAi(AIName1,win1,AIName2,win2)
+	else:
+		print('[mlerr]0[mlerr]')
 
 # Copy decks
 newDeckname = str(generation) + "_"+ str(subGen) + "_"+ str(win1)+ deck1 
 src_dir=os.getcwd()+"/windbot_master/bin/Debug/Decks/"+ deck1
-dst_dir=os.getcwd()+"/KoishiPro_Sakura/deck/"+ newDeckname
+dst_dir=os.getcwd()+"/ProjectIgnis/deck/"+ newDeckname
 shutil.copy(src_dir,dst_dir)
 
 newDeckname = str(generation) + "_"+ str(subGen) + "_"+ str(win2)+ deck2
 src_dir=os.getcwd()+"/windbot_master/bin/Debug/Decks/"+ deck2
-dst_dir=os.getcwd()+"/KoishiPro_Sakura/deck/"+ newDeckname
+dst_dir=os.getcwd()+"/ProjectIgnis/deck/"+ newDeckname
 shutil.copy(src_dir,dst_dir)

@@ -1,4 +1,4 @@
-﻿using YGOSharp.OCGWrapper.Enums;
+using YGOSharp.OCGWrapper.Enums;
 using System.Collections.Generic;
 using WindBot;
 using WindBot.Game;
@@ -21,6 +21,7 @@ namespace WindBot.Game.AI.Decks
             public const int CyberDragon = 70095154;
             public const int Tricky = 14778250;
             public const int SnipeHunter = 84290642;
+            public const int WindUpSoldier = 12299841;
             public const int ExiledForce = 74131780;
             public const int Snowman = 91133740;
             public const int Krawler = 88316955;
@@ -39,6 +40,7 @@ namespace WindBot.Game.AI.Decks
 
             AddExecutor(ExecutorType.Summon, CardId.SnipeHunter);
             AddExecutor(ExecutorType.Summon, CardId.ExiledForce);
+            AddExecutor(ExecutorType.Summon, CardId.WindUpSoldier, SnipeHunterSummon);
 
             AddExecutor(ExecutorType.MonsterSet, CardId.Krawler);
 
@@ -47,6 +49,7 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.Summon, CardId.Luster);
             AddExecutor(ExecutorType.Summon, CardId.Sabersaurus);
             AddExecutor(ExecutorType.Summon, CardId.Artorigus);
+            AddExecutor(ExecutorType.Summon, CardId.WindUpSoldier);
             AddExecutor(ExecutorType.MonsterSet, CardId.Snowman);
 
             AddExecutor(ExecutorType.SpSummon, CardId.Tricky);
@@ -57,6 +60,7 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.Activate, CardId.BlockAttack, ActivateBlockAttack);
             AddExecutor(ExecutorType.Activate, CardId.SnipeHunter, ActivateExiledForce);
             AddExecutor(ExecutorType.Activate, CardId.ExiledForce, ActivateExiledForce);
+            AddExecutor(ExecutorType.Activate, CardId.Krawler, SnipeHunterSummon);
             AddExecutor(ExecutorType.Activate, CardId.Krawler, ActivateExiledForce);
             AddExecutor(ExecutorType.Activate, CardId.Snowman, ActivateExiledForce);
         }
@@ -117,7 +121,14 @@ namespace WindBot.Game.AI.Decks
                 ||(Util.Enemy.HasInMonstersZone(defTarg) && !Bot.HasInHand(CardId.StopDefence));
         }
 
-        public override IList<ClientCard> OnSelectCard(IList<ClientCard> cards, int min, int max, int hint, bool cancelable)
+        public override bool OnSelectHand()
+        {
+            if (SqlComm.IsTraining)
+                return true;
+            return base.OnSelectHand();
+        }
+
+        public override IList<ClientCard> OnSelectCard(IList<ClientCard> cards, int min, int max, long hint, bool cancelable)
         {
             if (Duel.Phase == DuelPhase.BattleStart)
                 return null;
@@ -131,7 +142,7 @@ namespace WindBot.Game.AI.Decks
             return selected;
         }
 
-        public override int OnSelectOption(IList<int> options)
+        public override int OnSelectOption(IList<long> options)
         {
             return Program.Rand.Next(options.Count);
         }

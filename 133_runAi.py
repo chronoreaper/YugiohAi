@@ -6,7 +6,7 @@ recordDeck = sys.argv[4]
 
 result = 0
 
-p = subprocess.Popen(["WindBot.exe","Deck="+sys.argv[1],"Name="+sys.argv[2],"Hand="+sys.argv[3]],#,"Chat=false"],
+p = subprocess.Popen(["WindBot.exe","Deck="+sys.argv[1],"Name="+sys.argv[2],"Hand="+sys.argv[3],"IsTraining=true"],#,"Chat=false"],
                shell=True, stdout=subprocess.PIPE, stderr = subprocess.PIPE, universal_newlines=True)
 output, stderr = p.communicate()
 

@@ -11,13 +11,14 @@ namespace WindBot
     {
         // Set from WindBotInfo
         public static bool IsTraining = true;
+        public static bool ShouldUpdate = true;
 
         public static string Path = "log.txt";
         public static string LogPath = "gameLog.txt";
         public static string Name = "ai";
         public static SqliteConnection SQLCon = null;
         public static Dictionary<int, Dictionary<int, ActionWeightCard>> actionWeight = new Dictionary<int, Dictionary<int, ActionWeightCard>>();
-        public static Dictionary<int, List<TreeNode>> treeActivation = new Dictionary<int, List<TreeNode>>();
+        public static TreeActivation TreeActivation = new TreeActivation();
 
 
         private static List<Data> data = new List<Data>();
@@ -40,27 +41,6 @@ namespace WindBot
                 this.weight = weight;
                 this.action = action;
                 this.activatePercent = activatePercent;
-            }
-        }
-
-        public class TreeNode
-        {
-            public string id;
-            public string action;
-            public double? weight;
-            public double? originalWeight { get; private set; }
-            public int turn;
-            public int actionId;
-            public bool isFirst;
-            public TreeNode(string id, string action, double? weight, int turn, int actionId, bool isFirst)
-            {
-                this.id = id;
-                this.action = action;
-                this.weight = weight;
-                this.originalWeight = weight;
-                this.turn = turn;
-                this.actionId = actionId;
-                this.isFirst = isFirst;
             }
         }
 
@@ -185,6 +165,8 @@ namespace WindBot
 
             foreach (var node in history)
             {
+                //if (Math.Sign(node.activation) < 0 && weight > 0)
+                //    continue;
                 Data newNode = new Data(node);
                 newNode.activation = weight;
                 newNode.modified = changeTag;
@@ -193,67 +175,26 @@ namespace WindBot
             data.AddRange(toAdd);
         }
 
-        public static void SetTreeNodeResult(int turn, double? result, bool all = false)
-        {
-            int preTurn = turn - 1;
-            while (preTurn > 0)
-            {
-                if (treeActivation.Keys.Contains(preTurn))
-                {
-                    double? activation = treeActivation[preTurn][0].originalWeight;
-                    if (activation == null)
-                    {
-                        result = null;
-                        break;
-                    }
-                }
-                preTurn--;
-            }
-
-            if (treeActivation.Keys.Contains(turn))
-            {
-                for(int i = treeActivation[turn].Count - 1; i >= 0; i --)
-                {
-                    var node = treeActivation[turn][i];
-                    if (node.weight == null)
-                    {
-                        node.weight = result;
-                        if (!all)
-                        {
-                            // Remove all in data for this turn
-                            data.RemoveAll(x => x.turn == turn);
-                            return;
-                        }
-                    }
-                    else if (node.weight != result)
-                    {
-                        node.weight = result;// Math.Max(node.weight ?? result, result);//Math.Round((node.weight ?? 0 + result) / 2);
-                    }
-                }
-            }
-        }
-
-        public static void SaveTreeNode(int turn, int actionId, string id, string action, double? weight, bool isFirst)
-        {
-            if (!treeActivation.Keys.Contains(turn))
-                treeActivation.Add(turn, new List<TreeNode>());
-            treeActivation[turn].Add(new TreeNode(id, action, weight, turn, actionId, isFirst));
-        }
+        
 
         public static List<double> GetTreeNode(int turn, int actionId, string id, string action, bool isFirst)
         {
             List<double> row = new List<double>();
 
-            TreeNode lastAction = null;
-            if (treeActivation.Keys.Contains(turn))
-                lastAction = treeActivation[turn].Last();
-            string preId = "";
-            string preAction = "";
-            if (lastAction != null && false)
+            string prevAction = "";
+            TreeActivation.Node node = null;
+            if (TreeActivation.TurnActions.ContainsKey(turn))
+                node = TreeActivation.TurnActions[turn];
+
+            while (node != null)
             {
-                preId = lastAction.id;
-                preAction = lastAction.action;
+                if (node.weight == null)
+                    return new List<double>() { -1, -1 };
+
+                prevAction += node.actionId + ",";
+                node = node.children;
             }
+
 
             double games = 0;
             double activation = 0;
@@ -263,7 +204,9 @@ namespace WindBot
                 SQLCon.Open();
 
                 string sql = $"SELECT activation, games FROM playCardTree WHERE id = \"{id}\" " +
-                      $"AND action = \"{action}\" AND preId = \"{preId}\" AND preAction = \"{preAction}\" AND isFirst = \"{isFirst}\" " +
+                      $"AND action = \"{action}\"" +
+                      //$" AND preId = \"{}\"" +
+                      $" AND preAction = \"{prevAction}\" AND isFirst = \"{isFirst}\" " +
                       $"AND turn = \"{turn}\" and actionID = \"{actionId}\"";
                 using (SqliteCommand cmd = new SqliteCommand(sql, SQLCon))
                 {
@@ -373,18 +316,16 @@ namespace WindBot
 
         public static void UpdateTreeNode(int gameResult)
         {
-            if (treeActivation.Count > 0)
+            if (TreeActivation.TurnActions.Count > 0)
             {
                 if (gameResult == WIN)
                 {
-                    var turn = treeActivation.Keys.Max();
-                    //foreach (var turn in treeActivation.Keys)
-                        SetTreeNodeResult(turn, 5, true);
+                    TreeActivation.UpdateNode(TreeActivation.TurnActions.Keys.Max() + 1, 1);
                 }
                 else if (gameResult == LOSE)
-                    SetTreeNodeResult(treeActivation.Keys.Max(), -5);
+                    TreeActivation.UpdateNode(TreeActivation.TurnActions.Keys.Max() + 1, -1);
             }
-                
+
             ConnectToDatabase();
             using (SQLCon)
             {
@@ -394,19 +335,14 @@ namespace WindBot
 
                 //Select all the data that was stored
                 string sql = "";
-
-                foreach (var turn in treeActivation.Keys)
+                foreach (var turn in TreeActivation.TurnActions.Keys)
                 {
-                    for (int i = 0; i < treeActivation[turn].Count; i++)
+                    string preAction = "";
+                    TreeActivation.Node node = TreeActivation.TurnActions[turn];
+                    while (node != null)
                     {
-                        TreeNode node = treeActivation[turn][i];
                         string preId = "";
-                        string preAction = "";
-                        if (i > 0 && false)
-                        {
-                            preId = treeActivation[turn][i - 1].id;
-                            preAction = treeActivation[turn][i - 1].action;
-                        }
+
                         sql = $"UPDATE playCardTree SET activation = {node.weight}, " +
                             $"games = games + 1 WHERE " +
                                 $"id = \"{node.id}\" AND action = \"{node.action}\" AND " +
@@ -433,6 +369,8 @@ namespace WindBot
                                 }
                             }
                         }
+                        preAction += node.actionId + ",";
+                        node = node.children;
                     }
                 }
                 transaction.Commit();
@@ -619,7 +557,7 @@ namespace WindBot
                             {
                                 if (actual == 0)
                                     actual = 1;
-                                activation = 0.5 * (weight * Math.Sign(actual) - 0.1 * actual);
+                                //activation = 0.5 * (weight * Math.Sign(actual) - 0.1 * actual);
                                 //activation = weight * Math.Sign(actual);
                             }
                             //else
@@ -636,7 +574,7 @@ namespace WindBot
                     //    activation /= turnActions;
                     Console.WriteLine($"    {id}, {location}, {action}, {result}, {verify}, {value}, {count}, Act:{activation}");
                     // (games * activation + {activation})/ (games + {games})
-                    sql = $"UPDATE playCard SET activation = activation + {activation}, " +
+                    sql = $"UPDATE playCard SET activation = {activation}, " +
                         $"games = games + {games} WHERE " +
                             $"id = \"{id}\" AND location = \"{location}\" AND action = \"{action}\"  AND result LIKE \"{result}\" " +
                             $"AND verify = \"{verify}\" AND value = \"{value}\" AND count = {count} " +
@@ -650,7 +588,7 @@ namespace WindBot
                                 $"AND inprogress =  \"{Name}\" ";
 
                     int rowsUpdated = 0;
-                    if (activation != 0)
+                    if (activation != 0 && ShouldUpdate)
                     {
                         using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon, transaction))
                         {

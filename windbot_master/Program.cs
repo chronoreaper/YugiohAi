@@ -126,6 +126,8 @@ namespace WindBot
             Info.Debug = Config.GetBool("Debug", Info.Debug);
             Info.Chat = Config.GetBool("Chat", Info.Chat);
             Info.RoomId = Config.GetInt("RoomId", Info.RoomId);
+            Info.IsTraining = Config.GetBool("IsTraining", Info.IsTraining);
+            Info.ShouldUpdate = Config.GetBool("ShouldUpdate", Info.ShouldUpdate);
             string b64CreateGame = Config.GetString("CreateGame");
             if (b64CreateGame != null)
             {
@@ -237,6 +239,7 @@ namespace WindBot
             WindBotInfo Info = (WindBotInfo)o;
             GameClient client = new GameClient(Info);
             SqlComm.IsTraining = Info.IsTraining;
+            SqlComm.ShouldUpdate = Info.ShouldUpdate;
             client.Start();
             Logger.DebugWriteLine(client.Username + " started.");
             while (client.Connection.IsConnected)

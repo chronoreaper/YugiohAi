@@ -29,7 +29,8 @@ namespace WindBot.Game.AI.Decks.Util
 
         public void SetBest(ExecutorType action, ClientCard card, int index = -1, int desc = -1)
         {
-            actionCount++;
+            Executor.ActionId++;
+            actionCount = Executor.ActionId;
             Executor.SetCard((ExecutorType)(int)action, card, index);
             string phase = Phase.ToString();
             if (Phase == DuelPhase.Main2)
@@ -42,17 +43,19 @@ namespace WindBot.Game.AI.Decks.Util
 
                 if (action == ExecutorType.Repos)
                     weight = Executor.ShouldRepos() ? 1 : -1;
+                if (action == ExecutorType.GoToBattlePhase || action == ExecutorType.GoToEndPhase || action == ExecutorType.GoToMainPhase2)
+                    weight = 0;
 
                 if (weight >= BestAction.Weight)
                 {
                     // update to be the better one
                     NotActivated.Add(BestAction);
-                    BestAction = new ActionWeight(desc, action, card, index, weight);
+                    BestAction = new ActionWeight(desc, action, card, index, weight, actionCount);
                     Console.WriteLine($"Setting Best Action as {action} {card?.Name} {weight}");
                 }
                 else //if (weight < 0)
                 {
-                    NotActivated.Add(new ActionWeight(desc, action, card, index, weight));
+                    NotActivated.Add(new ActionWeight(desc, action, card, index, weight, actionCount));
                     Console.WriteLine($"Did not {action} {card?.Name} {weight} as the better choice is {BestAction.Action} {BestAction.Card?.Name} {BestAction.Weight}");
                 }
             }
@@ -60,14 +63,22 @@ namespace WindBot.Game.AI.Decks.Util
             {
                 //if (BestAction != null && BestAction.Weight  < 3)
                 {
-                    List<double> weights = SqlComm.GetTreeNode(Executor.Duel.Turn, Executor.ActionId, card?.Name, actionString, Executor.Duel.IsFirst);
-                    Console.WriteLine(string.Format($"    {Executor.ActionId} {(weights.Count > 0 ? weights[0].ToString() : "null")} | {action} {card?.Name} | {index}"));
-                    if (weights.Count == 0 && action != ExecutorType.Repos)
+                    List<double> weights = SqlComm.GetTreeNode(Executor.Duel.Turn, actionCount, card?.Name, actionString, Executor.Duel.IsFirst);
+                    if (action == ExecutorType.GoToBattlePhase || action == ExecutorType.GoToEndPhase || action == ExecutorType.GoToMainPhase2)
+                        weights = new List<double>() { 0, 0 };
+                    Console.WriteLine(string.Format($"    {actionCount} {(weights.Count > 0 ? weights[0].ToString() : "null")} | {action} {card?.Name} | {index}"));
+                    if ((weights.Count == 0 || actionCount == 2 ) && action != ExecutorType.Repos )
                     {
                         if (BestAction != null)
                             NotActivated.Add(BestAction);
                         IsBestSet = true;
-                        BestAction = new ActionWeight(desc, action, card, index, null);
+                        double? weight = null;
+                        if (weights.Count > 0)
+                        {
+                            weight = weights[0];
+                            IsBestSet = false;
+                        }
+                        BestAction = new ActionWeight(desc, action, card, index, weight, actionCount);
                     }
                     else
                     {
@@ -79,10 +90,10 @@ namespace WindBot.Game.AI.Decks.Util
                         if (!IsBestSet && (BestAction == null || BestAction.Weight <= weight))
                         {
                             NotActivated.Add(BestAction);
-                            BestAction = new ActionWeight(desc, action, card, index, weight);
+                            BestAction = new ActionWeight(desc, action, card, index, weight, actionCount);
                         }
                         else
-                            NotActivated.Add(new ActionWeight(desc, action, card, index, weight));
+                            NotActivated.Add(new ActionWeight(desc, action, card, index, weight, actionCount));
                     }
                 }   
             }
@@ -122,7 +133,7 @@ namespace WindBot.Game.AI.Decks.Util
                             phase = DuelPhase.Main1.ToString();
                         string actionString = Executor.BuildActionString(Action, Card, phase);
 
-                        SqlComm.SaveTreeNode(Executor.Duel.Turn, Executor.ActionId, Card?.Name, actionString, Weight, Executor.Duel.IsFirst);
+                        SqlComm.TreeActivation.SaveTreeNode(Executor.Duel.Turn, BestAction.ActionId, Card?.Name, actionString, Weight, Executor.Duel.IsFirst);
                     }
                 }
                 RecordAction(Action, Card, ActivateDesc, Weight);
@@ -136,7 +147,7 @@ namespace WindBot.Game.AI.Decks.Util
                     string n = actionWeight.Card?.Name;
                     if (actionWeight.Weight < 0)
                     {
-                        RecordAction(actionWeight.Action, actionWeight.Card, actionWeight.ActivateDesc, actionWeight.Weight);
+                        //RecordAction(actionWeight.Action, actionWeight.Card, actionWeight.ActivateDesc, actionWeight.Weight);
                     }
                     else
                     {

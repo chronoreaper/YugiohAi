@@ -1,4 +1,4 @@
 Match:1
-Time Past:0:05:47
-Time Past Excluding Setup:0:05:47
-Average Game Time:0:05:47
+Time Past:0:06:26
+Time Past Excluding Setup:0:06:26
+Average Game Time:0:06:26

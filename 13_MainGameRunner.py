@@ -113,7 +113,7 @@ def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result,name,compre
 				if card in deck: # Run only if played
 					if GetCardactivation(card) != 0:
 						gamesPlayed += 1
-						activation = activation + result
+						activation = result + activation
 				value = (activation, gamesPlayed ,games, int(card),int(related),deckQuant[card],deckQuant[related],name)
 				c.execute('UPDATE cardRelated SET activation = (?), gamesPlayed = (?), games = (?) WHERE id = (?) and relatedid = (?) and idQuant = (?) and relatedQuant = (?) and inprogress = (?)', 
 				value)
@@ -184,7 +184,7 @@ def UpdateGameAi(AIName1,win1,AIName2,win2):
 				err += abs(row[-2])
 				value = (row[-2] ,row[-1],row[0],row[1],row[2],row[3],row[4],row[5],row[6])
 				#value = (row[-2],row[-1],row[0],row[1],row[2],row[3],row[4],row[5],row[6])
-				c.execute('UPDATE playCard SET activation = activation + (?), games = games + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
+				c.execute('UPDATE playCard SET activation = (activation + (?))/2, games = games + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
 				#c.execute('UPDATE playCard SET activation = (?), games = games + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
 				value = (row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[-2],row[-1])
 				#c.execute('INSERT INTO playCard VALUES (?,?,?,?,?,?,?,?,?,\"Update:'+ai + ','+subGen+','+str(gameCount)+'\")', value)
@@ -322,10 +322,10 @@ while gameCount < int(gamesToPlay):
 		print("	Saving Deck 2 Results")
 		#UpdateDatabase(deckListOther,deckQuantOther,deckList,deckQuant, win2, AIName2,False)
 				
-		UpdateGameAi(AIName1,win1,AIName2,win2)
 	else:
 		print('[mlerr]0[mlerr]')
 
+UpdateGameAi(AIName1,win1,AIName2,win2)
 # Copy decks
 newDeckname = str(generation) + "_"+ str(subGen) + "_"+ str(win1)+ deck1 
 src_dir=os.getcwd()+"/windbot_master/bin/Debug/Decks/"+ deck1

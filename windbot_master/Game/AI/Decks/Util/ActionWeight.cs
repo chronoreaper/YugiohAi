@@ -12,18 +12,20 @@ namespace WindBot.Game.AI.Decks.Util
         public int Index { get; private set; } = 0;
         public double? Weight { get; private set; } = 0;//threshold
         public ExecutorType Action { get; private set; } = ExecutorType.GoToEndPhase;
+        public int ActionId { get; private set; } = 0;
 
         public ActionWeight()
         {
         }
 
-        public ActionWeight(int desc, ExecutorType action, ClientCard card, int index, double? weight)
+        public ActionWeight(int desc, ExecutorType action, ClientCard card, int index, double? weight, int actionId)
         {
             ActivateDesc = desc;
             Card = card;
             Index = index;
             Weight = weight;
             Action = action;
+            ActionId = actionId;
         }
     }
 }

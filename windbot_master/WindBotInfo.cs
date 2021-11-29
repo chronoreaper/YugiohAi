@@ -43,6 +43,7 @@ namespace WindBot
         public int RoomId { get; set; }
         public CreateGameInfo CreateGame { get; set; }
         public bool IsTraining { get; set; }
+        public bool ShouldUpdate { get; set; }
         public WindBotInfo()
         {
             Name = "WindBot";
@@ -58,7 +59,8 @@ namespace WindBot
             Chat = true;
             RoomId = 0;
             CreateGame = null;
-            IsTraining = true;
+            IsTraining = false;
+            ShouldUpdate = true;
         }
     }
 }

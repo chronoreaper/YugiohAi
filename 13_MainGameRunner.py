@@ -33,20 +33,7 @@ def readDict(filename, sep):
 				d[values[0]] = int(values[1])
 		f.close()
 		return(d)
-def hostGame(): 
-	print("	hosting game")
-	
-	time.sleep(20)
-	keyboard.press_and_release("1")
-	#time.sleep(3)
-	
-	#subprocess.run([os.getcwd() + "/131_ClickImage.py","spectateBut.png"],
-	#			   shell=True)
-				   
-	#time.sleep(0.1)
-	
-	#subprocess.run([os.getcwd() + "/131_ClickImage.py","spectateBut.png"],
-	#		   shell=True)
+
 def GetCardQuantity(deck):
 	dict = {}
 	deckFile = open(os.getcwd() 
@@ -238,16 +225,14 @@ while gameCount < int(gamesToPlay):
 	#			 shell=True, stdin=None, stdout=None,
 	#			 stderr=None, close_fds=True)
 
-	g = subprocess.Popen([os.getcwd() + "/ProjectIgnis/ygopro.exe"])
+	g = subprocess.Popen([os.getcwd() + "/ProjectIgnis/ygopro.exe", "-c"])
 
 	while(g.poll() == None and not isrespondingPID(g.pid)):
 		time.sleep(1)
 
 	check = 0
 	
-	hostGame()
-	
-	time.sleep(0.2)
+	time.sleep(20)
 	
 	print("	runningAi1")
 	p1 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI1Deck,AIName1,'1','1'],
@@ -261,12 +246,6 @@ while gameCount < int(gamesToPlay):
 	
 	if (p1.poll() == None or p2.poll() == None):
 		time.sleep(1)
-	
-	time.sleep(2)
-	
-	print("	click start")
-	#subprocess.run([os.getcwd() + "/131_ClickImage.py","startBut.png"],shell=True)
-	keyboard.press_and_release("2")
 	
 	if (not (p1.poll() == None or p2.poll() == None)) and check == 0:
 		print("	WARNING! ai is not running")

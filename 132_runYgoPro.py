@@ -4,4 +4,4 @@ print("		running ygppro")
 os.chdir(os.getcwd()+'/ProjectIgnis')
 
 #os.system(os.getcwd() + '/ygopro.exe')
-subprocess.run([os.getcwd() + "/ygopro.exe"],shell=True)
+subprocess.run([os.getcwd() + "/ygopro.exe -c"],shell=True)

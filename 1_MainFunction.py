@@ -88,7 +88,7 @@ while (count <= repeatFor):
 
 		print("running game")
 		
-		if (reset):
+		if (reset or matchNum > 1):
 			ResetTree()
 
 		#subprocess.run([os.getcwd() + "/13_MainGameRunner.py",str(generation),str(count),str(gamesToPlay)],shell=True)

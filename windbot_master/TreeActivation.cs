@@ -89,22 +89,32 @@ namespace WindBot
             
         }
 
-        public void SaveTreeNode(int turn, int actionId, string id, string action, double? weight, bool isFirst)
+        public bool ShouldSave()
         {
-            Node node = new Node(id, action, weight, turn, actionId, isFirst);
-
+            if (!SqlComm.IsTraining)
+                return true;
             // Only update if the last turn has no new values
             if (TurnActions.Keys.Count > 0)
             {
                 int lastTurn = TurnActions.Keys.Max();
                 Node check = TurnActions[lastTurn];
-                while(check != null)
+                while (check != null)
                 {
                     if (check.originalWeight == null)
-                        return;
+                        return false;
                     check = check.children;
                 }
             }
+
+            return true;
+        }
+
+        public void SaveTreeNode(int turn, int actionId, string id, string action, double? weight, bool isFirst)
+        {
+            Node node = new Node(id, action, weight, turn, actionId, isFirst);
+
+            if (!ShouldSave())
+                return;
 
             if (!TurnActions.Keys.Contains(turn))
                 TurnActions.Add(turn, node);

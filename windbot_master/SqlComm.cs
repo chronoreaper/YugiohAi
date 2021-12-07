@@ -385,6 +385,8 @@ namespace WindBot
         /// <param name="otherName">Name of the opponent, Unused</param>
         public static void UpdateDatabase(int gameResult, string otherName, int turns)
         {
+            if (!IsTraining)
+                return;
             UpdateTreeNode(gameResult);
             ConnectToDatabase();
             using (SQLCon)
@@ -400,16 +402,13 @@ namespace WindBot
 
                 List<Data> toAdd = new List<Data>();
 
-                // Add the result bais
-                double w = 1 * (1 - 2 * gameResult);
-
                 // Replace the original data
                 List<Data> original = data.FindAll(x => x.modified == 0);
                 foreach (Data d in original)
                 {
                     data.Remove(d);
                     Data newNode = new Data(d);
-                    d.activation = w;
+                    d.activation = 0;//w;
                     toAdd.Add(d);
                 }
                 //data.AddRange(temp);
@@ -482,17 +481,12 @@ namespace WindBot
                     int count = info.count;
                     double activation = (info.activation);
                     double games = 1;
-                    double actual = 0;
-                    //double games = info.turn; //stored as games since the database column is named games
-                    double confidence = -1;
-                    double totalWeight = 0;
-                    double turnActions = 0;
-
                     double originalWin = 0;
                     string sql_string = $"SELECT activation FROM playCard WHERE id = \"{id}\" AND location = \"{location}\" " +
                                           $"AND action = \"{action}\" AND result = \"{result}\" AND verify = \"{verify}\" " +
                                           $"AND value = \"{value}\" AND " +
                                           $"inprogress =  \"{master}\"";
+
                     using (SqliteCommand cmd = new SqliteCommand(sql_string, SQLCon))
                     {
                         using (SqliteDataReader rdr = cmd.ExecuteReader())
@@ -502,90 +496,21 @@ namespace WindBot
                             }
                     }
 
-                    {
-                        // Checks how confident this is a good move 
-
-                        if (actionWeight.ContainsKey(info.turn))
-                        {
-                            turnActions = actionWeight[info.turn].Count;
-                            // See if any future actions contain the select action
-                            foreach (int actionId in actionWeight[info.turn].Keys)
-                            {
-                                ActionWeightCard selectAction = actionWeight[info.turn][actionId];
-                                totalWeight = selectAction.activatePercent;
-                                if (info.actionId == actionId)
-                                    actual = selectAction.weight;
-
-                                if (selectAction.action == "Select"// check for select action
-                                && actionId > info.actionId  //make sure the action is after
-                                && selectAction.id.Equals(id)) // make sure its the same card
-                                {
-                                    //activation *= selectAction.activatePercent;
-                                    //if (Math.Abs(selectAction.weight) < 5 // If not confident
-                                    //)// Check if its the random variation
-                                    if (action.Contains("Activate"))
-                                    {
-                                        activation = 0;
-                                    }
-                                    // If select action is bad
-                                    /*if (selectAction.weight <= -5)
-                                    {
-                                        activation = -1;
-                                        info.modified = 3;
-                                    }*/
-                                    break;
-                                }
-                            }
-
-                            if (actionWeight[info.turn].ContainsKey(info.actionId))
-                                confidence = Math.Abs(actionWeight[info.turn][info.actionId].weight);
-                        }
-                    }
-
                     if (info.modified == -2) // update weights modifiers
                     {
                         if (gameResult == 1)
                             result = "l";
-                        //activation = 0;
-                    }
-                    else if (info.modified == 0)
-                    {
-                        {
-                            actual = originalWin;
-                            double weight = activation;
-                            //if (!(actual < 0 && weight > 0))
-                            {
-                                if (actual == 0)
-                                    actual = 1;
-                                //activation = 0.5 * (weight * Math.Sign(actual) - 0.1 * actual);
-                                //activation = weight * Math.Sign(actual);
-                            }
-                            //else
-                            //    activation = 0.0 * weight;
-                        }
+
                     }
 
-                    /*if (Math.Abs(activation) < 0.1 && activation != 0)
-                        activation = 0.2 * Math.Sign(activation);
-                    else if (Math.Abs(activation) > 1)
-                        activation = Math.Sign(activation);*/
 
-                    //if (turnActions > 0)
-                    //    activation /= turnActions;
                     Console.WriteLine($"    {id}, {location}, {action}, {result}, {verify}, {value}, {count}, Act:{activation}");
-                    // (games * activation + {activation})/ (games + {games})
-                    sql = $"UPDATE playCard SET activation = {activation}, " +
+
+                    sql = $"UPDATE playCard SET activation = (activation * games + {activation}) / (games + {games}), " +
                         $"games = games + {games} WHERE " +
                             $"id = \"{id}\" AND location = \"{location}\" AND action = \"{action}\"  AND result LIKE \"{result}\" " +
                             $"AND verify = \"{verify}\" AND value = \"{value}\" AND count = {count} " +
                             $"AND inprogress =  \"{Name}\" ";
-                    if (info.modified == -2)
-
-                        sql = $"UPDATE playCard SET activation = activation + ({activation} - activation) * 0.1, " +
-                            $"games = games + {games} WHERE " +
-                                $"id = \"{id}\" AND location = \"{location}\" AND action = \"{action}\"  AND result LIKE \"{result}\" " +
-                                $"AND verify = \"{verify}\" AND value = \"{value}\" AND count = {count} " +
-                                $"AND inprogress =  \"{Name}\" ";
 
                     int rowsUpdated = 0;
                     if (activation != 0 && ShouldUpdate)

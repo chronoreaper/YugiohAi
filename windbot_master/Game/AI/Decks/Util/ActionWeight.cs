@@ -9,7 +9,7 @@ namespace WindBot.Game.AI.Decks.Util
     {
         public int ActivateDesc { get; set; } = -1;
         public ClientCard Card { get; private set; } = null;
-        public int Index { get; private set; } = 0;
+        public long Index { get; private set; } = 0;
         public double? Weight { get; private set; } = 0;//threshold
         public ExecutorType Action { get; private set; } = ExecutorType.GoToEndPhase;
         public int ActionId { get; private set; } = 0;
@@ -18,7 +18,7 @@ namespace WindBot.Game.AI.Decks.Util
         {
         }
 
-        public ActionWeight(int desc, ExecutorType action, ClientCard card, int index, double? weight, int actionId)
+        public ActionWeight(int desc, ExecutorType action, ClientCard card, long index, double? weight, int actionId)
         {
             ActivateDesc = desc;
             Card = card;

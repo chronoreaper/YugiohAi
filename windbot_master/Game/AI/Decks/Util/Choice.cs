@@ -27,7 +27,7 @@ namespace WindBot.Game.AI.Decks.Util
                 BestAction = new ActionWeight();
         }
 
-        public void SetBest(ExecutorType action, ClientCard card, int index = -1, int desc = -1)
+        public void SetBest(ExecutorType action, ClientCard card, long index = -1, int desc = -1)
         {
             Executor.ActionId++;
             actionCount = Executor.ActionId;
@@ -119,11 +119,12 @@ namespace WindBot.Game.AI.Decks.Util
             int ActivateDesc = BestAction.ActivateDesc;
             ExecutorType Action = BestAction.Action;
             ClientCard Card = BestAction.Card;
-            int Index = BestAction.Index;
+            long Index = BestAction.Index;
             double? Weight = BestAction.Weight;
 
             if (actionCount > 1)
             {
+                RecordAction(Action, Card, ActivateDesc, Weight);
                 if (SqlComm.IsTraining)
                 {
                     if (Action != ExecutorType.Repos)
@@ -136,7 +137,6 @@ namespace WindBot.Game.AI.Decks.Util
                         SqlComm.TreeActivation.SaveTreeNode(Executor.Duel.Turn, BestAction.ActionId, Card?.Name, actionString, Weight, Executor.Duel.IsFirst);
                     }
                 }
-                RecordAction(Action, Card, ActivateDesc, Weight);
             }
             //if (Action == ExecutorType.GoToEndPhase)
             //else

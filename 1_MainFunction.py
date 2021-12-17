@@ -33,6 +33,8 @@ file.close()
 #TODO Copy config file
 
 reset = len(sys.argv)>1 and ("-reset" in sys.argv or "-r" in sys.argv)
+isTraining = str(not (len(sys.argv)>1 and ("-actual" in sys.argv or "-a" in sys.argv)))
+
 if reset:
 	print("Setting up cards in database")
 	#gets all the cards from the database
@@ -55,6 +57,7 @@ repeatFor = 3
 matches = 1
 gamesToPlay = 1
 count = 1
+totalGames = 0
 if "--repeat" in sys.argv:
 	repeatFor = int(sys.argv[sys.argv.index("--repeat")+1])
 	
@@ -78,7 +81,7 @@ while (count <= repeatFor):
 		print("making decks")
 
 
-		if (reset):
+		if (reset or matchNum > 1):
 			subprocess.run([os.getcwd() + "/ShuffleDeck.py", "AI_Random.ydk"],shell=True)
 			src_dir=os.getcwd() + '/windbot_master/bin/Debug/Decks/' + "AI_Random.ydk"
 			dst_dir=os.getcwd() + '/windbot_master/bin/Debug/Decks/' + "AI_Random2.ydk"
@@ -92,7 +95,7 @@ while (count <= repeatFor):
 			ResetTree()
 
 		#subprocess.run([os.getcwd() + "/13_MainGameRunner.py",str(generation),str(count),str(gamesToPlay)],shell=True)
-		p = subprocess.Popen([os.getcwd() + "/13_MainGameRunner.py",str(count),str(matchNum),str(gamesToPlay)],
+		p = subprocess.Popen([os.getcwd() + "/13_MainGameRunner.py",str(count),str(matchNum),str(gamesToPlay),isTraining],
 								shell=True,stdout=subprocess.PIPE,stderr=None,
 								universal_newlines=True)
 
@@ -114,7 +117,7 @@ while (count <= repeatFor):
 		#if '[mlerr]' in output:
 		err = output.split('[mlerr]')[1]
 		print(f"{err} Squared error")
-		
+		totalGames += wins + losses
 		if matchNum > 10:
 			wins = 0
 			losses = 0
@@ -144,7 +147,7 @@ end = time.time()
 
 Log("Time Past:" + str(datetime.timedelta(seconds=int(end - start))))
 Log("Time Past Excluding Setup:" + str(datetime.timedelta(seconds=int(end - startNoSetup))))
-Log("Average Game Time:"+str(datetime.timedelta(seconds=int((end - startNoSetup)/(count-1)))))
+Log("Average Game Time:"+str(datetime.timedelta(seconds=int((end - startNoSetup)/(totalGames)))))
 if error == 1:
     print("there were errors")
 if warning >= 3:

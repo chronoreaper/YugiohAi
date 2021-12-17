@@ -314,7 +314,7 @@ namespace WindBot.Game.AI.Decks
                     //    SqlComm.ModifyAction(Duel.Turn - 1, oppLpLoss / 1000.0, 1);
                     double weight = 0;// -playerFieldLoss
                     weight += (Math.Sign(enemyFieldLoss) - Math.Sign(playerFieldLoss) * 0.5) * 0.5;
-                    weight +=(advantageGain2  + advantageGain) * 0.5;
+                    weight += (advantageGain2) * 0.5;
 
                     //weight +=cardAdvantage;
                     //weight += oppLpLoss / 2000.0;
@@ -336,7 +336,7 @@ namespace WindBot.Game.AI.Decks
                     //SqlComm.ModifyAction(Duel.Turn - 2, advGainPre, 2);
                     //if (cardDiff >= 0)
                     {
-                        double weight = 1;
+                        double weight = 0;
                         //weight += (enemyFieldLoss - playerFieldLoss * 0.5) * 0.5;
                         weight += advantageGain;
 
@@ -410,7 +410,7 @@ namespace WindBot.Game.AI.Decks
 
                 if (SqlComm.IsTraining)
                 {
-                    List<double> weights = SqlComm.GetTreeNode(Duel.Turn, ActionId, Card?.Name, actionString, Duel.IsFirst);
+                    List<double> weights = SqlComm.TreeActivation.GetTreeNode(Duel.Turn, ActionId, Card?.Name, actionString, Duel.IsFirst);
                     if (weights.Count > 0)
                     {
                         weight = weights[0];
@@ -709,7 +709,7 @@ namespace WindBot.Game.AI.Decks
             double? weight = null;
             if (SqlComm.IsTraining)
             {
-                List<double> weights = SqlComm.GetTreeNode(Duel.Turn, ActionId, Card?.Name, action + result, Duel.IsFirst);
+                List<double> weights = SqlComm.TreeActivation.GetTreeNode(Duel.Turn, ActionId, Card?.Name, action + result, Duel.IsFirst);
                 if (weights.Count > 0)
                     weight = weights[0];
             }
@@ -735,11 +735,11 @@ namespace WindBot.Game.AI.Decks
 
             //Bot
             var cardQuant = ListToQuantity(Bot.Hand);
-            /*foreach (ClientCard CardInHand in cardQuant.Keys)
+            foreach (ClientCard CardInHand in cardQuant.Keys)
             {
                 score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Card In Hand", CardInHand.Name.ToString(), cardQuant[CardInHand], win));
             }
-            */
+            
             /*cardQuant = ListToQuantity(Bot.GetMonsters());
             foreach (ClientCard Monster in cardQuant.Keys)
             {
@@ -752,7 +752,7 @@ namespace WindBot.Game.AI.Decks
                 score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Player Monsters GY", Monster.Name.ToString(), cardQuant[Monster], win));
             }*/
             
-            /*if (Bot.GetMonsterCount() == 0)
+            if (Bot.GetMonsterCount() == 0)
             score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Number of Monsters Bot", Bot.GetMonsterCount().ToString(), 1, win));
             //score.AddRange(SQLCom(GetData, Card?.Name, Card?.Location.ToString() + " " + Card?.Position.ToString(), action, result, "Cards In Bot Hand", Bot.GetHandCount().ToString(), 1, win));
 
@@ -805,8 +805,8 @@ namespace WindBot.Game.AI.Decks
                     double games = score[i + 1];
                     double weight = score[i];
 
-                    if (Math.Abs(weight) == 0)
-                        weight = Program.Rand.Next(2) - 1;
+                    //if (Math.Abs(weight) == 0)
+                    //    weight = Program.Rand.Next(2) - 1;
 
                     activatePercent++;
                     activator += weight;
@@ -853,7 +853,7 @@ namespace WindBot.Game.AI.Decks
                 //if (activator > 0)
                 if (action != "Select")
                 {
-                    double potential = GetPotentialBestChoice(win, GetData);
+                    double potential = 0;// GetPotentialBestChoice(win, GetData);
                     //Console.WriteLine("     Potential best choice:" + potential);
                     if (Math.Abs(potential) > 1)
                         activator = activator * 0.0 + potential;

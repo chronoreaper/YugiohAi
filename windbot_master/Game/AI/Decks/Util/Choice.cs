@@ -24,7 +24,17 @@ namespace WindBot.Game.AI.Decks.Util
             Turn = turn;
             NotActivated = new List<ActionWeight>();
             if (phase == DuelPhase.Main1 || phase == DuelPhase.Main2)
-                BestAction = new ActionWeight();
+            {
+                if (SqlComm.IsTraining)
+                {
+                    double[] results = SqlComm.TreeActivation.GetNextPotentialAction(Executor.Duel.Turn, Executor.Duel.IsFirst);
+                    BestAction = new ActionWeight(results[1], (int)results[0]);
+                }
+                else
+                {
+                    BestAction = new ActionWeight();
+                }
+            }
         }
 
         public void SetBest(ExecutorType action, ClientCard card, long index = -1, int desc = -1)
@@ -63,10 +73,11 @@ namespace WindBot.Game.AI.Decks.Util
             {
                 //if (BestAction != null && BestAction.Weight  < 3)
                 {
-                    List<double> weights = SqlComm.GetTreeNode(Executor.Duel.Turn, actionCount, card?.Name, actionString, Executor.Duel.IsFirst);
+                    List<double> weights = SqlComm.TreeActivation.GetTreeNode(Executor.Duel.Turn, actionCount, card?.Name, actionString, Executor.Duel.IsFirst);
                     if (action == ExecutorType.GoToBattlePhase || action == ExecutorType.GoToEndPhase || action == ExecutorType.GoToMainPhase2)
                         weights = new List<double>() { 0, 0 };
                     Console.WriteLine(string.Format($"    {actionCount} {(weights.Count > 0 ? weights[0].ToString() : "null")} | {action} {card?.Name} | {index}"));
+                    // perform action if there is no weights to it or if it is the first action of the turn
                     if ((weights.Count == 0 || actionCount == 2 ) && action != ExecutorType.Repos )
                     {
                         if (BestAction != null)
@@ -87,7 +98,7 @@ namespace WindBot.Game.AI.Decks.Util
                         if (weights.Count > 0)
                             weight = weights[0];
 
-                        if (!IsBestSet && (BestAction == null || BestAction.Weight <= weight))
+                        if (!IsBestSet && (BestAction == null))// || BestAction.Weight <= weight
                         {
                             NotActivated.Add(BestAction);
                             BestAction = new ActionWeight(desc, action, card, index, weight, actionCount);

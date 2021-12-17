@@ -109,6 +109,70 @@ namespace WindBot
             return true;
         }
 
+        private string GetPrevAction(int turn)
+        {
+            string prevAction = "";
+            Node node = null;
+            if (TurnActions.ContainsKey(turn))
+                node = TurnActions[turn];
+
+            while (node != null)
+            {
+                if (node.weight == null)
+                    return null;
+
+                prevAction += node.actionId + ",";
+                node = node.children;
+            }
+
+            return prevAction;
+        }
+
+        /**
+         * Returns the next potential action to take and the weight of the result
+         */
+        public double[] GetNextPotentialAction(int turn, bool isFirst, string actionsTaken = "")
+        {
+            double[] result = new double[2] { -1, double.MinValue };
+            string prevAction = GetPrevAction(turn);
+            if (prevAction == null)
+                return result;
+            List<double> nextAct = SqlComm.GetNextTreeNodes(turn, prevAction + actionsTaken, isFirst);
+
+            if (nextAct.Count == 0)
+                return result;
+
+            for (int i = 0; i < nextAct.Count; i += 2)
+            {
+                double weight;
+                int action = (int)nextAct[i];
+                double[] potential = GetNextPotentialAction(turn, isFirst, actionsTaken + nextAct[i].ToString() + ",");
+
+
+                if (potential[0] == -1)
+                    weight = nextAct[i + 1];
+                else
+                    weight = potential[1];
+
+                if (result[1] < weight && result[1] < 1 && potential[0] != -2)
+                {
+                    result[1] = weight;
+                    result[0] = action;
+                }
+            }
+
+            return result;
+        }
+
+        public List<double> GetTreeNode(int turn, int actionId, string id, string action, bool isFirst)
+        {
+            string prevAction = GetPrevAction(turn);
+            if (prevAction == null)
+                return new List<double>() { -1, -1 };
+            //To change
+            return SqlComm.GetTreeNode(turn, actionId, id, action, prevAction, isFirst);
+        }
+
         public void SaveTreeNode(int turn, int actionId, string id, string action, double? weight, bool isFirst)
         {
             Node node = new Node(id, action, weight, turn, actionId, isFirst);

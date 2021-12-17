@@ -3,7 +3,7 @@ import sys, subprocess, os
 os.chdir(os.getcwd()+'/windbot_master/bin/Debug')
 
 recordDeck = sys.argv[4]
-
+isTraining = sys.argv[5]
 result = 0
 
 p = subprocess.Popen(["WindBot.exe","Deck="+sys.argv[1],"Name="+sys.argv[2],"Hand="+sys.argv[3],"IsTraining=true"],#,"Chat=false"],

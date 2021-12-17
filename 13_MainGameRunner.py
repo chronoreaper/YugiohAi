@@ -208,6 +208,7 @@ gameCount = 0
 generation = sys.argv[1]
 subGen = sys.argv[2]
 gamesToPlay = sys.argv[3]
+isTraining = sys.argv[4]
 
 result = 0
 win1 = 0
@@ -232,16 +233,16 @@ while gameCount < int(gamesToPlay):
 
 	check = 0
 	
-	time.sleep(20)
+	time.sleep(3)
 	
 	print("	runningAi1")
-	p1 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI1Deck,AIName1,'1','1'],
+	p1 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI1Deck,AIName1,'1','1',isTraining],
 						  shell=True,stdout=subprocess.PIPE, 
 						  stderr = subprocess.PIPE,
 						  universal_newlines=True)
 	time.sleep(1)
 	print("	runningAi2")
-	p2 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI2Deck,AIName2,'2','0'],
+	p2 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI2Deck,AIName2,'2','0',isTraining],
 						  shell=True)
 	
 	if (p1.poll() == None or p2.poll() == None):
@@ -258,7 +259,7 @@ while gameCount < int(gamesToPlay):
 	#make sure the game does not run longer than needed
 	#ends the ygopro program as soon as the ais are done. Ais play faster than what you see.
 	#
-	while globalTimeOut > 0 and ((count < timeout and (p1.poll() == None or p2.poll() == None)) or (p1.poll() == None and p2.poll() != None) or (p1.poll() != None and p2.poll() == None)):
+	while globalTimeOut > 0 and ((count < timeout and (p1.poll() == None and p2.poll() == None))):
 		time.sleep(1)
 		count += 1
 		globalTimeOut -=1

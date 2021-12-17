@@ -13,6 +13,7 @@ import sqlite3
 #for f in files:
 #    os.remove(f)
 
+
 subprocess.Popen([os.getcwd() + "/132_runYgoPro.py -c"], 
 			 shell=True, stdin=None, stdout=None,
 			 stderr=None, close_fds=True)

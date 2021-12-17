@@ -175,26 +175,46 @@ namespace WindBot
             data.AddRange(toAdd);
         }
 
-        
-
-        public static List<double> GetTreeNode(int turn, int actionId, string id, string action, bool isFirst)
+        /**
+         * Returns the list of potential next action ids followed by their weights
+         */
+        public static List<double> GetNextTreeNodes(int turn, string prevAction, bool isFirst)
         {
             List<double> row = new List<double>();
 
-            string prevAction = "";
-            TreeActivation.Node node = null;
-            if (TreeActivation.TurnActions.ContainsKey(turn))
-                node = TreeActivation.TurnActions[turn];
-
-            while (node != null)
+            ConnectToDatabase();
+            using (SQLCon)
             {
-                if (node.weight == null)
-                    return new List<double>() { -1, -1 };
+                SQLCon.Open();
 
-                prevAction += node.actionId + ",";
-                node = node.children;
+                string sql = $"SELECT actionId, activation, action from playCardTree WHERE " +
+                      $"preAction = \"{prevAction}\" AND isFirst = \"{isFirst}\" " +
+                      $"AND turn = \"{turn}\"";
+                using (SqliteCommand cmd = new SqliteCommand(sql, SQLCon))
+                {
+                    using (SqliteDataReader rdr = cmd.ExecuteReader())
+                        while (rdr.Read())
+                        {
+                            int actionId = rdr.GetInt32(0);
+                            double weight = rdr.GetDouble(1);
+                            string action = rdr.GetString(2);
+
+                            if (action.Contains("GoTo"))
+                                actionId = -2;
+                            row.Add(actionId);
+                            row.Add(weight);
+                        }
+                }
+                SQLCon.Close();
             }
 
+            return row;
+        }
+        
+
+        public static List<double> GetTreeNode(int turn, int actionId, string id, string action, string prevAction, bool isFirst)
+        {
+            List<double> row = new List<double>();
 
             double games = 0;
             double activation = 0;

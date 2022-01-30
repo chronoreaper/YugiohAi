@@ -312,14 +312,14 @@ namespace WindBot.Game.AI.Decks
                 {
                     //if (oppLpLoss > 0)
                     //    SqlComm.ModifyAction(Duel.Turn - 1, oppLpLoss / 1000.0, 1);
-                    double weight = 0;// -playerFieldLoss
-                    weight += (Math.Sign(enemyFieldLoss) - Math.Sign(playerFieldLoss) * 0.5) * 0.5;
-                    weight += (advantageGain2) * 0.5;
+                    double weight = 1;// -playerFieldLoss
+                    weight += (Math.Sign(enemyFieldLoss) - Math.Sign(playerFieldLoss) ) * 0.5;
+                    weight += (advantageGain) * 0.5;
 
                     //weight +=cardAdvantage;
-                    //weight += oppLpLoss / 2000.0;
+                    weight += oppLpLoss / 2000.0;
 
-                    if (Duel.Turn > 2) weight--;
+                    //if (Duel.Turn > 2) weight--;
                     if (Math.Abs(weight) > 0)
                     {
                         SqlComm.RecordActual(Duel.Turn - 1, weight, 1);
@@ -337,12 +337,12 @@ namespace WindBot.Game.AI.Decks
                     //if (cardDiff >= 0)
                     {
                         double weight = 0;
-                        //weight += (enemyFieldLoss - playerFieldLoss * 0.5) * 0.5;
-                        weight += advantageGain;
+                        weight += (enemyFieldLoss - playerFieldLoss *0.5) * 0.5;
+                        weight += advantageGain *0.5;
 
                         //weight += cardAdvantage;
                         //if (Duel.Turn != 3)
-                        //    weight -= playerLpLoss / 2000.0;
+                            weight -= playerLpLoss / 2000.0;
 
                         if (Math.Abs(weight) > 0)
                         {
@@ -351,8 +351,9 @@ namespace WindBot.Game.AI.Decks
                             // Save weight for debugging
                             SqlComm.SaveActionWeight(Duel.Turn - 1, -1, weight, "Result", "", 0);
                         }
-                        SqlComm.TreeActivation.UpdateNode(Duel.Turn - 2, weight + PreTurnWeight);
+                        Console.WriteLine("Weight: " + (weight + PreTurnWeight).ToString());
                         SqlComm.TreeActivation.UpdateNode(Duel.Turn - 1, weight + PreTurnWeight);
+                        SqlComm.TreeActivation.UpdateNode(Duel.Turn, weight + PreTurnWeight);
                         PreTurnWeight = weight;
                     }
                 }
@@ -465,7 +466,9 @@ namespace WindBot.Game.AI.Decks
                 return null;
             if (AI.HaveSelectedCards())
                 return null;
-            //ActionId++;
+
+            ActionId++;
+
             SetCard(ExecutorType.Activate, null, 0);
 
             double MAX = 4;
@@ -717,6 +720,8 @@ namespace WindBot.Game.AI.Decks
             {
                 weight = DataModifier(action, result);
             }
+            Console.WriteLine(string.Format($"    {ActionId} {(weight != null ? weight.ToString() : "null")} | {action}"));
+
             return weight;
         }
         
@@ -869,10 +874,10 @@ namespace WindBot.Game.AI.Decks
 
             if (GetData)
             {
-                Console.WriteLine($"    {activator} Activater");
+                Console.WriteLine($"        {activator} Activater");
                 //Console.WriteLine($"{gamesWon} games won");
-                Console.WriteLine($"    {totalWon} Total won");
-                Console.WriteLine($"    Number of games: {totalGames}");
+                Console.WriteLine($"        {totalWon} Total won");
+                Console.WriteLine($"        Number of games: {totalGames}");
             }
             else //recording action
             {

@@ -178,16 +178,16 @@ namespace WindBot
         /**
          * Returns the list of potential next action ids followed by their weights
          */
-        public static List<double> GetNextTreeNodes(int turn, string prevAction, bool isFirst)
+        public static List<TreeActivation.Node> GetNextTreeNodes(int turn, string prevAction, bool isFirst)
         {
-            List<double> row = new List<double>();
+            List<TreeActivation.Node> row = new List<TreeActivation.Node>();
 
             ConnectToDatabase();
             using (SQLCon)
             {
                 SQLCon.Open();
 
-                string sql = $"SELECT actionId, activation, action from playCardTree WHERE " +
+                string sql = $"SELECT actionId, activation, action, games from playCardTree WHERE " +
                       $"preAction = \"{prevAction}\" AND isFirst = \"{isFirst}\" " +
                       $"AND turn = \"{turn}\"";
                 using (SqliteCommand cmd = new SqliteCommand(sql, SQLCon))
@@ -198,11 +198,8 @@ namespace WindBot
                             int actionId = rdr.GetInt32(0);
                             double weight = rdr.GetDouble(1);
                             string action = rdr.GetString(2);
-
-                            if (action.Contains("GoTo"))
-                                actionId = -2;
-                            row.Add(actionId);
-                            row.Add(weight);
+                            double games = rdr.GetDouble(3);
+                            row.Add(new TreeActivation.Node(action, weight, actionId, games));
                         }
                 }
                 SQLCon.Close();
@@ -244,9 +241,52 @@ namespace WindBot
 
             string weight = row.Count > 0 ? row[0].ToString() : "null";
             //Console.WriteLine(string.Format($"    {actionId} {weight} | {action} {id} | {preAction} {preId}"));
+            if (row.Count == 0)
+            {
+                var avg = GetAvgTreeNodeAction(id, action);
+                row = avg;
+            }
+            else if (row.Count > 0 && Program.Rand.NextDouble() < (2 - games) / 2)
+            {
+                row[0] = 10;
+            }
+            return row;
+        }
+
+        static List<double> GetAvgTreeNodeAction(string id, string action)
+        {
+            List<double> row = new List<double>();
+
+            double games = 0;
+            double activation = 0;
+            ConnectToDatabase();
+            using (SQLCon)
+            {
+                SQLCon.Open();
+
+                string sql = $"SELECT avg(activation), avg(games) FROM playCardTree WHERE id = \"{id}\" " +
+                      $"AND action = \"{action}\" " +
+                      $"GROUP BY action, id";
+                using (SqliteCommand cmd = new SqliteCommand(sql, SQLCon))
+                {
+                    using (SqliteDataReader rdr = cmd.ExecuteReader())
+                        while (rdr.Read())
+                        {
+                            activation = rdr.GetDouble(0);
+                            games = rdr.GetDouble(1);
+                            row.Add(activation);
+                            row.Add(games);
+                        }
+                }
+                SQLCon.Close();
+            }
+
+            string weight = row.Count > 0 ? row[0].ToString() : "null";
+            //Console.WriteLine(string.Format($"    {actionId} {weight} | {action} {id} | {preAction} {preId}"));
 
             return row;
         }
+
         /// <summary>
         /// Gets the weight of the input from the database.
         /// </summary>
@@ -291,7 +331,7 @@ namespace WindBot
                             games += rdr.GetDouble(1);
                         }
                 }
-                Console.WriteLine(string.Format($"      {activation,-5},{games,-3},{id,-3},{location,-3},{action,-3},{result,-3},{verify,-3},{value,-3},{count,-3}"));
+                Console.WriteLine(string.Format($"          {activation,-5},{games,-3},{id,-3},{location,-3},{action,-3},{result,-3},{verify,-3},{value,-3},{count,-3}"));
                 SQLCon.Close();
             }
             row.Add(activation);

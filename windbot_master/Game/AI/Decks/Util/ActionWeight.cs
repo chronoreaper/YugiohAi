@@ -10,7 +10,7 @@ namespace WindBot.Game.AI.Decks.Util
         public int ActivateDesc { get; private set; } = -1;
         public ClientCard Card { get; private set; } = null;
         public long Index { get; private set; } = 0;
-        public double? Weight { get; private set; } = 0;//threshold
+        public double? Weight { get; private set; } = double.MinValue;//threshold
         public ExecutorType Action { get; private set; } = ExecutorType.GoToEndPhase;
         public int ActionId { get; private set; } = 0;
 

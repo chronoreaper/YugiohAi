@@ -81,7 +81,7 @@ while (count <= repeatFor):
 		print("making decks")
 
 
-		if (reset or matchNum > 1):
+		if (reset or matchNum > 1) and True:
 			subprocess.run([os.getcwd() + "/ShuffleDeck.py", "AI_Random.ydk"],shell=True)
 			src_dir=os.getcwd() + '/windbot_master/bin/Debug/Decks/' + "AI_Random.ydk"
 			dst_dir=os.getcwd() + '/windbot_master/bin/Debug/Decks/' + "AI_Random2.ydk"

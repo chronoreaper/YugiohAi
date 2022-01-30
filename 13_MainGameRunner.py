@@ -253,8 +253,8 @@ while gameCount < int(gamesToPlay):
 		check = 1
 	  
 	count = 0
-	globalTimeOut = 60*5 # Includes updating to database
-	timeout = 300 # Length of each game
+	globalTimeOut = 20# Includes updating to database
+	timeout = 20 # Length of each game
 	
 	#make sure the game does not run longer than needed
 	#ends the ygopro program as soon as the ais are done. Ais play faster than what you see.

@@ -7,6 +7,8 @@ namespace WindBot
 {
     public class TreeActivation
     {
+        public const double THRESHOLD = 99;
+
         public class Node
         {
             public Node children;
@@ -17,8 +19,17 @@ namespace WindBot
             public double? originalWeight { get; private set; }
             public int turn;
             public int actionId;
+            public double games;
             public bool isFirst;
             public Node parent;
+
+            public Node(string action, double? weight, int actionId, double games)
+            {
+                this.action = action;
+                this.weight = weight;
+                this.actionId = actionId;
+                this.games = games;
+            }
 
             public Node(string id, string action, double? weight, int turn, int actionId, bool isFirst, Node parent = null)
             {
@@ -72,17 +83,18 @@ namespace WindBot
                 }
                 else
                 {
-                    if (node.weight == result)
+                    if (node.weight != result)
                         Console.WriteLine("Expected " + node.weight + " But Got " + result);
+                    node.weight = result;
                 }
 
                 while (node.parent != null)
                 {
                     node = node.parent;
-                    if (node.weight <= result)
+                    //if (node.weight <= result)
                         node.weight = result;
-                    else
-                        break;
+                    //else
+                    //    break;
                 }
             }
             
@@ -91,7 +103,7 @@ namespace WindBot
 
         public bool ShouldSave()
         {
-            if (!SqlComm.IsTraining)
+            //if (!SqlComm.IsTraining)
                 return true;
             // Only update if the last turn has no new values
             if (TurnActions.Keys.Count > 0)
@@ -101,6 +113,25 @@ namespace WindBot
                 while (check != null)
                 {
                     if (check.originalWeight == null)
+                        return false;
+                    check = check.children;
+                }
+            }
+
+            return true;
+        }
+
+        public bool ShouldPlayCard(int turn)
+        {
+            //if (!SqlComm.IsTraining)
+                return true;
+            // Only update if the last turn has no new values
+            if (TurnActions.Keys.Contains(turn))
+            {
+                Node check = TurnActions[turn];
+                while (check != null)
+                {
+                    if (check.weight >= THRESHOLD)
                         return false;
                     check = check.children;
                 }
@@ -131,34 +162,40 @@ namespace WindBot
         /**
          * Returns the next potential action to take and the weight of the result
          */
-        public double[] GetNextPotentialAction(int turn, bool isFirst, string actionsTaken = "")
+        public Node GetNextPotentialAction(int turn, bool isFirst, string actionsTaken = "")
         {
-            double[] result = new double[2] { -1, double.MinValue };
+            Node result = null;
             string prevAction = GetPrevAction(turn);
             if (prevAction == null)
                 return result;
-            List<double> nextAct = SqlComm.GetNextTreeNodes(turn, prevAction + actionsTaken, isFirst);
+            List<Node> nextAct = SqlComm.GetNextTreeNodes(turn, prevAction + actionsTaken, isFirst);
 
             if (nextAct.Count == 0)
                 return result;
 
-            for (int i = 0; i < nextAct.Count; i += 2)
+            for (int i = 0; i < nextAct.Count; i += 1)
             {
-                double weight;
-                int action = (int)nextAct[i];
-                double[] potential = GetNextPotentialAction(turn, isFirst, actionsTaken + nextAct[i].ToString() + ",");
+                Node cur = nextAct[i];
+                Node potential = GetNextPotentialAction(turn, isFirst, actionsTaken + cur.actionId.ToString() + ",");
 
 
-                if (potential[0] == -1)
-                    weight = nextAct[i + 1];
-                else
-                    weight = potential[1];
-
-                if (result[1] < weight && result[1] < 1 && potential[0] != -2)
+                if (potential != null)
                 {
-                    result[1] = weight;
-                    result[0] = action;
+                    cur.action = potential.action;
+                    cur.weight = potential.weight;
+                    cur.games = potential.games;
                 }
+
+                if (!cur.action.Contains("GoTo"))
+                {
+                    if (result == null)
+                        result = cur;
+                    else if (result.weight < cur.weight)
+                    {
+                        result = cur;
+                    }
+                }
+
             }
 
             return result;

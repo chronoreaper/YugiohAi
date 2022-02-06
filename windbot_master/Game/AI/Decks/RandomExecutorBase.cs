@@ -411,7 +411,7 @@ namespace WindBot.Game.AI.Decks
 
                 if (SqlComm.IsTraining)
                 {
-                    List<double> weights = SqlComm.TreeActivation.GetTreeNode(Duel.Turn, ActionId, Card?.Name, actionString, Duel.IsFirst);
+                    List<double?> weights = SqlComm.TreeActivation.GetTreeNode(Duel.Turn, ActionId, Card?.Name, actionString, Duel.IsFirst);
                     if (weights.Count > 0)
                     {
                         weight = weights[0];
@@ -424,10 +424,18 @@ namespace WindBot.Game.AI.Decks
 
                 result = weight >= 0 || weight == null;
 
-                if (result && Card != null )
+                if (Card != null)
                 {
-                    RecordAction(actionString, "", weight ?? 0);
-                    SqlComm.TreeActivation.SaveTreeNode(Duel.Turn, ActionId, Card?.Name, actionString, weight, Duel.IsFirst);
+                    var parent = SqlComm.TreeActivation.GetLastNode(Duel.Turn);
+                    if (result)
+                    {
+                        RecordAction(actionString, "", weight);
+                        SqlComm.TreeActivation.SaveTreeNode(Duel.Turn, ActionId, Card?.Name, actionString, weight, Duel.IsFirst, true, parent);
+                    }
+                    else
+                    {
+                        SqlComm.TreeActivation.SaveTreeNode(Duel.Turn, ActionId, Card?.Name, actionString, weight, Duel.IsFirst, false, parent);
+                    }
                 }
             }
 
@@ -471,7 +479,6 @@ namespace WindBot.Game.AI.Decks
 
             SetCard(ExecutorType.Activate, null, 0);
 
-            double MAX = 4;
             IList<ClientCard> selected = new List<ClientCard>();
             IList<ClientCard> cards = new List<ClientCard>(_cards);
 
@@ -498,16 +505,17 @@ namespace WindBot.Game.AI.Decks
             List<ClientCardWeight> cardWeight = new List<ClientCardWeight>();
 
             // Add Top choices
+            ActionId++;
+            int actionId = ActionId;
             foreach (ClientCard clientCard in cards)
             {
-                int actionId = ++ActionId;
                 string action = $"Select" + hint.ToString();
-                double? weight = GetWeight(action, SelectStringBuilder(clientCard)) ?? MAX;
+                double? weight = GetWeight(action, SelectStringBuilder(clientCard));
                 Console.WriteLine(string.Format($"    {actionId} {(weight != null ? weight.ToString() : "null")} | {action} {clientCard?.Name}"));
                 cardWeight.Add(new ClientCardWeight()
                 {
                     Card = clientCard,
-                    Weight = weight ?? MAX,
+                    Weight = weight,
                     Quantity = 0,
                     ActionId = actionId
                 });
@@ -603,23 +611,30 @@ namespace WindBot.Game.AI.Decks
                 }
             }
             //RecordAction("Number Selected", numToSelect.ToString(), maxWeight);
+             var parent = SqlComm.TreeActivation.GetLastNode(Duel.Turn);
             foreach (ClientCard card in selected)
             {
-                double? weight = 1;
-                if (selected.IndexOf(card) < selected_card.Count)
-                    weight = selected_card[selected.IndexOf(card)].Weight;
-                if (weight == MAX)
-                    weight = null;
+                double? weight = cardWeight.Find(x => x.Card.Id == card.Id).Weight;
                 RecordAction($"Select" + hint.ToString(), SelectStringBuilder(card), weight ?? 0);
                 if (SqlComm.IsTraining)
                 {
-                    SqlComm.TreeActivation.SaveTreeNode(Duel.Turn, cardWeight.Find(x => x.Card.Id == card.Id).ActionId, Card?.Name, $"Select" + hint.ToString() + SelectStringBuilder(card), weight, Duel.IsFirst);
+                    SqlComm.TreeActivation.SaveTreeNode(Duel.Turn, cardWeight.Find(x => x.Card.Id == card.Id).ActionId, Card?.Name, $"Select" + hint.ToString() + SelectStringBuilder(card), weight, Duel.IsFirst, true, parent);
                 }
                 Console.WriteLine($"Choosing {SelectStringBuilder(card)} for Action {hint}");
                 //RecordAction($"Select",$"{card.Name} { card.Position.ToString()}");
                 //RecordAction($"Select", $"{card.Name}");
                 //RecordAction("Number Selected", count.ToString());
 
+            }
+            foreach (ClientCard card in cards)
+            {
+                // Not selected
+                RecordAction($"Select" + hint.ToString(), SelectStringBuilder(card), null);
+                if (SqlComm.IsTraining)
+                {
+                    SqlComm.TreeActivation.SaveTreeNode(Duel.Turn, cardWeight.Find(x => x.Card.Id == card.Id).ActionId, Card?.Name, $"Select" + hint.ToString() + SelectStringBuilder(card), cardWeight.Find(x => x.Card.Id == card.Id).Weight, Duel.IsFirst, false, parent);
+                }
+                Console.WriteLine($"Did not select {SelectStringBuilder(card)} for Action {hint}");
             }
 
 
@@ -639,7 +654,7 @@ namespace WindBot.Game.AI.Decks
         private class ClientCardWeight
         {
             public ClientCard Card;
-            public double Weight;
+            public double? Weight;
             public int Quantity;
             public int ActionId;
         }
@@ -700,9 +715,9 @@ namespace WindBot.Game.AI.Decks
             return GetWeight(action, "")??0;
         }
 
-        public void RecordAction(string action, string result, double wins = 1)
+        public void RecordAction(string action, string result, double? wins = 1)
         {
-            if (!SqlComm.TreeActivation.ShouldSave())
+            if (!SqlComm.TreeActivation.ShouldSave(Duel.Turn))
                 return;
             DataModifier(action, result, wins, false);
         }
@@ -712,7 +727,7 @@ namespace WindBot.Game.AI.Decks
             double? weight = null;
             if (SqlComm.IsTraining)
             {
-                List<double> weights = SqlComm.TreeActivation.GetTreeNode(Duel.Turn, ActionId, Card?.Name, action + result, Duel.IsFirst);
+                List<double?> weights = SqlComm.TreeActivation.GetTreeNode(Duel.Turn, ActionId, Card?.Name, action + result, Duel.IsFirst);
                 if (weights.Count > 0)
                     weight = weights[0];
             }
@@ -725,7 +740,7 @@ namespace WindBot.Game.AI.Decks
             return weight;
         }
         
-        private double DataModifier(string action, string result, double win = 0,bool GetData = true)
+        private double DataModifier(string action, string result, double? win = 0,bool GetData = true)
         {
             List<double> score = new List<double>();
 
@@ -893,9 +908,9 @@ namespace WindBot.Game.AI.Decks
         /// Gets the potential best select option for the current card
         /// </summary>
         /// <returns></returns>
-        private double GetPotentialBestChoice(double win = 0, bool GetData = true)
+        private double? GetPotentialBestChoice(double win = 0, bool GetData = true)
         {
-            Dictionary<string, double> result_weights = new Dictionary<string, double>();
+            Dictionary<string, double?> result_weights = new Dictionary<string, double?>();
             string cardName = Card?.Name;
             string cardLocation = Card?.Location.ToString() + " " + Card?.Position.ToString();
             List<SqlComm.Data> row = SqlComm.GetDataSelect(cardName);
@@ -1017,7 +1032,7 @@ namespace WindBot.Game.AI.Decks
             return valid;
         }
 
-        private List<double> SQLCom(bool GetData, string id, string location, string action, string result, string verify, string value, int count, double wins)
+        private List<double> SQLCom(bool GetData, string id, string location, string action, string result, string verify, string value, int count, double? wins)
         {
             if (GetData)
             {

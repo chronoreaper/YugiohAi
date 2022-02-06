@@ -7,11 +7,11 @@ namespace WindBot
 {
     public class TreeActivation
     {
-        public const double THRESHOLD = 99;
+        public const double THRESHOLD = 2;
 
         public class Node
         {
-            public Node children;
+            public List<Node> children;
 
             public string id;
             public string action;
@@ -21,19 +21,22 @@ namespace WindBot
             public int actionId;
             public double games;
             public bool isFirst;
+            public bool activated;
             public Node parent;
 
             public Node(string action, double? weight, int actionId, double games)
             {
                 this.action = action;
                 this.weight = weight;
+                this.originalWeight = weight;
                 this.actionId = actionId;
                 this.games = games;
+                this.activated = true;
             }
 
-            public Node(string id, string action, double? weight, int turn, int actionId, bool isFirst, Node parent = null)
+            public Node(string id, string action, double? weight, int turn, int actionId, bool isFirst, bool activated, Node parent = null)
             {
-                children = null;
+                children = new List<Node>();
                 this.id = id;
                 this.action = action;
                 this.weight = weight;
@@ -42,22 +45,54 @@ namespace WindBot
                 this.actionId = actionId;
                 this.isFirst = isFirst;
                 this.parent = parent;
+                this.activated = activated;
             }
 
-            public int Count()
+            public string GetPrevActions()
+            {
+                string prevAction = "";
+                var node = this.parent;
+
+                while (node != null)
+                {
+                    prevAction = node.actionId + "," + prevAction;
+                    node = node.parent;
+                }
+
+                return prevAction;
+            }
+
+            public int Depth()
             {
                 int count = 0;
-                Node node = this;
-                while(node.children != null)
+                var node = this.parent;
+
+                while (node != null)
                 {
                     count++;
-                    node = node.children;
+                    node = node.parent;
                 }
                 return count;
             }
+
+            public List<Node> GetNodePath()
+            {
+                Node node = this;
+                List<Node> path = new List<Node>();
+                path.Add(this);
+
+                while(node.parent != null)
+                {
+                    node = node.parent;
+                    path.Add(node);
+                }
+
+                return path;
+            }
+
         }
 
-        public Dictionary<int, Node> TurnActions;
+        public Dictionary<int, List<Node>> TurnActions;
 
         public TreeActivation()
         {
@@ -66,55 +101,73 @@ namespace WindBot
 
         protected void BuildTree()
         {
-            TurnActions = new Dictionary<int, Node>();
+            TurnActions = new Dictionary<int, List<Node>>();
             // Connect to SQL Com
         }
 
         public void UpdateNode(int turn, double? result, bool all = false)
         {
-            int preTurn = turn - 1;
-            Node node = GetLastNode(preTurn);
-
-            if (node != null)
+            if (all)
             {
-                if (node.weight == null)
+                foreach(var key in TurnActions.Keys)
                 {
-                    node.weight = result;
-                }
-                else
-                {
-                    if (node.weight != result)
-                        Console.WriteLine("Expected " + node.weight + " But Got " + result);
-                    node.weight = result;
-                }
-
-                while (node.parent != null)
-                {
-                    node = node.parent;
-                    //if (node.weight <= result)
+                    var node = TurnActions[key].FirstOrDefault(x => x.activated);
+                    while (node != null && node.children.Count > 0)
+                    {
                         node.weight = result;
-                    //else
-                    //    break;
+                        var child = node.children.FirstOrDefault(x => x.activated);
+                        if (child == null)
+                            break;
+                        node = child;
+                    }
                 }
             }
-            
-            
+            else
+            {
+                int preTurn = turn - 1;
+                Node node = GetLastNode(preTurn);
+                if (node != null)
+                {
+                    if (node.weight == null)
+                    {
+                        node.weight = result;
+                    }
+                    else
+                    {
+                        if (node.weight != result)
+                            Console.WriteLine("Expected " + node.weight + " But Got " + result);
+                        node.weight = result;
+                    }
+
+                    while (node.parent != null)
+                    {
+                        node = node.parent;
+                        if (node.weight == null || node.weight <= result)
+                            node.weight = result;
+                        //else
+                        //    break;
+                    }
+                }
+            }
         }
 
-        public bool ShouldSave()
+        public bool ShouldSave(int turn)
         {
-            //if (!SqlComm.IsTraining)
+            if (!SqlComm.IsTraining)
                 return true;
             // Only update if the last turn has no new values
             if (TurnActions.Keys.Count > 0)
             {
                 int lastTurn = TurnActions.Keys.Max();
-                Node check = TurnActions[lastTurn];
-                while (check != null)
+                if (lastTurn != turn)
                 {
-                    if (check.originalWeight == null)
-                        return false;
-                    check = check.children;
+                    Node check = TurnActions[lastTurn].FirstOrDefault(x => x.activated);
+                    while (check != null)
+                    {
+                        if (check.originalWeight == null)
+                            return false;
+                        check = check.children.FirstOrDefault(x => x.activated);
+                    }
                 }
             }
 
@@ -128,24 +181,82 @@ namespace WindBot
             // Only update if the last turn has no new values
             if (TurnActions.Keys.Contains(turn))
             {
-                Node check = TurnActions[turn];
+                Node check = TurnActions[turn].FirstOrDefault(x => x.activated);
                 while (check != null)
                 {
                     if (check.weight >= THRESHOLD)
                         return false;
-                    check = check.children;
+                    check = check.children.FirstOrDefault(x => x.activated);
                 }
             }
 
             return true;
         }
 
+        /**
+         * Returns true if the base node of a is greater than b
+         * If there is a tie, go up a child.
+         * If you hit a before b, return true, and vice versa for false.
+         * If there is a tie, return a.
+         * Returns true if there is a null weight
+         */
+        private bool IsBaseGreater(Node a, Node b)
+        {
+            bool result = true;
+
+            List<Node> a_path = a.GetNodePath();
+            List<Node> b_path = b.GetNodePath();
+
+            int i = 0;
+
+            while (a_path.Count < i && b_path.Count < i)
+            {
+                if (a_path[i].weight == null || b_path[i].weight == null)
+                {
+                    result = true;
+                    break;
+                }
+                else if (a_path[i].weight > b_path[i].weight)
+                {
+                    result = true;
+                    break;
+                }
+                else if (a_path[i].weight < b_path[i].weight)
+                {
+                    result = false;
+                    break;
+                }
+
+                i++;
+
+                // If at end of path
+                if (a_path.Count == i)
+                {
+                    result = true;
+                    break;
+                }
+                else if (b_path.Count == i)
+                {
+                    result = false;
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        private Node GetPrevActionNode(int turn)
+        {
+            Node node = null;
+            if (TurnActions.ContainsKey(turn))
+                node = TurnActions[turn].FirstOrDefault(x => x.activated);
+            return node;
+        }
+
         private string GetPrevAction(int turn)
         {
             string prevAction = "";
-            Node node = null;
-            if (TurnActions.ContainsKey(turn))
-                node = TurnActions[turn];
+            Node node = GetPrevActionNode(turn);
 
             while (node != null)
             {
@@ -153,7 +264,7 @@ namespace WindBot
                     return null;
 
                 prevAction += node.actionId + ",";
-                node = node.children;
+                node = node.children.FirstOrDefault(x => x.activated);
             }
 
             return prevAction;
@@ -162,38 +273,64 @@ namespace WindBot
         /**
          * Returns the next potential action to take and the weight of the result
          */
-        public Node GetNextPotentialAction(int turn, bool isFirst, string actionsTaken = "")
+        public Node GetNextPotentialAction(int turn, bool isFirst)
         {
             Node result = null;
-            string prevAction = GetPrevAction(turn);
-            if (prevAction == null)
-                return result;
-            List<Node> nextAct = SqlComm.GetNextTreeNodes(turn, prevAction + actionsTaken, isFirst);
+            Queue<Node> actions = new Queue<Node>();
+            List<string> visited = new List<string>();
 
-            if (nextAct.Count == 0)
-                return result;
 
-            for (int i = 0; i < nextAct.Count; i += 1)
+            string previousActions = "";
+            Node lastNode = GetLastNode(turn);
+            if (lastNode != null)
             {
-                Node cur = nextAct[i];
-                Node potential = GetNextPotentialAction(turn, isFirst, actionsTaken + cur.actionId.ToString() + ",");
+                previousActions = lastNode.GetPrevActions() + lastNode.actionId.ToString() + ",";
+            }
+            List<Node> nextAct = SqlComm.GetNextTreeNodes(turn, previousActions, isFirst);
+            foreach (var action in nextAct)
+                actions.Enqueue(action);
 
+            while (actions.Count > 0)
+            {
+                Node cur = actions.Dequeue();
+                string actionsTaken = previousActions + cur.GetPrevActions() + cur.actionId.ToString() + ",";
 
-                if (potential != null)
+                if (!visited.Contains(actionsTaken))
                 {
-                    cur.action = potential.action;
-                    cur.weight = potential.weight;
-                    cur.games = potential.games;
+                    visited.Add(actionsTaken);
+                }
+                else if (actionsTaken != "")
+                {
+                    continue;
                 }
 
-                if (!cur.action.Contains("GoTo"))
+                if (cur != null)
                 {
                     if (result == null)
                         result = cur;
-                    else if (result.weight < cur.weight)
+                    else if ((result.weight < cur.weight && cur.weight != null && result.weight != null) || (result.Depth() >= cur.Depth() && (
+                            (result.weight == null && cur.weight == null && IsBaseGreater(cur, result)) ||
+                            (cur.weight == null) ||
+                            (result.weight == null && cur.weight >= THRESHOLD))))
                     {
                         result = cur;
+                        // Set the action id and action to be the right one
+                        while (result.parent != null)
+                        {
+                            result = result.parent;
+                        }
+                        int actionId = result.actionId;
+                        result = cur;
+                        result.actionId = actionId;
+
                     }
+                }
+
+                nextAct = SqlComm.GetNextTreeNodes(turn, actionsTaken, isFirst);
+                foreach (var action in nextAct)
+                {
+                    action.parent = cur;
+                    actions.Enqueue(action);
                 }
 
             }
@@ -201,28 +338,40 @@ namespace WindBot
             return result;
         }
 
-        public List<double> GetTreeNode(int turn, int actionId, string id, string action, bool isFirst)
+        public List<double?> GetTreeNode(int turn, int actionId, string id, string action, bool isFirst)
         {
             string prevAction = GetPrevAction(turn);
-            if (prevAction == null)
-                return new List<double>() { -1, -1 };
+            //if (prevAction == null)
+            //    return new List<double>() { -1, -1 };
             //To change
             return SqlComm.GetTreeNode(turn, actionId, id, action, prevAction, isFirst);
         }
 
-        public void SaveTreeNode(int turn, int actionId, string id, string action, double? weight, bool isFirst)
+        public void SaveTreeNode(int turn, int actionId, string id, string action, double? weight, bool isFirst, bool activated, Node parent)
         {
-            Node node = new Node(id, action, weight, turn, actionId, isFirst);
+            Node node = new Node(id, action, weight, turn, actionId, isFirst, activated, parent);
 
-            if (!ShouldSave())
+            if (!ShouldSave(turn))
                 return;
 
-            if (!TurnActions.Keys.Contains(turn))
-                TurnActions.Add(turn, node);
+            if (parent == null)
+            {
+                List<Node> startNode = null;
+                if (TurnActions.ContainsKey(turn))
+                {
+                    startNode = TurnActions[turn];
+                }
+                else
+                {
+                    startNode = new List<Node>();
+                    TurnActions.Add(turn, startNode);
+                }
+                startNode.Add(node);
+            }
             else
             {
-                node.parent = GetLastNode(turn);
-                GetLastNode(turn).children = node;
+                node.parent = parent;
+                parent.children.Add(node);
             }
         }
 
@@ -231,10 +380,13 @@ namespace WindBot
             Node node = null;
             if (TurnActions.Keys.Contains(turn))
             {
-                node = TurnActions[turn];
-                while (node.children != null)
+                node = TurnActions[turn].FirstOrDefault(x => x.activated);
+                while (node != null && node.children.Count > 0)
                 {
-                    node = node.children;
+                    var child = node.children.FirstOrDefault(x => x.activated);
+                    if (child == null)
+                        break;
+                    node = child;
                 }
             }
             return node;

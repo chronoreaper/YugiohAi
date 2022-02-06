@@ -32,10 +32,10 @@ namespace WindBot
         public class ActionWeightCard
         {
             public string id;
-            public double weight;
+            public double? weight;
             public string action;
-            public double activatePercent;
-            public ActionWeightCard(string id, double weight, string action, double activatePercent)
+            public double? activatePercent;
+            public ActionWeightCard(string id, double? weight, string action, double? activatePercent)
             {
                 this.id = id;
                 this.weight = weight;
@@ -53,11 +53,11 @@ namespace WindBot
             public string verify;
             public string value;
             public int count;
-            public double activation;
+            public double? activation;
             public int turn;
             public int actionId;
             public int modified = 0; // 1 last turn, 2 turn before last, 3 other
-            public Data(string id, string location, string action, string result, string verify, string value, int count, double activation, int turn, int actionId)
+            public Data(string id, string location, string action, string result, string verify, string value, int count, double? activation, int turn, int actionId)
             {
                 this.id = id;
                 this.location = location;
@@ -117,7 +117,7 @@ namespace WindBot
         /// <param name="verify">What value was verifyed</param>
         /// <param name="value">The value to verify</param>
         /// <param name="count">how many times it was found</param>
-        public static void RecordAction(string id = "", string location = "", string action = "", string result = "", string verify = "", string value = "", int count = 1, double activation = 1, int turn = 0, int actionId = 0)
+        public static void RecordAction(string id = "", string location = "", string action = "", string result = "", string verify = "", string value = "", int count = 1, double? activation = 1, int turn = 0, int actionId = 0)
         {
             data.Add(new Data(id, location, action, result, verify, value, count, activation, turn, actionId));
         }
@@ -131,7 +131,7 @@ namespace WindBot
         /// <param name="id">The card id that performs this action</param>
         /// <param name="action">The action the card is performing</param>
         /// <param name="activatePercent">The percentage of weights who activated this action</param>
-        public static void SaveActionWeight(int turn, int actionId, double weight, string id, string action, double activatePercent)
+        public static void SaveActionWeight(int turn, int actionId, double? weight, string id, string action, double? activatePercent)
         {
             //check if the turn is in the dictonary
             if (!actionWeight.ContainsKey(turn))
@@ -196,7 +196,9 @@ namespace WindBot
                         while (rdr.Read())
                         {
                             int actionId = rdr.GetInt32(0);
-                            double weight = rdr.GetDouble(1);
+                            double? weight = null;
+                            if (!rdr.IsDBNull(1))
+                                weight = rdr.GetDouble(1);
                             string action = rdr.GetString(2);
                             double games = rdr.GetDouble(3);
                             row.Add(new TreeActivation.Node(action, weight, actionId, games));
@@ -209,12 +211,12 @@ namespace WindBot
         }
         
 
-        public static List<double> GetTreeNode(int turn, int actionId, string id, string action, string prevAction, bool isFirst)
+        public static List<double?> GetTreeNode(int turn, int actionId, string id, string action, string prevAction, bool isFirst)
         {
-            List<double> row = new List<double>();
+            List<double?> row = new List<double?>();
 
             double games = 0;
-            double activation = 0;
+            double? activation = 0;
             ConnectToDatabase();
             using (SQLCon)
             {
@@ -230,8 +232,14 @@ namespace WindBot
                     using (SqliteDataReader rdr = cmd.ExecuteReader())
                         while (rdr.Read())
                         {
-                            activation = rdr.GetDouble(0);
-                            games = rdr.GetDouble(1);
+                            if (rdr.IsDBNull(0))
+                                activation = null;
+                            else
+                            {
+                                activation = rdr.GetDouble(0);
+                                games = rdr.GetDouble(1);
+                            }
+
                             row.Add(activation);
                             row.Add(games);
                         }
@@ -244,18 +252,18 @@ namespace WindBot
             if (row.Count == 0)
             {
                 var avg = GetAvgTreeNodeAction(id, action);
-                row = avg;
+                //row = avg;
             }
             else if (row.Count > 0 && Program.Rand.NextDouble() < (2 - games) / 2)
             {
-                row[0] = 10;
+                //row[0] = 10;
             }
             return row;
         }
 
-        static List<double> GetAvgTreeNodeAction(string id, string action)
+        static List<double?> GetAvgTreeNodeAction(string id, string action)
         {
-            List<double> row = new List<double>();
+            List<double?> row = new List<double?>();
 
             double games = 0;
             double activation = 0;
@@ -272,10 +280,13 @@ namespace WindBot
                     using (SqliteDataReader rdr = cmd.ExecuteReader())
                         while (rdr.Read())
                         {
-                            activation = rdr.GetDouble(0);
-                            games = rdr.GetDouble(1);
-                            row.Add(activation);
-                            row.Add(games);
+                            if (!rdr.IsDBNull(0))
+                            {
+                                activation = rdr.GetDouble(0);
+                                games = rdr.GetDouble(1);
+                                row.Add(activation);
+                                row.Add(games);
+                            }
                         }
                 }
                 SQLCon.Close();
@@ -364,7 +375,7 @@ namespace WindBot
                             string verify = rdr.GetString(2);
                             string value = rdr.GetString(3);
                             int count = (int)rdr.GetDouble(4);
-                            double activation = rdr.GetDouble(5);
+                            double? activation = rdr.GetDouble(5);
                             int games = (int)rdr.GetDouble(6);
                             row.Add(new Data(id, location, "Select", result, verify, value, count, activation, games, -1));
                         }
@@ -380,7 +391,7 @@ namespace WindBot
             {
                 if (gameResult == WIN)
                 {
-                    TreeActivation.UpdateNode(TreeActivation.TurnActions.Keys.Max() + 1, 1);
+                    TreeActivation.UpdateNode(TreeActivation.TurnActions.Keys.Max() + 1, TreeActivation.THRESHOLD, true);
                 }
                 else if (gameResult == LOSE)
                     TreeActivation.UpdateNode(TreeActivation.TurnActions.Keys.Max() + 1, -1);
@@ -397,21 +408,39 @@ namespace WindBot
                 string sql = "";
                 foreach (var turn in TreeActivation.TurnActions.Keys)
                 {
-                    string preAction = "";
-                    TreeActivation.Node node = TreeActivation.TurnActions[turn];
-                    while (node != null)
-                    {
-                        string preId = "";
+                    Queue<TreeActivation.Node> q = new Queue<TreeActivation.Node>();
+                    foreach(var node in TreeActivation.TurnActions[turn])
+                        q.Enqueue(node);
 
-                        sql = $"UPDATE playCardTree SET activation = {node.weight}, " +
-                            $"games = games + 1 WHERE " +
+                    while (q.Count > 0)
+                    {
+                        var node = q.Dequeue();
+                        string preId = "";
+                        string preAction = node.GetPrevActions();
+
+                        string weight_string = node.weight.ToString();
+                        if (node.weight == null)
+                        {
+                            if (node.originalWeight == null)
+                                weight_string = "null";
+                            else
+                                weight_string = node.originalWeight.ToString();
+                        }
+
+                        int games = 0;
+                        if (node.activated)
+                            games = 1;
+
+                        sql = $"UPDATE playCardTree SET activation = {weight_string}, " +
+                            $"games = games + {games} WHERE " +
                                 $"id = \"{node.id}\" AND action = \"{node.action}\" AND " +
                                 $"preId = \"{preId}\" AND preAction = \"{preAction}\" AND " +
                                 $"turn = \"{turn}\" AND actionId = \"{node.actionId}\"" +
                                 $" AND isFirst = \"{node.isFirst}\"";
 
                         int rowsUpdated = 0;
-                        if (node.weight != null)
+
+                        if (node.actionId != 0 && (node.activated || node.weight == null))
                         {
                             using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon, transaction))
                             {
@@ -422,15 +451,19 @@ namespace WindBot
                             {
                                 //node.actionId = 0;
                                 //The master data isnt in the database yet so add it
-                                sql = $"INSERT INTO playCardTree (id,action,preId,preAction,turn,actionId,isFirst,activation,games) VALUES (\"{node.id}\",\"{node.action}\",\"{preId}\",\"{preAction}\",\"{turn}\",\"{node.actionId}\",\"{node.isFirst}\",\"{node.weight}\",\"1\")";
+                                sql = $"INSERT INTO playCardTree (id,action,preId,preAction,turn,actionId,isFirst,activation,games) VALUES (\"{node.id}\",\"{node.action}\",\"{preId}\",\"{preAction}\",\"{turn}\",\"{node.actionId}\",\"{node.isFirst}\"," +
+                                    $"{weight_string},\"1\")";
                                 using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon, transaction))
                                 {
                                     rowsUpdated = cmd2.ExecuteNonQuery();
                                 }
                             }
                         }
-                        preAction += node.actionId + ",";
-                        node = node.children;
+
+                        foreach(var child in node.children)
+                        {
+                            q.Enqueue(child);
+                        }
                     }
                 }
                 transaction.Commit();
@@ -474,29 +507,6 @@ namespace WindBot
                 //data.AddRange(temp);
                 toAdd.Clear();
 
-                // Only get the last action done
-                /*foreach(var turn in actionWeight)
-                {
-                    int lastActionId = turn.Value.Keys.Max();
-                    var turnActions = data.FindAll(x => x.turn == turn.Key);
-                    var lastAction = turnActions.Find(x => x.actionId == lastActionId);
-
-                    if (lastAction != null)
-                    {
-                        List<Data> temp = new List<Data>();
-                        temp.Add(lastAction);
-                        while (lastAction != null && Math.Abs(lastAction.activation) > 1)
-                        {
-                            lastActionId--;
-                            lastAction = turnActions.Find(x => x.actionId == lastActionId);
-                            temp.Add(lastAction);
-                        }
-
-                        toAdd.AddRange(temp);
-                    }
-                }
-                data = toAdd;
-                toAdd.Clear();*/
                 // Merge all the weights together
                 foreach (Data d in data)
                 {
@@ -514,7 +524,8 @@ namespace WindBot
                         }
 
                         List<Data> result = data.FindAll(x => x.id == d.id && x.location == d.location && x.action == d.action
-                                && x.result == d.result && x.verify == d.verify && x.value == d.value && x.count == d.count);
+                                && x.result == d.result && x.verify == d.verify && x.value == d.value && x.count == d.count
+                                && x.turn <= 2);
 
                         foreach (Data r in result)
                         {
@@ -539,7 +550,7 @@ namespace WindBot
                     string verify = info.verify;
                     string value = info.value;
                     int count = info.count;
-                    double activation = (info.activation);
+                    double? activation = (info.activation);
                     double games = 1;
                     double originalWin = 0;
                     string sql_string = $"SELECT activation FROM playCard WHERE id = \"{id}\" AND location = \"{location}\" " +
@@ -566,7 +577,7 @@ namespace WindBot
 
                     Console.WriteLine($"    {id}, {location}, {action}, {result}, {verify}, {value}, {count}, Act:{activation}");
 
-                    sql = $"UPDATE playCard SET activation = (activation * games + {activation}) / (games + {games}), " +
+                    sql = $"UPDATE playCard SET activation = {activation}, " +
                         $"games = games + {games} WHERE " +
                             $"id = \"{id}\" AND location = \"{location}\" AND action = \"{action}\"  AND result LIKE \"{result}\" " +
                             $"AND verify = \"{verify}\" AND value = \"{value}\" AND count = {count} " +
@@ -584,8 +595,9 @@ namespace WindBot
                         if (rowsUpdated <= 0)
                         {
                             //The master data isnt in the database yet so add it
-                            sql = $"INSERT INTO playCard (id,location,action,result,verify,value,count,activation,games,inprogress) VALUES (\"{id}\",\"{location}\",\"{action}\",\"{result}\",\"{verify}\",\"{value}\",{count},{activation}," +
-                                $"{games},\"{Name}\")";
+                            string activation_string = activation.ToString();
+                            sql = $"INSERT INTO playCard (id,location,action,result,verify,value,count,activation,games,inprogress) VALUES (\"{id}\",\"{location}\",\"{action}\",\"{result}\",\"{verify}\",\"{value}\",{count}," +
+                                $"{activation_string},{games},\"{Name}\")";
                             using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon, transaction))
                             {
                                 rowsUpdated = cmd2.ExecuteNonQuery();

@@ -148,42 +148,42 @@ def UpdateGameAi(AIName1,win1,AIName2,win2):
 	err = 0
 	
 	# Select all unique node for an ai
-	for ai in aiList:
-		c.execute('SELECT id,location,action,result,verify,value,count,activation,games FROM playCard where inprogress = (?)',(ai,))
-		records = c.fetchall()
-		# for each record, try and update master
-		
-		maxGames = 2
-		c.execute("SELECT MAX(games) FROM playCard")
-		lst = c.fetchone()
-		if lst!= None:
-			maxGames = lst[0]
-				
-		#x = (1 + win1/int(gamesToPlay))/maxGames
-		# c.execute('UPDATE playCard SET activation = cast(activation * (?) as int), games = cast(games* (?) as int)',(x,x))
-		
-		for row in records:
-			node = tuple(row[:-2])
-			c.execute('SELECT games,activation FROM playCard WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"', node)
+	for ai, result in zip(aiList, aiResult):
+		if result == 0 or True:
+			
+			c.execute('SELECT id,location,action,result,verify,value,count,activation,games FROM playCard where inprogress = (?)',(ai,))
+			records = c.fetchall()
+			# for each record, try and update master
+			
+			maxGames = 2
+			c.execute("SELECT MAX(games) FROM playCard")
 			lst = c.fetchone()
-			if lst != None : # It exists in master
-				#if row[-1] >= int(gamesToPlay):
-				err += abs(row[-2])
-				value = (row[-2] ,row[-1],row[0],row[1],row[2],row[3],row[4],row[5],row[6])
-				#value = (row[-2],row[-1],row[0],row[1],row[2],row[3],row[4],row[5],row[6])
-				c.execute('UPDATE playCard SET activation = (activation + (?))/2, games = games + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
-				#c.execute('UPDATE playCard SET activation = (?), games = games + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
-				value = (row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[-2],row[-1])
-				#c.execute('INSERT INTO playCard VALUES (?,?,?,?,?,?,?,?,?,\"Update:'+ai + ','+subGen+','+str(gameCount)+'\")', value)
-			else: # add it to master
-				value = tuple(row)
-				c.execute('INSERT INTO playCard VALUES (?,?,?,?,?,?,?,?,?,\"master\")', value)
-			n += 1
+			if lst!= None:
+				maxGames = lst[0]
+					
+			#x = (1 + win1/int(gamesToPlay))/maxGames
+			# c.execute('UPDATE playCard SET activation = cast(activation * (?) as int), games = cast(games* (?) as int)',(x,x))
+			
+			for row in records:
+				node = tuple(row[:-2])
+				c.execute('SELECT games,activation FROM playCard WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"', node)
+				lst = c.fetchone()
+				if lst != None : # It exists in master
+					#if row[-1] >= int(gamesToPlay):
+					err += abs(row[-2])
+					value = (row[-2] ,row[-1], row[-1],row[0],row[1],row[2],row[3],row[4],row[5],row[6])
+					#value = (row[-2],row[-1],row[0],row[1],row[2],row[3],row[4],row[5],row[6])
+					c.execute('UPDATE playCard SET activation = (activation * games + (?)) / (games + (?)), games = games + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
+					#c.execute('UPDATE playCard SET activation = (?), games = games + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
+					value = (row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[-2],row[-1])
+					#c.execute('INSERT INTO playCard VALUES (?,?,?,?,?,?,?,?,?,\"Update:'+ai + ','+subGen+','+str(gameCount)+'\")', value)
+				else: # add it to master
+					value = tuple(row)
+					c.execute('INSERT INTO playCard VALUES (?,?,?,?,?,?,?,?,?,\"master\")', value)
+				n += 1
 		
 		c.execute('DELETE FROM playCard WHERE inprogress = (?)',(ai,))
-	# Copy table
-	#if (int(subGen)%10 == 0):
-		#c.execute('SELECT '+subGen+' as inprogress, * INTO playCard IN "CardDataHistory.cdb" FROM playCard  ')
+
 	conn.commit()
 	c.close()
 	print('n:' + str(n))
@@ -213,12 +213,11 @@ isTraining = sys.argv[4]
 result = 0
 win1 = 0
 win2 = 0
+winsInARow = 0
 	
 #how many games to play with this deck and AI
 while gameCount < int(gamesToPlay):  
-	win1 = 0
-	win2 = 0
-	
+	result = 0 # 1 = p1 win, -1 = p2 win , 0 = tie
 	print("	running game " + str(gameCount))
 	#subprocess.Popen - does not wait to finish
 	#subprocess.run - waits to finish
@@ -276,16 +275,16 @@ while gameCount < int(gamesToPlay):
 	#print("	"+output)
 	if format(output).find('[win]') >= 0:
 		print('[win]')
-		win1 = 1
-		win2 = -1
+		win1 += 1
+		result = 1
 	elif format(output).find('[lose]') >= 0:
 		print('[lose]')
-		win2 = 1  
-		win1 = -1
+		win2 += 1  
+		result = -1
 	  
 	gameCount += 1
 	
-	if win1 == -1 or True:
+	if isTraining:
 		print("	Saving deck to database")
 		# Save to database
 		# deckList = GetGameLog(AIName1)
@@ -301,11 +300,12 @@ while gameCount < int(gamesToPlay):
 
 		print("	Saving Deck 2 Results")
 		#UpdateDatabase(deckListOther,deckQuantOther,deckList,deckQuant, win2, AIName2,False)
-				
-	else:
-		print('[mlerr]0[mlerr]')
+	
+	if abs(win1) > 2:
+		break
 
-UpdateGameAi(AIName1,win1,AIName2,win2)
+if isTraining:
+	UpdateGameAi(AIName1,win1,AIName2,win2)
 # Copy decks
 newDeckname = str(generation) + "_"+ str(subGen) + "_"+ str(win1)+ deck1 
 src_dir=os.getcwd()+"/windbot_master/bin/Debug/Decks/"+ deck1

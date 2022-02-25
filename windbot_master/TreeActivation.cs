@@ -7,7 +7,7 @@ namespace WindBot
 {
     public class TreeActivation
     {
-        public const double THRESHOLD = 2;
+        public const double THRESHOLD = 3;
 
         public class Node
         {
@@ -23,8 +23,9 @@ namespace WindBot
             public bool isFirst;
             public bool activated;
             public Node parent;
+            public string preActions;
 
-            public Node(string action, double? weight, int actionId, double games)
+            public Node(string action, double? weight, int actionId, double games, string preActions = "")
             {
                 this.action = action;
                 this.weight = weight;
@@ -32,6 +33,7 @@ namespace WindBot
                 this.actionId = actionId;
                 this.games = games;
                 this.activated = true;
+                this.preActions = preActions;
             }
 
             public Node(string id, string action, double? weight, int turn, int actionId, bool isFirst, bool activated, Node parent = null)
@@ -112,12 +114,10 @@ namespace WindBot
                 foreach(var key in TurnActions.Keys)
                 {
                     var node = TurnActions[key].FirstOrDefault(x => x.activated);
-                    while (node != null && node.children.Count > 0)
+                    while (node != null)
                     {
                         node.weight = result;
                         var child = node.children.FirstOrDefault(x => x.activated);
-                        if (child == null)
-                            break;
                         node = child;
                     }
                 }
@@ -139,13 +139,15 @@ namespace WindBot
                         node.weight = result;
                     }
 
-                    while (node.parent != null)
+                    node = node.parent;
+
+                    while (node != null)
                     {
-                        node = node.parent;
                         if (node.weight == null || node.weight <= result)
                             node.weight = result;
                         //else
                         //    break;
+                        node = node.parent;
                     }
                 }
             }
@@ -153,7 +155,7 @@ namespace WindBot
 
         public bool ShouldSave(int turn)
         {
-            if (!SqlComm.IsTraining)
+            //if (!SqlComm.IsTraining)
                 return true;
             // Only update if the last turn has no new values
             if (TurnActions.Keys.Count > 0)
@@ -260,8 +262,8 @@ namespace WindBot
 
             while (node != null)
             {
-                if (node.weight == null)
-                    return null;
+                //if (node.weight == null)
+                //    return null;
 
                 prevAction += node.actionId + ",";
                 node = node.children.FirstOrDefault(x => x.activated);
@@ -286,7 +288,43 @@ namespace WindBot
             {
                 previousActions = lastNode.GetPrevActions() + lastNode.actionId.ToString() + ",";
             }
+            
+            List<Node> potentialActions = SqlComm.GetBestTreeNodeActions(turn, previousActions, isFirst);
+
+            if (potentialActions.Count == 0)
+                return null;
+
+            List<Node> nullActions = potentialActions.Where(x => x.weight == null).ToList();
+            List<Node> nextActions = potentialActions.Where(x => x.preActions == previousActions).ToList();
+            List<Node> nullNextActions = nextActions.Where(x => x.weight == null).ToList();
+            double maxWeight = potentialActions[0].weight ?? 0;
+            List<Node> bestActions = potentialActions.Where(x => x.weight == maxWeight).ToList();
+
+            Random rnd = new Random();
+
+            if ((rnd.NextDouble()) * THRESHOLD < maxWeight || nullNextActions.Count < 2)
+            {
+                if (bestActions.Count > 0)
+                    result = bestActions[rnd.Next(bestActions.Count)];
+            }
+            else if (nextActions.Count > 0)
+                result = nextActions[rnd.Next(nextActions.Count)];
+
+            if (result != null)
+            {
+                string futureActions = result.preActions.Substring(previousActions.Length);
+
+                if (futureActions.Contains(','))
+                    result.actionId = int.Parse(futureActions.Split(',')[0]);
+            }
+
+            return result;
+
+
+
+
             List<Node> nextAct = SqlComm.GetNextTreeNodes(turn, previousActions, isFirst);
+
             foreach (var action in nextAct)
                 actions.Enqueue(action);
 
@@ -294,6 +332,11 @@ namespace WindBot
             {
                 Node cur = actions.Dequeue();
                 string actionsTaken = previousActions + cur.GetPrevActions() + cur.actionId.ToString() + ",";
+
+                if (cur.GetPrevActions().Split(',').Length >= 3)
+                {
+                    continue;
+                }
 
                 if (!visited.Contains(actionsTaken))
                 {

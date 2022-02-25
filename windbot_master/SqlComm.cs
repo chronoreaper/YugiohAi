@@ -165,14 +165,48 @@ namespace WindBot
 
             foreach (var node in history)
             {
-                //if (Math.Sign(node.activation) < 0 && weight > 0)
-                //    continue;
+                if (node.activation == null)
+                    continue;
                 Data newNode = new Data(node);
                 newNode.activation = weight;
                 newNode.modified = changeTag;
                 toAdd.Add(newNode);
             }
             data.AddRange(toAdd);
+        }
+
+        public static List<TreeActivation.Node> GetBestTreeNodeActions(int turn, string prevAction, bool isFirst)
+        {
+            List<TreeActivation.Node> row = new List<TreeActivation.Node>();
+
+            ConnectToDatabase();
+            using (SQLCon)
+            {
+                SQLCon.Open();
+
+                string sql = $"SELECT actionId, activation, action, games, preAction from playCardTree WHERE " +
+                      $"preAction like \"{prevAction}%\" AND isFirst = \"{isFirst}\" " +
+                      $"AND turn = \"{turn}\" " +
+                      $"ORDER BY activation desc, actionId desc";
+                using (SqliteCommand cmd = new SqliteCommand(sql, SQLCon))
+                {
+                    using (SqliteDataReader rdr = cmd.ExecuteReader())
+                        while (rdr.Read())
+                        {
+                            int actionId = rdr.GetInt32(0);
+                            double? weight = null;
+                            if (!rdr.IsDBNull(1))
+                                weight = rdr.GetDouble(1);
+                            string action = rdr.GetString(2);
+                            double games = rdr.GetDouble(3);
+                            string preActions = rdr.GetString(4);
+                            row.Add(new TreeActivation.Node(action, weight, actionId, games, preActions));
+                        }
+                }
+                SQLCon.Close();
+            }
+
+            return row;
         }
 
         /**
@@ -332,7 +366,8 @@ namespace WindBot
                       $"AND value = \"{value}\"" +
                       //$" AND count = {count}" +
                       $" AND " +
-                      $"inprogress =  \"{master}\"";
+                      $"inprogress =  \"{master}\" " +
+                      $"AND games > 1";
                 using (SqliteCommand cmd = new SqliteCommand(sql, SQLCon))
                 {
                     using (SqliteDataReader rdr = cmd.ExecuteReader())
@@ -496,7 +531,7 @@ namespace WindBot
                 List<Data> toAdd = new List<Data>();
 
                 // Replace the original data
-                List<Data> original = data.FindAll(x => x.modified == 0);
+                /*List<Data> original = data.FindAll(x => x.modified == 0);
                 foreach (Data d in original)
                 {
                     data.Remove(d);
@@ -504,7 +539,7 @@ namespace WindBot
                     d.activation = 0;//w;
                     toAdd.Add(d);
                 }
-                //data.AddRange(temp);
+                //data.AddRange(temp);*/
                 toAdd.Clear();
 
                 // Merge all the weights together
@@ -524,15 +559,21 @@ namespace WindBot
                         }
 
                         List<Data> result = data.FindAll(x => x.id == d.id && x.location == d.location && x.action == d.action
-                                && x.result == d.result && x.verify == d.verify && x.value == d.value && x.count == d.count
-                                && x.turn <= 2);
+                                && x.result == d.result && x.verify == d.verify && x.value == d.value && x.count == d.count); //TO CHANGE
 
+                        int i = 0;
                         foreach (Data r in result)
                         {
-                            newNode.activation += r.activation;
+                            i++;
+                            if (r.activation > 0)
+                            {
+                                newNode.activation = r.activation;
+                                break;
+                            }
+                            //newNode.activation = (newNode.activation * (i - 1) + r.activation) / i;
                         }
-                        if (result.Count > 0)
-                            newNode.activation /= result.Count;
+                        /*if (result.Count > 0)
+                            newNode.activation /= result.Count;*/
 
                         toAdd.Add(newNode);
                     }
@@ -577,14 +618,14 @@ namespace WindBot
 
                     Console.WriteLine($"    {id}, {location}, {action}, {result}, {verify}, {value}, {count}, Act:{activation}");
 
-                    sql = $"UPDATE playCard SET activation = {activation}, " +
+                    sql = $"UPDATE playCard SET activation = (activation * games + {activation}) / (games + {games}), " +
                         $"games = games + {games} WHERE " +
                             $"id = \"{id}\" AND location = \"{location}\" AND action = \"{action}\"  AND result LIKE \"{result}\" " +
                             $"AND verify = \"{verify}\" AND value = \"{value}\" AND count = {count} " +
                             $"AND inprogress =  \"{Name}\" ";
 
                     int rowsUpdated = 0;
-                    if (activation != 0 && ShouldUpdate)
+                    if (activation != null && ShouldUpdate)
                     {
                         using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon, transaction))
                         {

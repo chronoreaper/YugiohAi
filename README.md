@@ -5,7 +5,8 @@ The final build will have Ai find the best deck as well as play optimally.
 There are 2 Ais that need to made. A deck building Ai which is written in python. And a game Ai written in c#.
 
 ### Setup
-* Download all the cards using KoishiPro_Sakura/update-koishipro/update.exe
+* <s>Download all the cards using KoishiPro_Sakura/update-koishipro/update.exe</s>
+* Use Project Ignis Edopro
 * Download for python pyautogui (pip install pyautogui) and cv2 (pip install opencv-python)
 * Download [sqllite expert personal](http://www.sqliteexpert.com/download.html) to read the .cdb database files
 * Follow the instructions in Windbot

@@ -346,8 +346,8 @@ namespace WindBot.Game.AI.Decks
 
                         //if (Math.Abs(weight) > 0)
                         {
-                            //SqlComm.RecordActual(Duel.Turn - 2, weight, 2);
-                            //SqlComm.RecordActual(Duel.Turn - 1, weight, 2);
+                            SqlComm.RecordActual(Duel.Turn - 2, weight + PreTurnWeight, 2);
+                            SqlComm.RecordActual(Duel.Turn - 1, weight, 2);
                             // Save weight for debugging
                             //SqlComm.SaveActionWeight(Duel.Turn - 1, -1, weight, "Result", "", 0);
                         }
@@ -429,7 +429,7 @@ namespace WindBot.Game.AI.Decks
                     var parent = SqlComm.TreeActivation.GetLastNode(Duel.Turn);
                     if (result)
                     {
-                        RecordAction(actionString, "", weight);
+                        //RecordAction(actionString, "", weight);
                         if (SqlComm.IsTraining)
                             SqlComm.TreeActivation.SaveTreeNode(Duel.Turn, ActionId, Card?.Name, actionString, weight, Duel.IsFirst, true, parent);
                     }
@@ -743,6 +743,8 @@ namespace WindBot.Game.AI.Decks
         
         private double DataModifier(string action, string result, double? win = 0,bool GetData = true)
         {
+            if (!GetData)
+                Console.WriteLine($"Saving Weight for {Card?.Name} {action} {result} {win}");
             List<double> score = new List<double>();
 
             // Add self to the weights

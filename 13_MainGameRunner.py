@@ -301,7 +301,7 @@ while gameCount < int(gamesToPlay):
 		print("	Saving Deck 2 Results")
 		#UpdateDatabase(deckListOther,deckQuantOther,deckList,deckQuant, win2, AIName2,False)
 	
-	if abs(win1) > 2:
+	if abs(win1) > 1:
 		break
 
 if isTraining:

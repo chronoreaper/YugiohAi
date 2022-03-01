@@ -168,6 +168,7 @@ namespace WindBot
                 if (node.activation == null)
                     continue;
                 Data newNode = new Data(node);
+                Console.WriteLine($"Changing {node.id} {node.action} {node.activation} -> {weight}");
                 newNode.activation = weight;
                 newNode.modified = changeTag;
                 toAdd.Add(newNode);
@@ -475,7 +476,7 @@ namespace WindBot
 
                         int rowsUpdated = 0;
 
-                        if (node.actionId != 0 && (node.activated || node.weight == null))
+                        if (node.actionId != 0 && (node.activated || (!node.activated && node.weight == null)))
                         {
                             using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon, transaction))
                             {
@@ -487,7 +488,7 @@ namespace WindBot
                                 //node.actionId = 0;
                                 //The master data isnt in the database yet so add it
                                 sql = $"INSERT INTO playCardTree (id,action,preId,preAction,turn,actionId,isFirst,activation,games) VALUES (\"{node.id}\",\"{node.action}\",\"{preId}\",\"{preAction}\",\"{turn}\",\"{node.actionId}\",\"{node.isFirst}\"," +
-                                    $"{weight_string},\"1\")";
+                                    $"{weight_string},\"{games}\")";
                                 using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon, transaction))
                                 {
                                     rowsUpdated = cmd2.ExecuteNonQuery();
@@ -511,7 +512,7 @@ namespace WindBot
         /// </summary>
         /// <param name="gameResult">0 = win, 1 = lose, 2 = tie</param>
         /// <param name="otherName">Name of the opponent, Unused</param>
-        public static void UpdateDatabase(int gameResult, string otherName, int turns)
+        public static void UpdateDatabase(int gameResult, string otherName, int turns, bool isFirst)
         {
             if (!IsTraining)
                 return;
@@ -531,7 +532,7 @@ namespace WindBot
                 List<Data> toAdd = new List<Data>();
 
                 // Replace the original data
-                /*List<Data> original = data.FindAll(x => x.modified == 0);
+                List<Data> original = data.FindAll(x => x.modified == 0);
                 foreach (Data d in original)
                 {
                     data.Remove(d);
@@ -539,8 +540,16 @@ namespace WindBot
                     d.activation = 0;//w;
                     toAdd.Add(d);
                 }
-                //data.AddRange(temp);*/
                 toAdd.Clear();
+
+                // Don't save the last turn if you lost on opp turn
+                if (turns % 2 != (isFirst ? 1 : 0))
+                {
+                    foreach (Data d in data.FindAll(x => x.turn == turns))
+                    {
+                        data.Remove(d);
+                    }
+                }
 
                 // Merge all the weights together
                 foreach (Data d in data)
@@ -564,16 +573,17 @@ namespace WindBot
                         int i = 0;
                         foreach (Data r in result)
                         {
-                            i++;
-                            if (r.activation > 0)
+                            if (r.activation != null)
                             {
-                                newNode.activation = r.activation;
-                                break;
+                                newNode.activation += r.activation;
+                                i++;
                             }
                             //newNode.activation = (newNode.activation * (i - 1) + r.activation) / i;
                         }
-                        /*if (result.Count > 0)
-                            newNode.activation /= result.Count;*/
+                        if (i > 0)
+                            newNode.activation /= i;
+                        else
+                            newNode.activation = null;
 
                         toAdd.Add(newNode);
                     }

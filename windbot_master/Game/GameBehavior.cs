@@ -437,7 +437,7 @@ namespace WindBot.Game
             string textResult = (result == 2 ? "Draw" : result == 0 ? "Win" : "Lose");
             Logger.DebugWriteLine("Duel finished against " + otherName + ", result: " + textResult);
 
-            SqlComm.UpdateDatabase(result, otherName, _duel.Turn);
+            SqlComm.UpdateDatabase(result, otherName, _duel.Turn, _duel.IsFirst);
         }
 
         private void OnDraw(BinaryReader packet)

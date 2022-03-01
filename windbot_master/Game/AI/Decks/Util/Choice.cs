@@ -154,7 +154,7 @@ namespace WindBot.Game.AI.Decks.Util
             {
                 if (notPlayed == null)
                     continue;
-                RecordAction(notPlayed.Action, notPlayed.Card, notPlayed.ActivateDesc, -1);//notPlayed.Weight);
+                RecordAction(notPlayed.Action, notPlayed.Card, notPlayed.ActivateDesc, null);//notPlayed.Weight);
                 if (SqlComm.IsTraining)
                 {
                     double? weight = notPlayed.Weight;

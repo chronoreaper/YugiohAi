@@ -319,66 +319,6 @@ namespace WindBot
             }
 
             return result;
-
-
-
-
-            List<Node> nextAct = SqlComm.GetNextTreeNodes(turn, previousActions, isFirst);
-
-            foreach (var action in nextAct)
-                actions.Enqueue(action);
-
-            while (actions.Count > 0)
-            {
-                Node cur = actions.Dequeue();
-                string actionsTaken = previousActions + cur.GetPrevActions() + cur.actionId.ToString() + ",";
-
-                if (cur.GetPrevActions().Split(',').Length >= 3)
-                {
-                    continue;
-                }
-
-                if (!visited.Contains(actionsTaken))
-                {
-                    visited.Add(actionsTaken);
-                }
-                else if (actionsTaken != "")
-                {
-                    continue;
-                }
-
-                if (cur != null)
-                {
-                    if (result == null)
-                        result = cur;
-                    else if ((result.weight < cur.weight && cur.weight != null && result.weight != null) || (result.Depth() >= cur.Depth() && (
-                            (result.weight == null && cur.weight == null && IsBaseGreater(cur, result)) ||
-                            (cur.weight == null) ||
-                            (result.weight == null && cur.weight >= THRESHOLD))))
-                    {
-                        result = cur;
-                        // Set the action id and action to be the right one
-                        while (result.parent != null)
-                        {
-                            result = result.parent;
-                        }
-                        int actionId = result.actionId;
-                        result = cur;
-                        result.actionId = actionId;
-
-                    }
-                }
-
-                nextAct = SqlComm.GetNextTreeNodes(turn, actionsTaken, isFirst);
-                foreach (var action in nextAct)
-                {
-                    action.parent = cur;
-                    actions.Enqueue(action);
-                }
-
-            }
-
-            return result;
         }
 
         public List<double?> GetTreeNode(int turn, int actionId, string id, string action, bool isFirst)

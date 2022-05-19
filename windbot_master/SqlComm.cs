@@ -368,7 +368,7 @@ namespace WindBot
                       //$" AND count = {count}" +
                       $" AND " +
                       $"inprogress =  \"{master}\" " +
-                      $"AND games > 1";
+                      $"AND games >= 1";
                 using (SqliteCommand cmd = new SqliteCommand(sql, SQLCon))
                 {
                     using (SqliteDataReader rdr = cmd.ExecuteReader())
@@ -430,7 +430,7 @@ namespace WindBot
                     TreeActivation.UpdateNode(TreeActivation.TurnActions.Keys.Max() + 1, TreeActivation.THRESHOLD, true);
                 }
                 else if (gameResult == LOSE)
-                    TreeActivation.UpdateNode(TreeActivation.TurnActions.Keys.Max() + 1, -1);
+                    TreeActivation.UpdateNode(TreeActivation.TurnActions.Keys.Max() + 1, null);
             }
 
             ConnectToDatabase();
@@ -466,6 +466,11 @@ namespace WindBot
                         int games = 0;
                         if (node.activated)
                             games = 1;
+
+                        if (node.activated && node.weight == null)
+                        {
+                            var v = 0;
+                        }
 
                         sql = $"UPDATE playCardTree SET activation = {weight_string}, " +
                             $"games = games + {games} WHERE " +
@@ -514,153 +519,144 @@ namespace WindBot
         /// <param name="otherName">Name of the opponent, Unused</param>
         public static void UpdateDatabase(int gameResult, string otherName, int turns, bool isFirst)
         {
-            if (!IsTraining)
-                return;
-            UpdateTreeNode(gameResult);
-            ConnectToDatabase();
-            using (SQLCon)
+            if (IsTraining)
             {
-                SQLCon.Open();
-                //SQLCon.State
-                SqliteTransaction transaction = SQLCon.BeginTransaction();
-
-                //Select all the data that was stored
-                string sql =
-                      $"SELECT id,location,action,result,verify,value,count,activation,games FROM playCard " +
-                      $"WHERE inprogress = \"{Name}\"";
-
-                List<Data> toAdd = new List<Data>();
-
-                // Replace the original data
-                List<Data> original = data.FindAll(x => x.modified == 0);
-                foreach (Data d in original)
+                UpdateTreeNode(gameResult);
+                ConnectToDatabase();
+                using (SQLCon)
                 {
-                    data.Remove(d);
-                    Data newNode = new Data(d);
-                    d.activation = 0;//w;
-                    toAdd.Add(d);
-                }
-                toAdd.Clear();
+                    SQLCon.Open();
+                    //SQLCon.State
+                    SqliteTransaction transaction = SQLCon.BeginTransaction();
 
-                // Don't save the last turn if you lost on opp turn
-                if (turns % 2 != (isFirst ? 1 : 0))
-                {
-                    foreach (Data d in data.FindAll(x => x.turn == turns))
+                    //Select all the data that was stored
+                    string sql =
+                          $"SELECT id,location,action,result,verify,value,count,activation,games FROM playCard " +
+                          $"WHERE inprogress = \"{Name}\"";
+
+                    List<Data> toAdd = new List<Data>();
+
+                    // Replace the original data
+                    List<Data> original = data.FindAll(x => x.modified == 0);
+                    foreach (Data d in original)
                     {
                         data.Remove(d);
-                    }
-                }
-
-                // Merge all the weights together
-                foreach (Data d in data)
-                {
-                    int index = toAdd.FindIndex(x => x.id == d.id && x.location == d.location && x.action == d.action
-                                && x.result == d.result && x.verify == d.verify && x.value == d.value
-                                && x.count == d.count);
-                    if (index < 0)
-                    {
                         Data newNode = new Data(d);
-                        if (newNode.modified != -2)
+                        d.activation = 0;//w;
+                        toAdd.Add(d);
+                    }
+                    toAdd.Clear();
+
+                    // Don't save the last turn if you lost on opp turn
+                    if (turns % 2 != (isFirst ? 1 : 0))
+                    {
+                        foreach (Data d in data.FindAll(x => x.turn == turns))
                         {
-                            newNode.modified = 0;
-                            newNode.activation = 0;
-                            newNode.turn = 0;
+                            data.Remove(d);
                         }
+                    }
 
-                        List<Data> result = data.FindAll(x => x.id == d.id && x.location == d.location && x.action == d.action
-                                && x.result == d.result && x.verify == d.verify && x.value == d.value && x.count == d.count); //TO CHANGE
-
-                        int i = 0;
-                        foreach (Data r in result)
+                    // Merge all the weights together
+                    /*foreach (Data d in data)
+                    {
+                        int index = toAdd.FindIndex(x => x.id == d.id && x.location == d.location && x.action == d.action
+                                    && x.result == d.result && x.verify == d.verify && x.value == d.value
+                                    && x.count == d.count);
+                        if (index < 0)
                         {
-                            if (r.activation != null)
+                            Data newNode = new Data(d);
+                            if (newNode.modified != -2)
                             {
-                                newNode.activation += r.activation;
-                                i++;
+                                newNode.modified = 0;
+                                newNode.activation = 0;
+                                newNode.turn = 0;
                             }
-                            //newNode.activation = (newNode.activation * (i - 1) + r.activation) / i;
-                        }
-                        if (i > 0)
-                            newNode.activation /= i;
-                        else
-                            newNode.activation = null;
 
-                        toAdd.Add(newNode);
-                    }
-                }
+                            List<Data> result = data.FindAll(x => x.id == d.id && x.location == d.location && x.action == d.action
+                                    && x.result == d.result && x.verify == d.verify && x.value == d.value && x.count == d.count); //TO CHANGE
 
-                data = toAdd;
-
-                for (int i = 0; i < data.Count; i++)
-                {
-                    Data info = data[i];
-                    string id = info.id;
-                    string location = info.location;
-                    string action = info.action;
-                    string result = info.result;
-                    string verify = info.verify;
-                    string value = info.value;
-                    int count = info.count;
-                    double? activation = (info.activation);
-                    double games = 1;
-                    double originalWin = 0;
-                    string sql_string = $"SELECT activation FROM playCard WHERE id = \"{id}\" AND location = \"{location}\" " +
-                                          $"AND action = \"{action}\" AND result = \"{result}\" AND verify = \"{verify}\" " +
-                                          $"AND value = \"{value}\" AND " +
-                                          $"inprogress =  \"{master}\"";
-
-                    using (SqliteCommand cmd = new SqliteCommand(sql_string, SQLCon))
-                    {
-                        using (SqliteDataReader rdr = cmd.ExecuteReader())
-                            while (rdr.Read())
+                            int i = 0;
+                            foreach (Data r in result)
                             {
-                                originalWin += rdr.GetDouble(0);
+                                if (r.activation != null)
+                                {
+                                    newNode.activation += r.activation;
+                                    i++;
+                                }
+                                //newNode.activation = (newNode.activation * (i - 1) + r.activation) / i;
                             }
-                    }
+                            if (i > 0)
+                                newNode.activation /= i;
+                            else
+                                newNode.activation = null;
 
-                    if (info.modified == -2) // update weights modifiers
-                    {
-                        if (gameResult == 1)
-                            result = "l";
-
-                    }
-
-
-                    Console.WriteLine($"    {id}, {location}, {action}, {result}, {verify}, {value}, {count}, Act:{activation}");
-
-                    sql = $"UPDATE playCard SET activation = (activation * games + {activation}) / (games + {games}), " +
-                        $"games = games + {games} WHERE " +
-                            $"id = \"{id}\" AND location = \"{location}\" AND action = \"{action}\"  AND result LIKE \"{result}\" " +
-                            $"AND verify = \"{verify}\" AND value = \"{value}\" AND count = {count} " +
-                            $"AND inprogress =  \"{Name}\" ";
-
-                    int rowsUpdated = 0;
-                    if (activation != null && ShouldUpdate)
-                    {
-                        using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon, transaction))
-                        {
-                            rowsUpdated = cmd2.ExecuteNonQuery();
-                            //WriteLine($"{rowsUpdated} Rows Were updated." );
+                            toAdd.Add(newNode);
                         }
-                        // If there was no update, add it instead
-                        if (rowsUpdated <= 0)
+                    }
+
+                    data = toAdd;
+                    */
+                    for (int i = 0; i < data.Count; i++)
+                    {
+                        Data info = data[i];
+                        string id = info.id;
+                        string location = info.location;
+                        string action = info.action;
+                        string result = info.result;
+                        string verify = info.verify;
+                        string value = info.value;
+                        int count = info.count;
+                        double? activation = (info.activation);
+                        double games = 1;
+                        double originalWin = 0;
+                        string sql_string = $"SELECT activation FROM playCard WHERE id = \"{id}\" AND location = \"{location}\" " +
+                                              $"AND action = \"{action}\" AND result = \"{result}\" AND verify = \"{verify}\" " +
+                                              $"AND value = \"{value}\" AND " +
+                                              $"inprogress =  \"{master}\"";
+
+                        using (SqliteCommand cmd = new SqliteCommand(sql_string, SQLCon))
                         {
-                            //The master data isnt in the database yet so add it
-                            string activation_string = activation.ToString();
-                            sql = $"INSERT INTO playCard (id,location,action,result,verify,value,count,activation,games,inprogress) VALUES (\"{id}\",\"{location}\",\"{action}\",\"{result}\",\"{verify}\",\"{value}\",{count}," +
-                                $"{activation_string},{games},\"{Name}\")";
-                            using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon, transaction))
+                            using (SqliteDataReader rdr = cmd.ExecuteReader())
+                                while (rdr.Read())
+                                {
+                                    originalWin += rdr.GetDouble(0);
+                                }
+                        }
+
+                        Console.WriteLine($"    {id}, {location}, {action}, {result}, {verify}, {value}, {count}, Act:{activation}");
+
+                        sql = $"UPDATE playCard SET activation = (activation * games + {activation}) / (games + {games}), " +
+                            $"games = games + {games} WHERE " +
+                                $"id = \"{id}\" AND location = \"{location}\" AND action = \"{action}\"  AND result LIKE \"{result}\" " +
+                                $"AND verify = \"{verify}\" AND value = \"{value}\" AND count = {count} " +
+                                $"AND inprogress =  \"{Name}\" ";
+
+                        int rowsUpdated = 0;
+                        if (activation != null && ShouldUpdate)// && info.turn <= 2)
+                        {
+                            /*using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon, transaction))
                             {
                                 rowsUpdated = cmd2.ExecuteNonQuery();
-                                //WriteLine($"{rowsUpdated} Rows were inserted.");
+                            }*/
+                            // If there was no update, add it instead
+                            if (rowsUpdated <= 0)
+                            {
+                                //The master data isnt in the database yet so add it
+                                string activation_string = activation.ToString();
+                                sql = $"INSERT INTO playCard (id,location,action,result,verify,value,count,activation,games,inprogress) VALUES (\"{id}\",\"{location}\",\"{action}\",\"{result}\",\"{verify}\",\"{value}\",{count}," +
+                                    $"{activation_string},{games},\"{Name}\")";
+                                using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon, transaction))
+                                {
+                                    rowsUpdated = cmd2.ExecuteNonQuery();
+                                    //WriteLine($"{rowsUpdated} Rows were inserted.");
+                                }
                             }
                         }
                     }
+                    transaction.Commit();
+                    SQLCon.Close();
                 }
-                transaction.Commit();
-                SQLCon.Close();
             }
-
             //Print Game log
             if (true)
                 foreach (int turn in actionWeight.Keys)

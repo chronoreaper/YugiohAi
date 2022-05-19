@@ -54,14 +54,16 @@ namespace WindBot.Game.AI.Decks.Util
 
             if (!SqlComm.IsTraining)
             {
-                double weight = Executor.ActionWeight(actionString);
+                double? weight = Executor.ActionWeight(actionString);
 
                 if (action == ExecutorType.Repos)
                     weight = Executor.ShouldRepos() ? 1 : -1;
+                if (action == ExecutorType.GoToMainPhase2)
+                    action = ExecutorType.GoToEndPhase;
                 if (action == ExecutorType.GoToBattlePhase || action == ExecutorType.GoToEndPhase || action == ExecutorType.GoToMainPhase2)
-                    weight = Math.Min(weight, 0);
+                    weight = Math.Min(weight ?? 0, 0);
 
-                if (BestAction == null || BestAction.Weight == null || weight >= BestAction.Weight)
+                if (BestAction == null || BestAction.Weight == null || weight > BestAction.Weight)
                 {
                     // update to be the better one
                     if (BestAction != null)
@@ -139,7 +141,8 @@ namespace WindBot.Game.AI.Decks.Util
 
             if (actionCount > 1)
             {
-                RecordAction(BestAction.Action, BestAction.Card, BestAction.ActivateDesc, 1);//BestAction.Weight);
+                //if (BestAction.Weight == null)
+                    RecordAction(BestAction.Action, BestAction.Card, BestAction.ActivateDesc, 1);//BestAction.Weight);
                 if (SqlComm.IsTraining)
                 {
                     if (BestAction.Action != ExecutorType.Repos)

@@ -149,7 +149,7 @@ def UpdateGameAi(AIName1,win1,AIName2,win2):
 	
 	# Select all unique node for an ai
 	for ai, result in zip(aiList, aiResult):
-		if result == 0 or True:
+		if result > 0:# or True:
 			
 			c.execute('SELECT id,location,action,result,verify,value,count,activation,games FROM playCard where inprogress = (?)',(ai,))
 			records = c.fetchall()
@@ -168,13 +168,13 @@ def UpdateGameAi(AIName1,win1,AIName2,win2):
 				node = tuple(row[:-2])
 				c.execute('SELECT games,activation FROM playCard WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"', node)
 				lst = c.fetchone()
-				if lst != None : # It exists in master
+				if lst != None: # It exists in master
 					#if row[-1] >= int(gamesToPlay):
 					err += abs(row[-2])
 					value = (row[-2] ,row[-1], row[-1],row[0],row[1],row[2],row[3],row[4],row[5],row[6])
 					#value = (row[-2],row[-1],row[0],row[1],row[2],row[3],row[4],row[5],row[6])
 					c.execute('UPDATE playCard SET activation = (activation * games + (?)) / (games + (?)), games = games + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
-					#c.execute('UPDATE playCard SET activation = (?), games = games + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
+					#c.execute('UPDATE playCard SET activation = (?) + activation, games = games + (?) WHERE id = (?) and location = (?) and action = (?) and result = (?) and verify = (?) and value = (?) and count = (?) and inprogress = \"master\"',value)
 					value = (row[0],row[1],row[2],row[3],row[4],row[5],row[6],row[-2],row[-1])
 					#c.execute('INSERT INTO playCard VALUES (?,?,?,?,?,?,?,?,?,\"Update:'+ai + ','+subGen+','+str(gameCount)+'\")', value)
 				else: # add it to master
@@ -193,22 +193,24 @@ def UpdateGameAi(AIName1,win1,AIName2,win2):
 	print('[mlerr]'+str(err/n)+'[mlerr]')
 	
 	
+generation = sys.argv[1]
+subGen = sys.argv[2]
+gamesToPlay = sys.argv[3]
+isTraining = sys.argv[4]
+
 AIName1 = 'bot1'
 AIName2 = 'bot2'	
 
 #The Deck name and location	
 AI1Deck = 'Random'
-AI2Deck = 'Master'#'Random2' #
+AI2Deck = 'Random2'
+if not isTraining or True:
+	AI2Deck = 'Master'
 deck1 = 'AI_Random.ydk'
 deck2 = 'AI_Random2.ydk'
 
 winWeight = 0
 gameCount = 0
-
-generation = sys.argv[1]
-subGen = sys.argv[2]
-gamesToPlay = sys.argv[3]
-isTraining = sys.argv[4]
 
 result = 0
 win1 = 0
@@ -241,7 +243,7 @@ while gameCount < int(gamesToPlay):
 						  universal_newlines=True)
 	time.sleep(1)
 	print("	runningAi2")
-	p2 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI2Deck,AIName2,'2','0',isTraining],
+	p2 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI2Deck,AIName2,'3','0',isTraining],
 						  shell=True)
 	
 	if (p1.poll() == None or p2.poll() == None):
@@ -301,7 +303,7 @@ while gameCount < int(gamesToPlay):
 		print("	Saving Deck 2 Results")
 		#UpdateDatabase(deckListOther,deckQuantOther,deckList,deckQuant, win2, AIName2,False)
 	
-	if abs(win1) > 1:
+	if abs(win1) > 1 and AI2Deck == "Master" :
 		break
 
 if isTraining:

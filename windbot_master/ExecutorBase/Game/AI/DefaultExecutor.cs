@@ -742,6 +742,7 @@ namespace WindBot.Game.AI
                     return true;
                 if (Card.IsFaceup() && Card.IsDefense())
                     return false;
+                return false;
             }
 
             if (Enemy.HasInMonstersZone(_CardId.BlueEyesChaosMAXDragon, true) &&

@@ -1,10 +1,4 @@
-GameAi
-	public void OnJoinGame gets the database does not work
-	GameBehavior.cs has the result of who wins
-english database is in koishipro locales en-us
+Make sure irrlicht/include is renamed to irrlicht and is in the /vcpkg/installed/x64-linux/include/irrlicht 
+also include the irrlicht/source/Irrlicht as /vcpkg/installed/x64-linux/include/src/
 
-Run Main Function First
-
-Main Game runner can also run alone
-
-Update cards in Koishipro_Sakura/update-koishipro
+run vcpkg install freetype

@@ -1,0 +1,19 @@
+menu_handler.cpp
+
+case BUTTON_HOST_CONFIRM:
+
+DuelClient::SendPacketToServer(CTOS_HS_TOOBSERVER);
+
+duelclient.cpp
+
+state == PLAYERCHANGE_OBSERVE
+
+if (is_host && CheckReady())
+DuelClient::SendPacketToServer(CTOS_HS_START);
+
+gframe.cpp
+
+CheckArguments()
+
+ygo::mainGame->HideElement(ygo::mainGame->wMainMenu);
+	ClickButton(ygo::mainGame->btnHostConfirm);

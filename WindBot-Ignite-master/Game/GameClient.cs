@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Net;
 using System.Text;
 using YGOSharp.Network;
@@ -71,6 +71,7 @@ namespace WindBot.Game
 
         public void Chat(string message, bool forced)
         {
+            //message = $"{ _proVersion}";
             if (!forced && !_chat)
                 return;
             byte[] content = Encoding.Unicode.GetBytes(message + "\0");

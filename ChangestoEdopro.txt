@@ -1,7 +1,8 @@
 menu_handler.cpp
 
-case BUTTON_HOST_CONFIRM:
+case BUTTON_LAN_MODE
 
+copy BUTTON_HOST_CONFIRM + this line
 DuelClient::SendPacketToServer(CTOS_HS_TOOBSERVER);
 
 duelclient.cpp
@@ -15,5 +16,4 @@ gframe.cpp
 
 CheckArguments()
 
-ygo::mainGame->HideElement(ygo::mainGame->wMainMenu);
-	ClickButton(ygo::mainGame->btnHostConfirm);
+ClickButton(ygo::mainGame->btnLanMode);

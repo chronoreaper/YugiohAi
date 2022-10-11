@@ -87,6 +87,14 @@ namespace WindBot.Game
         }
 
         /// <summary>
+        /// Called when any player wins.
+        /// </summary>
+        public void OnWin(int result)
+        {
+            Executor.OnWin(result);
+        }
+
+        /// <summary>
         /// Called when it's a new turn.
         /// </summary>
         public void OnNewTurn()

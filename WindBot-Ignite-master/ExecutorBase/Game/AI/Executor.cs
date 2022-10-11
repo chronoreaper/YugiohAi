@@ -109,6 +109,11 @@ namespace WindBot.Game.AI
             // Some AI need do something on draw
         }
 
+        public virtual void OnWin(int player)
+        {
+            // Some AI need do something on draw
+        }
+
         public virtual IList<ClientCard> OnSelectCard(IList<ClientCard> cards, int min, int max, long hint, bool cancelable)
         {
             // For overriding

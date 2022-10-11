@@ -13,7 +13,7 @@ namespace WindBot
             public List<Node> Children;
             public Node Parent;
             public double Rewards = 0;
-            public int Visited = 0;
+            public int Visited = 0.0001;
             public string CardId;
             public string Action;
             public long NodeId = -1;
@@ -30,13 +30,11 @@ namespace WindBot
         }
 
         Node current;
-        Node best;
         int TotalGames = 0;
 
         public MCST()
         {
             current = new Node(null, "", "");
-            best = null;
             TotalGames = SQLComm.GetTotalGames();
         }
 
@@ -67,20 +65,33 @@ namespace WindBot
             double weight = 0;
             double c = 0.5;
 
-            foreach(Node n in current.Children)
+            if (!SQLComm.IsRollout)
             {
-                double w = n.Rewards + c * Math.Sqrt(Math.Log(TotalGames) / n.Visited);
-                if (w > weight)
+                foreach (Node n in current.Children)
                 {
-                    weight = w;
-                    best = n;
+                    double w = n.Rewards + c * Math.Sqrt(Math.Log(TotalGames) / n.Visited);
+                    if (w > weight)
+                    {
+                        weight = w;
+                        best = n;
+                    }
                 }
+
+                if (best != null)
+                    current = best;
+            }
+            else if (current.Children.Count > 0)
+            {
+                best = current.Children[Program.Rand.Next(0, current.Children.Count)];
+                current.Children.Clear();
             }
 
-            if (best != null)
-                current = best;
-
             return best;
+        }
+
+        public void Backpropagate(int result)
+        {
+            SQLComm.Backpropagate(current, result);
         }
     }
 }

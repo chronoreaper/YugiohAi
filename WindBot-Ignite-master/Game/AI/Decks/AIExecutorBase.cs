@@ -4,6 +4,7 @@ using WindBot;
 using WindBot.Game;
 using WindBot.Game.AI;
 using static WindBot.MCST;
+using System.Linq;
 
 namespace WindBot.Game.AI.Decks
 {
@@ -32,6 +33,31 @@ namespace WindBot.Game.AI.Decks
             Tree = new MCST();
         }
 
+        private List<long> HintMsgForEnemy = new List<long>
+        {
+            HintMsg.Release, HintMsg.Destroy, HintMsg.Remove, HintMsg.ToGrave, HintMsg.ReturnToHand, HintMsg.ToDeck,
+            HintMsg.FusionMaterial, HintMsg.SynchroMaterial, HintMsg.XyzMaterial, HintMsg.LinkMaterial
+        };
+
+        private List<long> HintMsgForDeck = new List<long>
+        {
+            HintMsg.SpSummon, HintMsg.ToGrave, HintMsg.Remove, HintMsg.AddToHand, HintMsg.FusionMaterial
+        };
+
+        private List<long> HintMsgForSelf = new List<long>
+        {
+            HintMsg.Equip
+        };
+
+        private List<long> HintMsgForMaterial = new List<long>
+        {
+            HintMsg.FusionMaterial, HintMsg.SynchroMaterial, HintMsg.XyzMaterial, HintMsg.LinkMaterial, HintMsg.Release
+        };
+
+        private List<long> HintMsgForMaxSelect = new List<long>
+        {
+            HintMsg.SpSummon, HintMsg.ToGrave, HintMsg.AddToHand, HintMsg.FusionMaterial, HintMsg.Destroy
+        };
 
         public override void SetMain(MainPhase main)
         {
@@ -106,9 +132,6 @@ namespace WindBot.Game.AI.Decks
             if (AI.HaveSelectedCards())
                 return null;
 
-
-            SetCard(ExecutorType.Activate, null, 0);
-
             IList<ClientCard> selected = new List<ClientCard>();
             IList<ClientCard> cards = new List<ClientCard>(_cards);
 
@@ -127,15 +150,8 @@ namespace WindBot.Game.AI.Decks
             foreach (ClientCard clientCard in cards)
             {
                 string action = $"Select" + hint.ToString();
-                double? weight = GetWeight(action, SelectStringBuilder(clientCard));
-                Console.WriteLine(string.Format($"    {actionId} {(weight != null ? weight.ToString() : "null")} | {action} {clientCard?.Name}"));
-                cardWeight.Add(new ClientCardWeight()
-                {
-                    Card = clientCard,
-                    Weight = weight,
-                    Quantity = 0,
-                    ActionId = actionId
-                });
+                string card = SelectStringBuilder(clientCard);
+                Tree.AddPossibleAction(card, action);
             }
 
 
@@ -215,39 +231,19 @@ namespace WindBot.Game.AI.Decks
                     cards.Remove(card);
                 }
             }
-            //RecordAction("Number Selected", numToSelect.ToString(), maxWeight);
-            var parent = SqlComm.TreeActivation.GetLastNode(Duel.Turn);
-            foreach (ClientCard card in selected)
-            {
-                double? weight = cardWeight.Find(x => x.Card.Id == card.Id).Weight;
-                RecordAction($"Select" + hint.ToString(), SelectStringBuilder(card), weight);
-                if (SqlComm.IsTraining)
-                {
-                    SqlComm.TreeActivation.SaveTreeNode(Duel.Turn, cardWeight.Find(x => x.Card.Id == card.Id).ActionId, Card?.Name, $"Select" + hint.ToString() + SelectStringBuilder(card), weight, Duel.IsFirst, true, parent);
-                }
-                Console.WriteLine($"Choosing {SelectStringBuilder(card)} for Action {hint}");
-                //RecordAction($"Select",$"{card.Name} { card.Position.ToString()}");
-                //RecordAction($"Select", $"{card.Name}");
-                //RecordAction("Number Selected", count.ToString());
-
-            }
-            foreach (ClientCard card in cards)
-            {
-                // Not selected
-                RecordAction($"Select" + hint.ToString(), SelectStringBuilder(card), null);
-                if (SqlComm.IsTraining)
-                {
-                    SqlComm.TreeActivation.SaveTreeNode(Duel.Turn, cardWeight.Find(x => x.Card.Id == card.Id).ActionId, Card?.Name, $"Select" + hint.ToString() + SelectStringBuilder(card), cardWeight.Find(x => x.Card.Id == card.Id).Weight, Duel.IsFirst, false, parent);
-                }
-                Console.WriteLine($"Did not select {SelectStringBuilder(card)} for Action {hint}");
-            }
-
 
             return selected;
         }
 
         public override int OnSelectOption(IList<long> options)
         {
+            foreach(long o in options)
+            {
+                Tree.AddPossibleAction(o.ToString(), "SelectOption");
+            }
+
+            long best = long.Parse(Tree.GetNextAction().CardId);
+            return options.IndexOf(best);
         }
 
         public bool ShouldPerform()
@@ -255,7 +251,7 @@ namespace WindBot.Game.AI.Decks
             if (BestAction != null)
             {
                 //ActivateDescription
-                if (Card.Name == BestAction.CardId && Type == BestAction.Action)
+                if (Card.Name == BestAction.CardId && Type.ToString() == BestAction.Action)
                 {
                     BestAction = null;
                 }
@@ -265,8 +261,29 @@ namespace WindBot.Game.AI.Decks
                 }
             }
 
-            return Tree.ShouldActivate(Card.Name, Type);
+            return Tree.ShouldActivate(Card.Name, Type.ToString());
 
+        }
+
+        public override void OnWin(int player)
+        {
+            Tree.Backpropagate();
+        }
+
+        private string SelectStringBuilder(ClientCard Card, int Quant = 1)
+        {
+            return $"{Card.Name ?? "Set Monster" };{Card?.Location.ToString()};{Card?.Position.ToString()};{Card.Controller}";// x{Quant}";
+        }
+
+        private string BuildActionString(ExecutorType action, ClientCard card, string Phase)
+        {
+            if (Phase == "Main2")
+                Phase = "Main1";
+            string actionString = action.ToString();
+            if (action == ExecutorType.Repos && card != null)
+                actionString += $";{card.Position}";
+            actionString += ";" + Phase;
+            return actionString;
         }
     }
 }

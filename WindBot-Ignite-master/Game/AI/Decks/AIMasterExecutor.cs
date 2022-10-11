@@ -121,7 +121,7 @@ namespace WindBot.Game.AI.Decks
 
         public override bool OnSelectHand()
         {
-            if (SqlComm.IsTraining)
+            if (SQLComm.IsTraining)
                 return true;
             return base.OnSelectHand();
         }

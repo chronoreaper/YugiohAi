@@ -13,7 +13,7 @@ namespace WindBot
             public List<Node> Children;
             public Node Parent;
             public double Rewards = 0;
-            public int Visited = 0.0001;
+            public int Visited = 0;
             public string CardId;
             public string Action;
             public long NodeId = -1;
@@ -69,7 +69,8 @@ namespace WindBot
             {
                 foreach (Node n in current.Children)
                 {
-                    double w = n.Rewards + c * Math.Sqrt(Math.Log(TotalGames) / n.Visited);
+                    double visited = Math.Max(0.0001, n.Visited);
+                    double w = n.Rewards + c * Math.Sqrt(Math.Log(TotalGames) / visited);
                     if (w > weight)
                     {
                         weight = w;

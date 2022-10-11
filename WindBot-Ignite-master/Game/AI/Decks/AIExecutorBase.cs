@@ -265,9 +265,9 @@ namespace WindBot.Game.AI.Decks
 
         }
 
-        public override void OnWin(int player)
+        public override void OnWin(int result)
         {
-            Tree.Backpropagate();
+            Tree.Backpropagate(result);
         }
 
         private string SelectStringBuilder(ClientCard Card, int Quant = 1)

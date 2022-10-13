@@ -20,7 +20,7 @@ namespace WindBot.Game
         public int Rank { get; private set; }
         public int Type { get; private set; }
         public int Attribute { get; private set; }
-        public int Race { get; private set; }
+        public ulong Race { get; private set; }
         public int Attack { get; private set; }
         public int Defense { get; private set; }
         public int LScale { get; private set; }
@@ -134,7 +134,7 @@ namespace WindBot.Game
                         }
                     case (uint)Query.Race:
                         {
-                            Race = packet.ReadInt32();
+                            Race = packet.ReadUInt64();
                             break;
                         }
                     case (uint)Query.Attack:
@@ -297,7 +297,7 @@ namespace WindBot.Game
 
         public bool HasRace(CardRace race)
         {
-            return (Race & (int)race) != 0;
+            return (Race & (ulong)race) != 0;
         }
 
         public bool HasSetcode(int setcode)

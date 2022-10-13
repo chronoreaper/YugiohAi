@@ -15,18 +15,30 @@ set -euxo pipefail
 # VSROOT="/c/Program Files (x86)/Microsoft Visual Studio/2017"
 # INSTALLATION_ID=$(grep InstallationID= "$VSROOT/Common7/IDE/devenv.isolation.ini" | cut -f2 -d=)
 # Thus for now, the installation ID after 15.0_ must be manually updated if Travis CI updates the Windows runner
+# Visual Studio id for github actions 2019 16.0_42bb5ccc
+# Visual Studio id for github actions 2016 15.0_87d23d74
+# Visual Studio id for travis ci 15.0_09147932
+
+# As workaround to find the installation id of visual studio,
+# use the registry key used to associate .vssettings file extensions
+# and extract the installation id from there,
+# the runner has to set the "VS_PREFIX" environment variable (like "16.0_")
+# to be able to generate the full installation id
+
+KEY=$(echo $(reg query 'HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.vssettings\OpenWithProgids') | cut -d ' ' -f 3)
+INSTALLATION_ID="$VS_PREFIX${KEY##*.}"
 
 # These registry entries are normally set through the GUI: Tools\Options\Xamarin\Android Settings
-reg add 'HKCU\SOFTWARE\Xamarin\VisualStudio\15.0_09147932\Android' -v AndroidSdkDirectory -t REG_SZ -d "$ANDROID_SDK_ROOT" -f
+reg add 'HKCU\SOFTWARE\Xamarin\VisualStudio\'$INSTALLATION_ID'\Android' -v AndroidSdkDirectory -t REG_SZ -d "$ANDROID_SDK_ROOT" -f
 # Sometimes installed by Microsoft in C:\ProgramData\Microsoft\AndroidNDK64 but not present on CI
-reg add 'HKCU\SOFTWARE\Xamarin\VisualStudio\15.0_09147932\Android' -v AndroidNdkDirectory -t REG_SZ -d "C:\android-ndk-r15c" -f
+reg add 'HKCU\SOFTWARE\Xamarin\VisualStudio\'$INSTALLATION_ID'\Android' -v AndroidNdkDirectory -t REG_SZ -d "C:\android-ndk-r15c" -f
 # Visual Studio Installer provides this JDK for Android development
-reg add 'HKCU\SOFTWARE\Xamarin\VisualStudio\15.0_09147932\Android' -v JavaSdkDirectory -t REG_SZ -d "$JAVA_HOME" -f
+reg add 'HKCU\SOFTWARE\Xamarin\VisualStudio\'$INSTALLATION_ID'\Android' -v JavaSdkDirectory -t REG_SZ -d "$JAVA_HOME" -f
 
 # Manually install Android SDK Platform 24, the most recent version that still works with Embeddinator 0.4.0
-cd "$ANDROID_SDK_ROOT"
-(yes || true) | tools/bin/sdkmanager.bat --sdk_root=. "platforms;android-24"
-cd -
+# cd "$ANDROID_SDK_ROOT"
+# (yes || true) | tools/bin/sdkmanager.bat --sdk_root=. "platforms;android-24"
+# cd -
 
 # Manually install Android NDK r15c, the most recent version that still works with Embeddinator 0.4.0
 curl --retry 5 --connect-timeout 30 --location --remote-header-name --remote-name https://dl.google.com/android/repository/android-ndk-r15c-windows-x86_64.zip

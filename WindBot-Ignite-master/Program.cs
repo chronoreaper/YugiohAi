@@ -6,6 +6,7 @@ using System.Web;
 using WindBot.Game;
 using WindBot.Game.AI;
 using YGOSharp.OCGWrapper;
+using System.Runtime.Serialization.Json;
 
 namespace WindBot
 {
@@ -25,9 +26,11 @@ namespace WindBot
 
             AssetPath = Config.GetString("AssetPath", "");
 
-            string databasePath = Config.GetString("DbPath", "cards.cdb");
+            string databasePath = Config.GetString("DbPath");
 
-            InitDatas(databasePath);
+            string databasePaths = Config.GetString("DbPaths");
+
+            InitDatas(databasePath, databasePaths);
 
             bool serverMode = Config.GetBool("ServerMode", false);
 
@@ -50,32 +53,61 @@ namespace WindBot
             }
         }
 
-        public static void InitDatas(string databasePath)
+        public static void InitDatas(string databasePath, string databasePaths)
         {
             Rand = new Random();
             DecksManager.Init();
 
-            string[] dbPaths;
-            //If databasePath is an absolute path like "‪C:/ProjectIgnis/expansions/cards.cdb",
-            //then Path.GetFullPath("../‪C:/ProjectIgnis/expansions/cards.cdb" would give an error,
-            //due to containing a colon that's not part of a volume identifier.
-            if (Path.IsPathRooted(databasePath)) dbPaths = new string[] { databasePath };
-            else dbPaths = new string[]{
+            string[] dbPaths = null;
+            try
+            {
+                if (databasePath == null && databasePaths != null)
+                {
+                    MemoryStream json = new MemoryStream(Convert.FromBase64String(databasePaths));
+                    DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(string[]));
+                    dbPaths = serializer.ReadObject(json) as string[];
+                }
+            }
+            catch (Exception)
+            {
+            }
+
+            if (dbPaths == null)
+            {
+                if (databasePath == null)
+                    databasePath = "cards.cdb";
+                //If databasePath is an absolute path like "‪C:/ProjectIgnis/expansions/cards.cdb",
+                //then Path.GetFullPath("../‪C:/ProjectIgnis/expansions/cards.cdb" would give an error,
+                //due to containing a colon that's not part of a volume identifier.
+                if (Path.IsPathRooted(databasePath)) dbPaths = new string[] { databasePath };
+                else dbPaths = new string[]{
                 Path.GetFullPath(databasePath),
                 Path.GetFullPath("../" + databasePath),
                 Path.GetFullPath("../expansions/" + databasePath)
             };
+            }
 
+            bool loadedone = false;
             foreach (var absPath in dbPaths)
             {
-                if (File.Exists(absPath))
+                try
                 {
-                    NamedCardsManager.Init(absPath);
-                    return;
+                    if (File.Exists(absPath))
+                    {
+                        NamedCardsManager.LoadDatabase(absPath);
+                        Logger.DebugWriteLine("Loaded database: " + absPath + ".");
+                        loadedone = true;
+                    }
+                } catch (Exception ex)
+                {
+                    Logger.WriteErrorLine("Failed loading database: " + absPath + " error: " + ex);
                 }
             }
-            Logger.WriteErrorLine("Can't find cards database file.");
-            Logger.WriteErrorLine("Please place cards.cdb next to WindBot.exe or Bot.exe .");
+            if (!loadedone)
+            {
+                Logger.WriteErrorLine("Can't find cards database file.");
+                Logger.WriteErrorLine("Please place cards.cdb next to WindBot.exe or Bot.exe .");
+            }
         }
 
         private static void RunFromArgs()
@@ -83,6 +115,7 @@ namespace WindBot
             WindBotInfo Info = new WindBotInfo();
             Info.Name = Config.GetString("Name", Info.Name);
             Info.Deck = Config.GetString("Deck", Info.Deck);
+            Info.DeckFile = Config.GetString("DeckFile", Info.DeckFile);
             Info.Dialog = Config.GetString("Dialog", Info.Dialog);
             Info.Host = Config.GetString("Host", Info.Host);
             Info.Port = Config.GetInt("Port", Info.Port);
@@ -91,11 +124,24 @@ namespace WindBot
             Info.Hand = Config.GetInt("Hand", Info.Hand);
             Info.Debug = Config.GetBool("Debug", Info.Debug);
             Info.Chat = Config.GetBool("Chat", Info.Chat);
-
-            SQLComm.IsRollout = Config.GetBool("Rollout", SQLComm.IsRollout);
-            SQLComm.IsTraining = Config.GetBool("Rollout", SQLComm.IsTraining);
-            SQLComm.ShouldBackPropagate = Config.GetBool("Rollout", SQLComm.ShouldBackPropagate);
-
+            Info.RoomId = Config.GetInt("RoomId", Info.RoomId);
+            string b64CreateGame = Config.GetString("CreateGame");
+            if (b64CreateGame != null)
+            {
+                try
+                {
+                    var ms = new MemoryStream(Convert.FromBase64String(b64CreateGame));
+                    var ser = new DataContractJsonSerializer(typeof(CreateGameInfo));
+                    Info.CreateGame = ser.ReadObject(ms) as CreateGameInfo;
+                    // "Best of 0" is not allowed by the server, use that to check for validity.
+                    if (Info.CreateGame.bestOf == 0) Info.CreateGame = null;
+                }
+                catch (Exception ex)
+                {
+                    Info.CreateGame = null;
+                    Logger.DebugWriteLine("Error while parsing CreateGame json: " + ex);
+                }
+            }
             Run(Info);
         }
 
@@ -124,6 +170,9 @@ namespace WindBot
                     string port = HttpUtility.ParseQueryString(RawUrl).Get("port");
                     if (port != null)
                         Info.Port = Int32.Parse(port);
+                    string deckfile = HttpUtility.ParseQueryString(RawUrl).Get("deckfile");
+                    if (deckfile != null)
+                        Info.DeckFile = deckfile;
                     string dialog = HttpUtility.ParseQueryString(RawUrl).Get("dialog");
                     if (dialog != null)
                         Info.Dialog = dialog;
@@ -195,12 +244,17 @@ namespace WindBot
         {
 #endif
                 client.Tick();
-                //Thread.Sleep(30);
+                Thread.Sleep(30);
 #if !DEBUG
         }
         catch (Exception ex)
         {
             Logger.WriteErrorLine("Tick Error: " + ex);
+            client.Chat("I crashed, check the crash.log file in the WindBot folder", true);
+            using (StreamWriter sw = File.AppendText(Path.Combine(AssetPath, "crash.log"))) {
+                sw.WriteLine("[" + DateTime.Now.ToString("yy-MM-dd HH:mm:ss") + "] Tick Error: " + ex);
+            }
+            return;
         }
 #endif
             }

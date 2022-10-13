@@ -42,6 +42,8 @@ namespace WindBot
         public bool Chat { get; set; }
         public int RoomId { get; set; }
         public CreateGameInfo CreateGame { get; set; }
+        public bool IsTraining { get; set; }
+        public bool ShouldUpdate { get; set; }
         public WindBotInfo()
         {
             Name = "WindBot";
@@ -51,12 +53,14 @@ namespace WindBot
             Host = "127.0.0.1";
             Port = 7911;
             HostInfo = "";
-            Version = 40|0<<8|10<<16;
+            Version = 655400;//39 | 1<<8|9<<16;
             Hand = 0;
             Debug = false;
             Chat = true;
             RoomId = 0;
             CreateGame = null;
+            IsTraining = false;
+            ShouldUpdate = true;
         }
     }
 }

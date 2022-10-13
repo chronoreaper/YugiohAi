@@ -1,4 +1,4 @@
-﻿using YGOSharp.OCGWrapper.Enums;
+using YGOSharp.OCGWrapper.Enums;
 using System.Collections.Generic;
 using WindBot;
 using WindBot.Game;
@@ -117,13 +117,11 @@ namespace WindBot.Game.AI.Decks
         bool summon_used = false;
         bool CardOfDemiseeff_used = false;
         bool SeaStealthAttackeff_used = false;
-        int City_count = 0;
         public override void OnNewTurn()
         {            
             summon_used = false;
             CardOfDemiseeff_used = false;
             SeaStealthAttackeff_used = false;
-            City_count = 0;
             base.OnNewTurn();
         }
         private bool PreventFeatherDustereff()
@@ -356,9 +354,6 @@ namespace WindBot.Game.AI.Decks
             }
             else
             {
-                if (City_count > 10)
-                    return false;
-
                 ClientCard target = null;
                 foreach(ClientCard s in Bot.GetSpells())
                 {
@@ -380,7 +375,6 @@ namespace WindBot.Game.AI.Decks
                         break;
                     }
                 }
-                City_count++;
                 AI.SelectPlace(Zones.z1 | Zones.z3);
                 AI.SelectCard(CardId.PhantasmSprialBattle);
                 return true;
@@ -474,13 +468,13 @@ namespace WindBot.Game.AI.Decks
             IList<ClientCard> material_list = new List<ClientCard>();
             if(Bot.HasInExtra(CardId.BorreloadDragon))
             {
-                AI.SelectCard(
+                AI.SelectMaterials(new[] {
                     CardId.TopologicBomberDragon,
                     CardId.TopologicTrisbaena,
                     CardId.KnightmareGryphon,
                     CardId.SummonSorceress,
                     CardId.BorreloadDragon
-                    );
+                }, HintMsg.Remove);
             }
             else 
             {               
@@ -489,6 +483,7 @@ namespace WindBot.Game.AI.Decks
                     if (material_list.Count == 5) break;
                     material_list.Add(m);
                 }
+                AI.SelectMaterials(material_list, HintMsg.Remove);
             }
             return true;
         }

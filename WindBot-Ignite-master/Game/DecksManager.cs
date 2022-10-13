@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -49,7 +49,7 @@ namespace WindBot.Game
             }
             try
             {
-                string[] files = Directory.GetFiles("Executors", "*.dll", SearchOption.TopDirectoryOnly);
+                string[] files = Directory.GetFiles(Path.Combine(Program.AssetPath, "Executors"), "*.dll", SearchOption.TopDirectoryOnly);
                 foreach (string file in files)
                 {
                     Assembly assembly = Assembly.LoadFrom(file);
@@ -78,7 +78,6 @@ namespace WindBot.Game
             }
             catch (Exception ex)
             {
-                Logger.WriteErrorLine(ex.ToString());
             }
 
             _list = new List<DeckInstance>();

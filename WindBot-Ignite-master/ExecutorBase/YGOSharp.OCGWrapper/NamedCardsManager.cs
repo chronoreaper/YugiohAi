@@ -3,6 +3,8 @@ using System.Data;
 using Mono.Data.Sqlite;
 using System;
 using System.IO;
+using System.Linq;
+using System.Collections.Concurrent;
 
 namespace YGOSharp.OCGWrapper
 {
@@ -10,7 +12,12 @@ namespace YGOSharp.OCGWrapper
     {
         private static IDictionary<int, NamedCard> _cards = new Dictionary<int, NamedCard>();
 
-        public static void Init(string databaseFullPath)
+        public static void SetThreadSafe()
+        {
+            _cards = new ConcurrentDictionary<int, NamedCard>();
+        }
+
+        public static void LoadDatabase(string databaseFullPath)
         {
             try
             {
@@ -51,10 +58,15 @@ namespace YGOSharp.OCGWrapper
             return null;
         }
 
+        public static IList<NamedCard> GetAllCards()
+        {
+            return _cards.Values.ToList();
+        }
+
         private static void LoadCard(IDataRecord reader)
         {
             NamedCard card = new NamedCard(reader);
-            _cards.Add(card.Id, card);
+            _cards[card.Id] = card;
         }
     }
 }

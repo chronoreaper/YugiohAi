@@ -1,4 +1,4 @@
-﻿using YGOSharp.OCGWrapper.Enums;
+using YGOSharp.OCGWrapper.Enums;
 using System.Collections.Generic;
 using WindBot;
 using WindBot.Game;
@@ -230,6 +230,9 @@ namespace WindBot.Game.AI.Decks
         }
         private bool UnendingNightmareeff()
         {
+            if (Card.IsDisabled()){
+                return false;
+            }
             ClientCard card = null;
             foreach(ClientCard check in Enemy.GetSpells())
             {
@@ -520,7 +523,7 @@ namespace WindBot.Game.AI.Decks
                 targets.Add(e_c);                
                 if (targets.Count >= 5)
                 {
-                    AI.SelectCard(targets);
+                    AI.SelectMaterials(targets, HintMsg.Remove);
                     /*AI.SelectCard(new[] {
                         CardId.BingirsuTheWorldChaliceWarrior,
                         CardId.TopologicTrisbaena,
@@ -545,7 +548,7 @@ namespace WindBot.Game.AI.Decks
                 targets.Add(s_c);
                 if (targets.Count >= 5)
                 {
-                    AI.SelectCard(targets);
+                    AI.SelectMaterials(targets, HintMsg.Remove);
                     return true;
                 }
             }

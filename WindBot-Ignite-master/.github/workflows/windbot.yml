@@ -1,0 +1,121 @@
+name: Build EDOPro
+on: [push, pull_request]
+env:
+  DEPLOY_REPO: ${{ secrets.DEPLOY_REPO }}
+  DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+  DEPLOY_BRANCH: ${{ secrets.DEPLOY_BRANCH }}
+jobs:
+  create_release:
+    runs-on: ubuntu-latest
+    outputs:
+      output: ${{steps.create.outputs.id}}
+    steps:
+    - name: Create release
+      if: startsWith(github.ref, 'refs/tags/')
+      id: create
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: ${{ github.ref }}
+        draft: true
+        prerelease: false
+  Desktop:
+    runs-on: windows-2019
+    needs: create_release
+    env:
+      TRAVIS_OS_NAME: windows
+    steps:
+    - name: Set ARTIFACT env var
+      shell: bash
+      run: |
+        echo "ARTIFACT=WindBotIgnite-Release-$(date +%Y%m%d)-${{ github.sha }}.zip" >> $GITHUB_ENV
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+        submodules: true
+    - name: Build
+      shell: bash
+      run: |
+        dotnet build WindBot.csproj --configuration=Release
+    - name: Predeploy
+      shell: bash
+      run: |
+        cd bin && mv Release WindBot
+        7z a -tzip "$ARTIFACT" WindBot
+        mv $ARTIFACT .. && cd ..
+        mkdir -p assets
+        cp $ARTIFACT assets
+        cp Dialogs/default.json .
+    - name: Deploy
+      if: ${{ github.event_name == 'push' }}
+      shell: bash
+      run: ./ci/deploy.sh
+    - name: Upload Release Assets
+      if: startsWith(github.ref, 'refs/tags/')
+      id: upload-release-assets
+      uses: dwenegar/upload-release-assets@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        release_id: ${{ needs.create_release.outputs.output }}
+        assets_path: assets
+
+  Android:
+    runs-on: windows-2019
+    needs: create_release
+    env:
+      TRAVIS_OS_NAME: android
+    steps:
+    - name: Set ARTIFACT env var
+      shell: bash
+      run: |
+        echo "ARTIFACT=WindBotIgnite-Release-$(date +%Y%m%d)-${{ github.sha }}.zip" >> $GITHUB_ENV
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v1.0.2
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+        submodules: true
+# Unspecified dependency for Embeddinator; 64-bit does not work
+    - name: Install mono
+      shell: bash
+      run: |
+        choco install mono --x86
+    - name: Install ndk 15
+      shell: bash
+      env:
+        VS_PREFIX: "16.0_"
+      run: |
+        ./ci/install-sdk-ndk.sh
+    - name: Build
+      shell: bash
+      run: |
+        msbuild.exe -t:restore WindBot.sln
+        msbuild.exe -m -p:Configuration=Release WindBot.sln
+    - name: Predeploy
+      shell: bash
+      run: |
+        cd bin && mkdir -p WindBot
+        cp -r Release/COPYING Release/LICENSE Release/bots.json Release/Decks/ Release/Dialogs/ WindBot/
+        7z a WindBotIgnite-Resources.7z WindBot && cd ..
+        mkdir -p assets
+        mv output/libWindbot.aar bin/WindBotIgnite-Resources.7z assets
+    - name: Upload Release Assets
+      if: startsWith(github.ref, 'refs/tags/')
+      id: upload-release-assets
+      uses: dwenegar/upload-release-assets@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        release_id: ${{ needs.create_release.outputs.output }}
+        assets_path: assets
+        
+        
+# assets to upload android
+    # - $ARTIFACT
+    # - libWindbot.aar
+    # - WindBotIgnite-Resources.7z

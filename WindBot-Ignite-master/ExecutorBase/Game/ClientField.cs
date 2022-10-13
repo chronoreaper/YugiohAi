@@ -39,6 +39,41 @@ namespace WindBot.Game
                 ExtraDeck.Add(new ClientCard(0, CardLocation.Extra, -1, 0));
         }
 
+        public void Clear()
+        {
+            Deck.Clear();
+            ExtraDeck.Clear();
+            Hand.Clear();
+            Banished.Clear();
+            Graveyard.Clear();
+            MonsterZone = new ClientCard[7];
+            SpellZone = new ClientCard[8];
+        }
+
+        public void SwapDeckAndGrave(System.Collections.BitArray extra_buf, int extra_insert_off)
+        {
+            IList<ClientCard> oldgrave = Graveyard;
+            Graveyard = Deck;
+            Deck = oldgrave;
+            foreach(ClientCard card in Graveyard)
+                card.Location = CardLocation.Grave;
+            int i = 0;
+            foreach (ClientCard card in Deck.ToList()) {
+                if (extra_buf[i])
+                {
+                    card.Position = (int)CardPosition.FaceDown;
+                    card.Location = CardLocation.Extra;
+                    Deck.Remove(card);
+                    ExtraDeck.Insert(extra_insert_off++, card);
+                }
+                else
+                {
+                    card.Location = CardLocation.Deck;
+                }
+                i++;
+            }
+        }
+
         public int GetMonstersExtraZoneCount()
         {
             int count = 0;
@@ -246,6 +281,11 @@ namespace WindBot.Game
         public bool HasInHandOrInGraveyard(int cardId)
         {
             return HasInHand(cardId) || HasInGraveyard(cardId);
+        }
+
+        public bool HasInGraveyardOrInBanished(int cardId)
+        {
+            return HasInBanished(cardId) || HasInGraveyard(cardId);
         }
 
         public bool HasInMonstersZoneOrInGraveyard(int cardId)

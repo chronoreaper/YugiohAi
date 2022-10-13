@@ -91,6 +91,11 @@ namespace WindBot
             Info.Hand = Config.GetInt("Hand", Info.Hand);
             Info.Debug = Config.GetBool("Debug", Info.Debug);
             Info.Chat = Config.GetBool("Chat", Info.Chat);
+
+            SQLComm.IsRollout = Config.GetBool("Rollout", SQLComm.IsRollout);
+            SQLComm.IsTraining = Config.GetBool("Rollout", SQLComm.IsTraining);
+            SQLComm.ShouldBackPropagate = Config.GetBool("Rollout", SQLComm.ShouldBackPropagate);
+
             Run(Info);
         }
 

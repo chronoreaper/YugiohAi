@@ -61,8 +61,8 @@ namespace WindBot
          */
         public Node GetNextAction()
         {
-            Node best = null;
-            double weight = 0;
+            Node best = current;
+            double weight = -1;
             double c = 0.5;
 
             if (!SQLComm.IsRollout)
@@ -71,7 +71,7 @@ namespace WindBot
                 {
                     double visited = Math.Max(0.0001, n.Visited);
                     double w = n.Rewards + c * Math.Sqrt(Math.Log(TotalGames) / visited);
-                    if (w > weight)
+                    if (w >= weight)
                     {
                         weight = w;
                         best = n;

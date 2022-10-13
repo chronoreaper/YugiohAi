@@ -254,6 +254,7 @@ namespace WindBot.Game.AI.Decks
                 if (Card.Name == BestAction.CardId && Type.ToString() == BestAction.Action)
                 {
                     BestAction = null;
+                    return true;
                 }
                 else
                 {

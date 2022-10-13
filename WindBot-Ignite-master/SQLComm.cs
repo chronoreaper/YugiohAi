@@ -18,7 +18,7 @@ namespace WindBot
             //@"URI=file:\windbot_master\windbot_master\bin\Debug\cards.cdb";
             string dir = Directory.GetCurrentDirectory();
             //Go to the YugiohAi Directory
-            dir = dir.Remove(dir.IndexOf(@"windbot_master\bin\Debug")) + "cardData.cdb";
+            dir = dir.Remove(dir.IndexOf(@"WindBot-Ignite-master\bin\Debug")) + "cardData.cdb";
             string absolutePath = $@"URI = file: {dir}";
             return new SqliteConnection(absolutePath);
         }
@@ -29,7 +29,7 @@ namespace WindBot
             {
                 conn.Open();
                 string sql = $"SELECT rowid, Reward, Visited FROM MCST WHERE " +
-                    $"ParentId = {node.Parent.NodeId} AND CardId = {node.CardId} and Action = {node.Action}";
+                    $"ParentId = \"{node.Parent?.NodeId}\" AND CardId = \"{node.CardId}\" AND Action = \"{node.Action}\"";
                 using (SqliteCommand cmd = new SqliteCommand(sql, conn))
                 {
                     using (SqliteDataReader rdr = cmd.ExecuteReader())
@@ -51,13 +51,20 @@ namespace WindBot
             {
                 conn.Open();
                 string sql = $"SELECT SUM(Visited) FROM MCST";
-                using (SqliteCommand cmd = new SqliteCommand(sql, conn))
+                try
                 {
-                    using (SqliteDataReader rdr = cmd.ExecuteReader())
-                        while (rdr.Read())
-                        {
-                            total = rdr.GetInt32(0);
-                        }
+                    using (SqliteCommand cmd = new SqliteCommand(sql, conn))
+                    {
+                        using (SqliteDataReader rdr = cmd.ExecuteReader())
+                            while (rdr.Read())
+                            {
+                                total = rdr.GetInt32(0);
+                            }
+                    }
+                }
+                catch (InvalidCastException)
+                {
+                    Logger.WriteLine("Empty MCST Database");
                 }
                 conn.Close();
             }

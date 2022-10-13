@@ -57,7 +57,7 @@ namespace WindBot.Game.AI.Decks.Util
                 double? weight = Executor.ActionWeight(actionString);
 
                 if (action == ExecutorType.Repos)
-                    weight = Executor.ShouldRepos() ? 1 : -1;
+                    weight = Executor.ShouldRepos() ? 10 : -10;
                 if (action == ExecutorType.GoToMainPhase2)
                     action = ExecutorType.GoToEndPhase;
                 if (action == ExecutorType.GoToBattlePhase || action == ExecutorType.GoToEndPhase || action == ExecutorType.GoToMainPhase2)

@@ -7,7 +7,7 @@ namespace WindBot
 {
     public class TreeActivation
     {
-        public const double THRESHOLD = 3;
+        public const double THRESHOLD = 5;
 
         public class Node
         {
@@ -307,8 +307,11 @@ namespace WindBot
                 if (bestActions.Count > 0)
                     result = bestActions[rnd.Next(bestActions.Count)];
             }
+            else if (nullNextActions.Count > 0)
+                result = nullNextActions[rnd.Next(nullNextActions.Count)];
             else if (nextActions.Count > 0)
                 result = nextActions[rnd.Next(nextActions.Count)];
+
 
             if (result != null)
             {

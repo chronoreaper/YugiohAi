@@ -62,13 +62,39 @@ topCardsRange = min(topCards, 40)
 
 #adds random card to main 
 
-c.execute('select id, idQuant, sum(wins)/sum(games) as weight '+
+'''c.execute('select id, idQuant, sum(wins)/sum(games) as weight '+
 	'from cardRelated '+
 	'where id = relatedid '+
 	'group by id '+
 	'order by weight desc '+
 	'LIMIT (?)', (topCards,))
-cards = c.fetchall()
+cards = c.fetchall()'''
+
+cards = []
+sql = "SELECT id, sum(activation) as a, sum(games), sum(activation)/ sum(games) as value from playCard GROUP BY id order by a desc"
+c.execute(sql)
+records = c.fetchall()
+
+avg = "select avg(a) from (" + sql + ")"
+c.execute(avg)
+avg = c.fetchone()[0]
+if (avg != None):
+	avg = float(avg)
+else:
+	avg = 1
+if avg == 0:
+	avg = 1
+
+for record in records:
+	name = record[0]
+	weight = record[1]
+	c.execute("SELECT id from cardList where name = (?)", (name,))
+	cardId = c.fetchone()
+	if cardId == None:
+		continue
+	cardId = cardId[0]
+	cards.append((cardId, name, weight / avg))
+	
 
 deck_main = AddToDeck(cards,topCardsRange, deck_main)
 

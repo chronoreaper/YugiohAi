@@ -51,14 +51,26 @@ def GetCardQuantity(deck):
 	return dict
 
 def GetGameLog(deck):
-	file = []
-	deckFile = open(os.getcwd()+'/windbot_master/bin/Debug/'+ deck + ".txt" ,"r")
-	for l in deckFile:
-		if len(l)>3:
-			file.append(l.split("]")[1].strip())
-	deckFile.close()
+	cardWinWeight = []
 	
-	return file
+	conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
+	c = conn.cursor()
+	sql = "SELECT id, sum(activation) as a, sum(games), sum(activation)/ sum(games) as value from playCard WHERE inprogress = (?) GROUP BY id order by a desc"
+	c.execute(sql, (deck,))
+	records = c.fetchall()
+	
+	avg = "select avg(a) from (" + sql + ")"
+	c.execute(avg)
+	avg = float(c.fetchone()[0])
+	
+	for record in records:
+		name = record[0]
+		weight = record[1]
+		c.execute("SELECT id from cardList where name = (?)", (name,))
+		cardId = c.fetchone()[0]
+		cardWinWeight.append((cardId, name, weight / avg))
+	
+	return cardWinWeight
 
 def GetCardactivation(cardid):
 	conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
@@ -74,11 +86,12 @@ def GetCardactivation(cardid):
 	return 0
 	
 def UpdateDatabase(deck, deckQuant, deckOther, deckQuantOther,result,name,compressMaster):
-	# Takes in two list and a dictonary
-	# deck = the deck you are saving, list of ids
-	# deckQuant= the quantity of all the cards in your deck
-	# deckOther = the other deck
-	# deckQuantOther=the quantity of all the cards in the other deck
+	"""	Takes in two list and a dictonary
+		deck = the deck you are saving, list of ids
+		deckQuant= the quantity of all the cards in your deck
+		deckOther = the other deck
+		deckQuantOther=the quantity of all the cards in the other deck
+	"""
 	conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
 	c = conn.cursor()
 	#record the relationship in the deck
@@ -204,7 +217,7 @@ AIName2 = 'bot2'
 #The Deck name and location	
 AI1Deck = 'Random'
 AI2Deck = 'Random2'
-if not isTraining or True:
+if not isTraining:# or True:
 	AI2Deck = 'Master'
 deck1 = 'AI_Random.ydk'
 deck2 = 'AI_Random2.ydk'
@@ -286,22 +299,22 @@ while gameCount < int(gamesToPlay):
 	  
 	gameCount += 1
 	
-	if isTraining:
+	if isTraining and False:
 		print("	Saving deck to database")
 		# Save to database
-		# deckList = GetGameLog(AIName1)
-		# deckListOther = GetGameLog(AIName2)
+		deckList = GetGameLog(AIName1)
+		deckListOther = GetGameLog(AIName2)
 
-		# deckQuant = GetCardQuantity(deck1)	
-		# deckQuantOther = GetCardQuantity(deck2)
+		deckQuant = GetCardQuantity(deck1)	
+		deckQuantOther = GetCardQuantity(deck2)
 
 		time.sleep(1)
 
 		print("	Saving Deck 1 Results")
-		#UpdateDatabase(deckList,deckQuant,deckListOther,deckQuantOther, win1, AIName1,True)
+		UpdateDatabase(deckList,deckQuant,deckListOther,deckQuantOther, win1, AIName1,True)
 
 		print("	Saving Deck 2 Results")
-		#UpdateDatabase(deckListOther,deckQuantOther,deckList,deckQuant, win2, AIName2,False)
+		UpdateDatabase(deckListOther,deckQuantOther,deckList,deckQuant, win2, AIName2,False)
 	
 	if abs(win1) > 1 and AI2Deck == "Master" :
 		break

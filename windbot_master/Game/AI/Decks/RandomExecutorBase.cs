@@ -336,6 +336,7 @@ namespace WindBot.Game.AI.Decks
 
                         //weight = Math.Sign(cardAdvantage) + Math.Sign(fieldAdvantage);
                         weight += (advantageGain);
+                        weight += cardAdvantage;
                         //if (Math.Abs(weight) > 0)
                         {
                             SqlComm.RecordActual(Duel.Turn - 2, weight + PreTurnWeight, 2);
@@ -409,6 +410,8 @@ namespace WindBot.Game.AI.Decks
                     {
                         weight = weights[0];
                     }
+                    else
+                        weight = ActionWeight(actionString);
                 }
                 else
                 {

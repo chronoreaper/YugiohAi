@@ -19,7 +19,7 @@ g = subprocess.Popen([os.getcwd() + "/ProjectIgnis/ygopro.exe", "-c"])
 AIName1 = 'bot1'		 
 AI1Deck = 'Random'
 deck1 = 'AI_Random.ydk'
-#subprocess.run([os.getcwd() + "/12_makeDeck.py", "AI_Random.ydk"],shell=True)
+subprocess.run([os.getcwd() + "/12_makeDeck.py", "AI_Random.ydk"],shell=True)
 time.sleep(3)			  
 p1 = subprocess.Popen([os.getcwd() + "/133_runAi.py",AI1Deck,AIName1,'1','1',"false"],
 					  shell=True,stdout=subprocess.PIPE, 

@@ -427,7 +427,7 @@ namespace WindBot
             {
                 if (gameResult == WIN)
                 {
-                    TreeActivation.UpdateNode(TreeActivation.TurnActions.Keys.Max() + 1, TreeActivation.THRESHOLD, true);
+                    //TreeActivation.UpdateNode(TreeActivation.TurnActions.Keys.Max() + 1, TreeActivation.THRESHOLD, true);
                 }
                 else if (gameResult == LOSE)
                     TreeActivation.UpdateNode(TreeActivation.TurnActions.Keys.Max() + 1, null);
@@ -472,7 +472,7 @@ namespace WindBot
                             var v = 0;
                         }
 
-                        sql = $"UPDATE playCardTree SET activation = {weight_string}, " +
+                        sql = $"UPDATE playCardTree SET activation = coalesce({weight_string}, activation), " +
                             $"games = games + {games} WHERE " +
                                 $"id = \"{node.id}\" AND action = \"{node.action}\" AND " +
                                 $"preId = \"{preId}\" AND preAction = \"{preAction}\" AND " +
@@ -625,14 +625,14 @@ namespace WindBot
 
                         Console.WriteLine($"    {id}, {location}, {action}, {result}, {verify}, {value}, {count}, Act:{activation}");
 
-                        sql = $"UPDATE playCard SET activation = (activation * games + {activation}) / (games + {games}), " +
+                        sql = $"UPDATE playCard SET activation = coalesce({activation} , activation * games + {activation} / (games + {games}, activation), " +
                             $"games = games + {games} WHERE " +
                                 $"id = \"{id}\" AND location = \"{location}\" AND action = \"{action}\"  AND result LIKE \"{result}\" " +
                                 $"AND verify = \"{verify}\" AND value = \"{value}\" AND count = {count} " +
                                 $"AND inprogress =  \"{Name}\" ";
 
                         int rowsUpdated = 0;
-                        if (activation != null && ShouldUpdate)// && info.turn <= 2)
+                        if (activation != null && ShouldUpdate && info.turn <= 2)
                         {
                             /*using (SqliteCommand cmd2 = new SqliteCommand(sql, SQLCon, transaction))
                             {
@@ -681,10 +681,10 @@ namespace WindBot
 
         public static void WriteToFile(string str)
         {
-            /*using (StreamWriter sw = File.AppendText(Path))
+            using (StreamWriter sw = File.AppendText(Path))
             {
                 sw.WriteLine(str);
-            }*/
+            }
         }
     }
 }

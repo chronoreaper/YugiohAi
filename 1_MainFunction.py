@@ -72,7 +72,7 @@ print("Running " + str(repeatFor) + " times X "+ str(matches) + " matches X " + 
 while (count <= repeatFor):
 	print("Running:"+str(count))
 	matchNum = 1
-	#subprocess.run([os.getcwd() + "/12_makeDeck.py", "AI_Random.ydk"],shell=True)
+	subprocess.run([os.getcwd() + "/12_makeDeck.py", "AI_Random.ydk"],shell=True)
 	#subprocess.run([os.getcwd() + "/12_makeDeck.py", "AI_Random2.ydk"],shell=True)
 	while ((matchNum <= matches) and (error == 0) and (warning < 3)):
 		file = open("log.txt","a")

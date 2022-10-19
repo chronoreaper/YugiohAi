@@ -239,7 +239,17 @@ namespace WindBot.Game
 
         private void OnRematch(BinaryReader packet)
         {
-            Connection.Send(CtosMessage.RematchResponse, (byte)(1));
+            Logger.WriteLine($"Total Games Played: {++SQLComm.TotalGames}");
+
+            //if (SQLComm.TotalGames % 10 == 0)
+            {
+                SQLComm.ShouldBackPropagate = true;
+            }
+
+            int response = 1;
+            if (SQLComm.TotalGames > 100)
+                response = 0;
+            Connection.Send(CtosMessage.RematchResponse, (byte)(response));
         }
 
         private void OnTypeChange(BinaryReader packet)
@@ -436,6 +446,8 @@ namespace WindBot.Game
             string otherName = _room.Position == 0 ? _room.Names[1] : _room.Names[0];
             string textResult = (result == 2 ? "Draw" : result == 0 ? "Win" : "Lose");
             Logger.DebugWriteLine("Duel finished against " + otherName + ", result: " + textResult);
+
+            _ai.OnWin(result);
         }
 
         private void OnDraw(BinaryReader packet)

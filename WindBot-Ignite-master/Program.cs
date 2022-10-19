@@ -125,6 +125,10 @@ namespace WindBot
             Info.Debug = Config.GetBool("Debug", Info.Debug);
             Info.Chat = Config.GetBool("Chat", Info.Chat);
             Info.RoomId = Config.GetInt("RoomId", Info.RoomId);
+
+            SQLComm.ShouldBackPropagate = Config.GetBool("Backpropagate", SQLComm.ShouldBackPropagate);
+            SQLComm.IsRollout = Config.GetBool("Rollout", SQLComm.IsRollout);
+
             string b64CreateGame = Config.GetString("CreateGame");
             if (b64CreateGame != null)
             {
@@ -244,7 +248,7 @@ namespace WindBot
         {
 #endif
                 client.Tick();
-                Thread.Sleep(30);
+                //Thread.Sleep(30);
 #if !DEBUG
         }
         catch (Exception ex)

@@ -57,6 +57,10 @@
   <ItemGroup>
     <Compile Include="Config.cs" />
     <Compile Include="Game\AI\Deck.cs" />
+    <Compile Include="Game\AI\Decks\AIExecutor1.cs" />
+    <Compile Include="Game\AI\Decks\AIExecutor2.cs" />
+    <Compile Include="Game\AI\Decks\AIExecutorBase.cs" />
+    <Compile Include="Game\AI\Decks\AIMasterExecutor.cs" />
     <Compile Include="Game\AI\Decks\[HealingJAMExecutor].cs" />
     <Compile Include="Game\AI\Decks\[ImaginaryArkExecutor].cs" />
     <Compile Include="Game\DecksManager.cs" />
@@ -112,8 +116,10 @@
     <Compile Include="Game\GamePacketFactory.cs" />
     <Compile Include="Game\Room.cs" />
     <Compile Include="Logger.cs" />
+    <Compile Include="MCST.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SQLComm.cs" />
     <Compile Include="WindBotInfo.cs" />
     <Compile Include="YGOSharp.Network\AsyncBinaryClient.cs" />
     <Compile Include="YGOSharp.Network\AsyncNetworkServer.cs" />

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using YGOSharp.OCGWrapper.Enums;
@@ -48,6 +48,11 @@ namespace WindBot.Game.AI
         public virtual bool OnSelectHand()
         {
             return Rand.Next(2) > 0;
+        }
+
+        public virtual void OnWin(int result)
+        {
+            //For overriding 
         }
 
         /// <summary>
@@ -218,12 +223,12 @@ namespace WindBot.Game.AI
             return 0;
         }
 
-        public void SetMain(MainPhase main)
+        public virtual void SetMain(MainPhase main)
         {
             Main = main;
         }
 
-        public void SetBattle(BattlePhase battle)
+        public virtual void SetBattle(BattlePhase battle)
         {
             Battle = battle;
         }

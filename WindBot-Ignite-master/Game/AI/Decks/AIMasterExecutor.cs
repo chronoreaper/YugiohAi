@@ -36,7 +36,7 @@ namespace WindBot.Game.AI.Decks
 
             AddExecutor(ExecutorType.SpSummon, CardId.CyberDragon);
 
-            AddExecutor(ExecutorType.Summon, CardId.SnipeHunter);
+            //AddExecutor(ExecutorType.Summon, CardId.SnipeHunter);
             AddExecutor(ExecutorType.Summon, CardId.ExiledForce);
             AddExecutor(ExecutorType.Summon, CardId.WindUpSoldier, SnipeHunterSummon);
 
@@ -66,9 +66,11 @@ namespace WindBot.Game.AI.Decks
         private bool ActivateBlockAttack()
         {
             ClientCard target = null;
+            int highest_attack = Util.GetBestBotMonster(true).Attack;
             foreach (ClientCard card in Util.Enemy.GetMonsters())
                 if (card.Position == (int)CardPosition.Attack)
-                    if (card.Attack > card.Defense && (target == null || card.Attack > target.Attack))
+                    if (card.Attack > card.Defense && (target == null || card.Attack > target.Attack)
+                        && highest_attack > card.Defense)
                         target = card;
             if (target != null)
             {
@@ -81,9 +83,11 @@ namespace WindBot.Game.AI.Decks
         private bool ActivateStopDefence()
         {
             ClientCard target = null;
+            int highest_attack = Util.GetBestBotMonster(true).Attack;
             foreach (ClientCard card in Util.Enemy.GetMonsters())
                 if (card.Position == (int)CardPosition.Defence)
-                    if (card.Defense > card.Attack && (target == null || card.Defense > target.Defense))
+                    if (card.Defense > card.Attack && (target == null || card.Defense > target.Defense)
+                         && highest_attack > card.Attack)
                         target = card;
             if (target != null)
             {
@@ -108,7 +112,9 @@ namespace WindBot.Game.AI.Decks
         {
             IList<int> atkTarg = new[] {
                 CardId.CyberDragon,
-                CardId.Tricky
+                CardId.Tricky,
+                CardId.Alexandrite,
+                CardId.Avram
             };
 
             IList<int> defTarg = new[] {

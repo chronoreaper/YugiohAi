@@ -64,6 +64,11 @@ namespace WindBot.Game
             _dialogs.SendDuelStart();
         }
 
+        public void OnWin(int result)
+        {
+            Executor.OnWin(result);
+        }
+
         /// <summary>
         /// Called when the AI do the rock-paper-scissors.
         /// </summary>

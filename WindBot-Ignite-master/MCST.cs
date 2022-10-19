@@ -25,6 +25,9 @@ namespace WindBot
                 CardId = cardId;
                 Action = action;
 
+                if (Parent == null)
+                    NodeId = 0;
+
                 SQLComm.GetNodeInfo(this);
             }
         }
@@ -34,8 +37,13 @@ namespace WindBot
 
         public MCST()
         {
-            current = new Node(null, "", "");
+            OnNewGame();
+        }
+
+        public void OnNewGame()
+        {
             TotalGames = SQLComm.GetTotalGames();
+            current = new Node(null, "", "");
         }
 
         /*
@@ -70,7 +78,7 @@ namespace WindBot
                 foreach (Node n in current.Children)
                 {
                     double visited = Math.Max(0.0001, n.Visited);
-                    double w = n.Rewards + c * Math.Sqrt(Math.Log(TotalGames) / visited);
+                    double w = n.Rewards + c * Math.Sqrt((Math.Log(TotalGames + 1) + 1) / visited);
                     if (w >= weight)
                     {
                         weight = w;
@@ -79,7 +87,12 @@ namespace WindBot
                 }
 
                 if (best != null)
+                {
                     current = best;
+                    if (best.Visited <= 0)
+                        SQLComm.IsRollout = true;
+                }
+                current.Children.Clear();
             }
             else if (current.Children.Count > 0)
             {

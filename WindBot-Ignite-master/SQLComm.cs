@@ -13,6 +13,7 @@ namespace WindBot
         public static bool IsTraining = true;
         public static bool IsRollout = false;
         public static bool ShouldBackPropagate = false;
+        public static int TotalGames = 0;
         private static SqliteConnection ConnectToDatabase()
         {
             //@"URI=file:\windbot_master\windbot_master\bin\Debug\cards.cdb";
@@ -35,7 +36,7 @@ namespace WindBot
                     using (SqliteDataReader rdr = cmd.ExecuteReader())
                     while (rdr.Read())
                     {
-                        node.NodeId = rdr.GetInt64(0);
+                        node.NodeId = long.Parse(rdr["rowid"].ToString());
                         node.Rewards = rdr.GetDouble(1);
                         node.Visited = rdr.GetInt32(2);
                     }
@@ -58,7 +59,7 @@ namespace WindBot
                         using (SqliteDataReader rdr = cmd.ExecuteReader())
                             while (rdr.Read())
                             {
-                                total = rdr.GetInt32(0);
+                                total += rdr.GetInt32(0);
                             }
                     }
                 }
@@ -99,8 +100,8 @@ namespace WindBot
                     using (SqliteDataReader rdr = cmd.ExecuteReader())
                         while (rdr.Read())
                         {
-                            rewards += rdr.GetDouble(1);
-                            RolloutCount += rdr.GetInt32(2);
+                            rewards = rdr.GetDouble(0);
+                            RolloutCount = rdr.GetInt32(1);
                         }
                 }
 
@@ -119,7 +120,12 @@ namespace WindBot
                     }
                     else
                     {
-                        sql = $"INSERT INTO MCST (NodeId,ParentId,CardId,Action,Reward,Visited) VALUES (\"0\",\"{node?.Parent.NodeId}\",\"{node.CardId}\",\"{node.Action}\",\"{rewards / RolloutCount}\",\"1\")";
+                        long parentId = 0;
+                        if (node.Parent != null)
+                        {
+                            parentId = node.Parent.NodeId;
+                        }
+                        sql = $"INSERT INTO MCST (ParentId,CardId,Action,Reward,Visited) VALUES (\"{parentId}\",\"{node.CardId}\",\"{node.Action}\",\"{rewards / RolloutCount}\",\"1\")";
                         using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                         {
                             rowsUpdated = cmd2.ExecuteNonQuery();
@@ -129,9 +135,19 @@ namespace WindBot
                     node = node.Parent;
                 }
 
+                // Remove the rollout
+                sql = $"DELETE FROM MCST WHERE CardId = \"Result\" and Action = \"Result\" ";
+                using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                {
+                    rowsUpdated = cmd2.ExecuteNonQuery();
+                }
+
                 transaction.Commit();
                 conn.Close();
             }
+
+            ShouldBackPropagate = false;
+            IsRollout = false;
         }
 
         private static void RecordWin(int result)
@@ -157,7 +173,7 @@ namespace WindBot
                 // If there was no update, add it instead
                 if (rowsUpdated <= 0)
                 {
-                    sql = $"INSERT INTO MCST (NodeId,ParentId,CardId,Action,Reward,Visited) VALUES (\"-1\",\"-1\",\"Result\",\"Result\",\"{reward}\",\"1\")";
+                    sql = $"INSERT INTO MCST (ParentId,CardId,Action,Reward,Visited) VALUES (\"-1\",\"Result\",\"Result\",\"{reward}\",\"1\")";
                     using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                     {
                         rowsUpdated = cmd2.ExecuteNonQuery();

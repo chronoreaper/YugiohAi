@@ -90,7 +90,7 @@ namespace WindBot.Game.AI.Decks
             for (int i = 0; i < main.ActivableCards.Count; ++i)
             {
                 ClientCard card = main.ActivableCards[i];
-                Tree.AddPossibleAction(card?.Name, ExecutorType.Repos.ToString());
+                Tree.AddPossibleAction(card?.Name, ExecutorType.Activate.ToString());
                 //choice.SetBest(ExecutorType.Activate, card, card.ActionActivateIndex[main.ActivableDescs[i]]);
             }
 

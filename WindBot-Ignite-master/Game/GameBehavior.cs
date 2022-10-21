@@ -239,16 +239,23 @@ namespace WindBot.Game
 
         private void OnRematch(BinaryReader packet)
         {
-            Logger.WriteLine($"Total Games Played: {++SQLComm.TotalGames}");
+            Logger.WriteLine($"Total Games Played: {++SQLComm.GamesPlayed} / {SQLComm.TotalGames}");
 
-            //if (SQLComm.TotalGames % 10 == 0)
+            if (SQLComm.RolloutCount <= 0)
             {
+                SQLComm.ShouldBackPropagate = true;
+            }
+            else if (SQLComm.GamesPlayed % SQLComm.RolloutCount == 0)
+            {
+                Logger.WriteLine("Backpropergate");
                 SQLComm.ShouldBackPropagate = true;
             }
 
             int response = 1;
-            if (SQLComm.TotalGames > 100)
+            if (SQLComm.GamesPlayed >= SQLComm.TotalGames) // For some reason, if the value is SQLComm.TotalGames set from Program.cs, it sets response to 0  for some dumb reason. Doesn't even pass through here Throws a System.ObjectDisposedException in System.dll
+            {
                 response = 0;
+            }
             Connection.Send(CtosMessage.RematchResponse, (byte)(response));
         }
 

@@ -13,7 +13,10 @@ namespace WindBot
         public static bool IsTraining = true;
         public static bool IsRollout = false;
         public static bool ShouldBackPropagate = false;
-        public static int TotalGames = 0;
+        public static int TotalGames = 100;
+        public static int RolloutCount = 2;
+
+        public static int GamesPlayed = 0;
         private static SqliteConnection ConnectToDatabase()
         {
             //@"URI=file:\windbot_master\windbot_master\bin\Debug\cards.cdb";
@@ -78,6 +81,7 @@ namespace WindBot
          */
         public static void Backpropagate(Node node, int result)
         {
+            IsRollout = false;
             if (!ShouldBackPropagate)
             {
                 RecordWin(result);

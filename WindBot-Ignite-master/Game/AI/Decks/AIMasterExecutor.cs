@@ -66,7 +66,8 @@ namespace WindBot.Game.AI.Decks
         private bool ActivateBlockAttack()
         {
             ClientCard target = null;
-            int highest_attack = Util.GetBestBotMonster(true).Attack;
+            int highest_attack = 0;
+            if (Util.GetBestBotMonster(true) != null) highest_attack = Util.GetBestBotMonster(true).Attack;
             foreach (ClientCard card in Util.Enemy.GetMonsters())
                 if (card.Position == (int)CardPosition.Attack)
                     if (card.Attack > card.Defense && (target == null || card.Attack > target.Attack)
@@ -83,7 +84,8 @@ namespace WindBot.Game.AI.Decks
         private bool ActivateStopDefence()
         {
             ClientCard target = null;
-            int highest_attack = Util.GetBestBotMonster(true).Attack;
+            int highest_attack = 0;
+            if (Util.GetBestBotMonster(true) != null) highest_attack = Util.GetBestBotMonster(true).Attack;
             foreach (ClientCard card in Util.Enemy.GetMonsters())
                 if (card.Position == (int)CardPosition.Defence)
                     if (card.Defense > card.Attack && (target == null || card.Defense > target.Defense)

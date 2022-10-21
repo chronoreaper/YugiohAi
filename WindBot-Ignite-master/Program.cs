@@ -128,6 +128,8 @@ namespace WindBot
 
             SQLComm.ShouldBackPropagate = Config.GetBool("Backpropagate", SQLComm.ShouldBackPropagate);
             SQLComm.IsRollout = Config.GetBool("Rollout", SQLComm.IsRollout);
+            //SQLComm.RolloutCount = Config.GetInt("RolloutCount", SQLComm.RolloutCount); // Causes errors
+            //SQLComm.TotalGames = Config.GetInt("TotalGames", SQLComm.TotalGames);
 
             string b64CreateGame = Config.GetString("CreateGame");
             if (b64CreateGame != null)

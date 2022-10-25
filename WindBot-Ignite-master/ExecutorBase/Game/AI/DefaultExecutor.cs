@@ -134,6 +134,8 @@ namespace WindBot.Game.AI
         /// <returns>BattlePhaseAction including the target, or null (in this situation, GameAI will check the next attacker)</returns>
         public override BattlePhaseAction OnSelectAttackTarget(ClientCard attacker, IList<ClientCard> defenders)
         {
+            ClientCard toAttack = null;
+            int greatestAttack = -1;
             foreach (ClientCard defender in defenders)
             {
                 attacker.RealPower = attacker.Attack;
@@ -141,12 +143,23 @@ namespace WindBot.Game.AI
                 if (!OnPreBattleBetween(attacker, defender))
                     continue;
 
-                if (attacker.RealPower > defender.RealPower || (attacker.RealPower >= defender.RealPower && attacker.IsLastAttacker && defender.IsAttack()))
-                    return AI.Attack(attacker, defender);
+                if (attacker.RealPower > defender.RealPower
+                || (attacker.RealPower >= defender.RealPower && defender.IsAttack()
+                && (Bot.GetMonsterCount() >= defenders.Count || attacker.IsLastAttacker)))
+                {
+                    if ((defender.Attack > greatestAttack || greatestAttack == attacker.RealPower)
+                        && (toAttack == null || defender.Position != ((int)CardPosition.FaceDownDefence))
+                        )
+
+                    {
+                        toAttack = defender;
+                        greatestAttack = Math.Max(defender.Attack, defender.Defense);
+                    }
+                }
             }
 
-            if (attacker.CanDirectAttack)
-                return AI.Attack(attacker, null);
+            if (toAttack != null || attacker.CanDirectAttack)
+                return AI.Attack(attacker, toAttack);//toAttack == null if it is a direct attack
 
             return null;
         }
@@ -733,6 +746,7 @@ namespace WindBot.Game.AI
                     return true;
                 if (Card.IsFaceup() && Card.IsDefense())
                     return false;
+                return false;
             }
 
             if (Enemy.HasInMonstersZone(_CardId.BlueEyesChaosMAXDragon, true) &&
@@ -743,7 +757,7 @@ namespace WindBot.Game.AI
                 (4000 - Card.Defense) * 2 > (4000 - Card.Attack))
                 return true;
 
-            bool enemyBetter = Util.IsAllEnemyBetter();
+            bool enemyBetter = Util.IsAllEnemyBetter(true);
             if (Card.IsAttack() && enemyBetter)
                 return true;
             if (Card.IsDefense() && !enemyBetter && (Card.Attack >= Card.Defense || Card.Attack >= Util.GetBestPower(Enemy)))
@@ -912,9 +926,9 @@ namespace WindBot.Game.AI
                     AI.SelectOption(SYNCHRO);
                     return true;
                 }
-                for (int i=1; i<=12; i++)
+                for (int i = 1; i <= 12; i++)
                 {
-                    if (levels[i]>1)
+                    if (levels[i] > 1)
                     {
                         AI.SelectOption(XYZ);
                         return true;

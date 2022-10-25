@@ -740,7 +740,7 @@ namespace WindBot.Game.AI
             if (Card.IsMonsterInvincible())
                 return Card.IsDefense();
 
-            if (Card.Attack == 0)
+            if (Card.Attack < 1000)
             {
                 if (Card.IsFaceup() && Card.IsAttack())
                     return true;

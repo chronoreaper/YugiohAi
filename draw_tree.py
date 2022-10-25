@@ -26,7 +26,7 @@ for record in records:
     reward = record[4]
     visited = max(0.0001, record[5])
 
-    const = 1
+    const = 0.5
     activation = reward + const * math.sqrt((math.log(total + 1) + 1) / visited)
 
     nx_graph.add_node(25, label=f'{action} {cardid}', title=f'{action} {cardid}', group=group_count)

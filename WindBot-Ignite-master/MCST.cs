@@ -156,7 +156,7 @@ namespace WindBot
         {
             Node best = current;
             double weight = -1;
-            double c = 1;
+            double c = 0.5;
 
             if (!SQLComm.IsRollout)
             {

@@ -41,6 +41,75 @@
              }
 
              
+             #loadingBar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width: 1000px;
+                 height: 1000px;
+                 background-color:rgba(200,200,200,0.8);
+                 -webkit-transition: all 0.5s ease;
+                 -moz-transition: all 0.5s ease;
+                 -ms-transition: all 0.5s ease;
+                 -o-transition: all 0.5s ease;
+                 transition: all 0.5s ease;
+                 opacity:1;
+             }
+
+             #bar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width:20px;
+                 height:20px;
+                 margin:auto auto auto auto;
+                 border-radius:11px;
+                 border:2px solid rgba(30,30,30,0.05);
+                 background: rgb(0, 173, 246); /* Old browsers */
+                 box-shadow: 2px 0px 4px rgba(0,0,0,0.4);
+             }
+
+             #border {
+                 position:absolute;
+                 top:10px;
+                 left:10px;
+                 width:500px;
+                 height:23px;
+                 margin:auto auto auto auto;
+                 box-shadow: 0px 0px 4px rgba(0,0,0,0.2);
+                 border-radius:10px;
+             }
+
+             #text {
+                 position:absolute;
+                 top:8px;
+                 left:530px;
+                 width:30px;
+                 height:50px;
+                 margin:auto auto auto auto;
+                 font-size:22px;
+                 color: #000000;
+             }
+
+             div.outerBorder {
+                 position:relative;
+                 top:400px;
+                 width:600px;
+                 height:44px;
+                 margin:auto auto auto auto;
+                 border:8px solid rgba(0,0,0,0.1);
+                 background: rgb(252,252,252); /* Old browsers */
+                 background: -moz-linear-gradient(top,  rgba(252,252,252,1) 0%, rgba(237,237,237,1) 100%); /* FF3.6+ */
+                 background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(252,252,252,1)), color-stop(100%,rgba(237,237,237,1))); /* Chrome,Safari4+ */
+                 background: -webkit-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Chrome10+,Safari5.1+ */
+                 background: -o-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Opera 11.10+ */
+                 background: -ms-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* IE10+ */
+                 background: linear-gradient(to bottom,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* W3C */
+                 filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fcfcfc', endColorstr='#ededed',GradientType=0 ); /* IE6-9 */
+                 border-radius:72px;
+                 box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+             }
+             
 
              
              #config {
@@ -62,6 +131,15 @@
             <div id="mynetwork" class="card-body"></div>
         </div>
 
+        
+            <div id="loadingBar">
+              <div class="outerBorder">
+                <div id="text">0%</div>
+                <div id="border">
+                  <div id="bar"></div>
+                </div>
+              </div>
+            </div>
         
         
             <div id="config"></div>
@@ -96,8 +174,8 @@
                   
 
                   // parsing and collecting nodes and edges from the python
-                  nodes = new vis.DataSet([]);
-                  edges = new vis.DataSet([]);
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "id": 0, "label": 0, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 3, "label": 3, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 6, "label": 6, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 9, "label": 9, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 12, "label": 12, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 15, "label": 15, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 18, "label": 18, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 21, "label": 21, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 24, "label": 24, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 27, "label": 27, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 33, "label": 33, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 69, "label": 69, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 39, "label": 39, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 42, "label": 42, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 72, "label": 72, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 45, "label": 45, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 78, "label": 78, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 48, "label": 48, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 60, "label": 60, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 30, "label": 30, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 66, "label": 66, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 51, "label": 51, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 81, "label": 81, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 36, "label": 36, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 57, "label": 57, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 63, "label": 63, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 54, "label": 54, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 84, "label": 84, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 87, "label": 87, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 96, "label": 96, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 75, "label": 75, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 90, "label": 90, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 93, "label": 93, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 102, "label": 102, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 105, "label": 105, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 99, "label": 99, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 108, "label": 108, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 114, "label": 114, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 111, "label": 111, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 117, "label": 117, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 120, "label": 120, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 126, "label": 126, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 132, "label": 132, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 138, "label": 138, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 123, "label": 123, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 129, "label": 129, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 135, "label": 135, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 141, "label": 141, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 144, "label": 144, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 147, "label": 147, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 150, "label": 150, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 153, "label": 153, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 156, "label": 156, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 159, "label": 159, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 162, "label": 162, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 165, "label": 165, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 183, "label": 183, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 225, "label": 225, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 174, "label": 174, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 213, "label": 213, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 186, "label": 186, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 177, "label": 177, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 219, "label": 219, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 189, "label": 189, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 207, "label": 207, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 180, "label": 180, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 216, "label": 216, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 201, "label": 201, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 192, "label": 192, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 195, "label": 195, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 198, "label": 198, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 168, "label": 168, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 210, "label": 210, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 171, "label": 171, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 204, "label": 204, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 228, "label": 228, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 231, "label": 231, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 234, "label": 234, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 237, "label": 237, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 240, "label": 240, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 243, "label": 243, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 246, "label": 246, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 249, "label": 249, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 252, "label": 252, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 255, "label": 255, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 261, "label": 261, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 222, "label": 222, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 267, "label": 267, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 258, "label": 258, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 270, "label": 270, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 273, "label": 273, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 297, "label": 297, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 276, "label": 276, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 279, "label": 279, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 282, "label": 282, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 285, "label": 285, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 288, "label": 288, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 291, "label": 291, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 264, "label": 264, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 294, "label": 294, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 300, "label": 300, "shape": "dot", "size": 10}, {"group": 12, "id": 25, "label": "Activate Block Attack", "shape": "dot", "size": 10, "title": "Activate Block Attack"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": 0, "group": 0, "label": "Activate Pot of Greed", "to": 3, "width": 0.9440516864512298}, {"arrows": "to", "from": 0, "group": 0, "label": "Activate Stop Defense", "to": 6, "width": 1.01405168645123}, {"arrows": "to", "from": 0, "group": 0, "label": "Summon Alexandrite Dragon", "to": 9, "width": 0.9340516864512298}, {"arrows": "to", "from": 0, "group": 0, "label": "Summon Wind-Up Soldier", "to": 12, "width": 0.9140516864512298}, {"arrows": "to", "from": 0, "group": 0, "label": "Summon Krawler Spine", "to": 15, "width": 0.9940516864512299}, {"arrows": "to", "from": 0, "group": 0, "label": "MonsterSet Alexandrite Dragon", "to": 18, "width": 0.9540516864512298}, {"arrows": "to", "from": 0, "group": 0, "label": "MonsterSet Wind-Up Soldier", "to": 21, "width": 0.9940516864512299}, {"arrows": "to", "from": 0, "group": 0, "label": "MonsterSet Krawler Spine", "to": 24, "width": 9.155907288891433}, {"arrows": "to", "from": 0, "group": 0, "label": "GoToEndPhase ", "to": 27, "width": 0.9540516864512298}, {"arrows": "to", "from": 3, "group": 1, "label": "Activate Stop Defense", "to": 33, "width": 1.254812275936705}, {"arrows": "to", "from": 3, "group": 2, "label": "SpSummon Cyber Dragon", "to": 69, "width": 1.254812275936705}, {"arrows": "to", "from": 6, "group": 1, "label": "NumberSelected 1", "to": 39, "width": 1.097788794747911}, {"arrows": "to", "from": 9, "group": 1, "label": "Activate Pot of Greed", "to": 42, "width": 1.2948122759367051}, {"arrows": "to", "from": 9, "group": 2, "label": "Activate Stop Defense", "to": 72, "width": 1.254812275936705}, {"arrows": "to", "from": 12, "group": 1, "label": "Activate Wind-Up Soldier", "to": 45, "width": 1.274812275936705}, {"arrows": "to", "from": 12, "group": 2, "label": "Activate Pot of Greed", "to": 78, "width": 1.254812275936705}, {"arrows": "to", "from": 15, "group": 1, "label": "Activate Pot of Greed", "to": 48, "width": 1.354812275936705}, {"arrows": "to", "from": 15, "group": 1, "label": "Activate Stop Defense", "to": 60, "width": 1.254812275936705}, {"arrows": "to", "from": 18, "group": 1, "label": "Activate Pot of Greed", "to": 30, "width": 1.254812275936705}, {"arrows": "to", "from": 18, "group": 2, "label": "Activate Stop Defense", "to": 66, "width": 1.254812275936705}, {"arrows": "to", "from": 21, "group": 1, "label": "Activate Pot of Greed", "to": 51, "width": 1.274812275936705}, {"arrows": "to", "from": 21, "group": 2, "label": "Activate Stop Defense", "to": 81, "width": 1.334812275936705}, {"arrows": "to", "from": 24, "group": 1, "label": "Activate Pot of Greed", "to": 36, "width": 8.372634636585133}, {"arrows": "to", "from": 24, "group": 1, "label": "Activate Stop Defense", "to": 57, "width": 1.05405168645123}, {"arrows": "to", "from": 24, "group": 1, "label": "GoToEndPhase ", "to": 63, "width": 1.01405168645123}, {"arrows": "to", "from": 27, "group": 1, "label": "Activate Pot of Greed", "to": 54, "width": 1.254812275936705}, {"arrows": "to", "from": 27, "group": 2, "label": "SpSummon Cyber Dragon", "to": 84, "width": 1.314812275936705}, {"arrows": "to", "from": 36, "group": 2, "label": "Activate Stop Defense", "to": 87, "width": 7.776957876183845}, {"arrows": "to", "from": 36, "group": 2, "label": "GoToEndPhase ", "to": 96, "width": 1.03405168645123}, {"arrows": "to", "from": 39, "group": 2, "label": "Activate Pot of Greed", "to": 75, "width": 1.354812275936705}, {"arrows": "to", "from": 57, "group": 2, "label": "NumberSelected 1", "to": 90, "width": 1.077788794747911}, {"arrows": "to", "from": 63, "group": 2, "label": "Activate Pot of Greed", "to": 93, "width": 1.2948122759367051}, {"arrows": "to", "from": 63, "group": 3, "label": "Summon Cyber Dragon", "to": 102, "width": 1.314812275936705}, {"arrows": "to", "from": 87, "group": 3, "label": "NumberSelected 1", "to": 105, "width": 7.668101534492088}, {"arrows": "to", "from": 90, "group": 3, "label": "Activate Pot of Greed", "to": 99, "width": 1.274812275936705}, {"arrows": "to", "from": 96, "group": 3, "label": "Summon Mekk-Knight Avram", "to": 108, "width": 1.2948122759367051}, {"arrows": "to", "from": 96, "group": 4, "label": "Summon Noble Knight Artorigus", "to": 114, "width": 1.334812275936705}, {"arrows": "to", "from": 105, "group": 3, "label": "GoToEndPhase ", "to": 111, "width": 1.0998641579141422}, {"arrows": "to", "from": 105, "group": 4, "label": "Select528 Set Monster;MonsterZone;8;1", "to": 117, "width": 6.975573473561656}, {"arrows": "to", "from": 111, "group": 4, "label": "Summon Mekk-Knight Avram", "to": 120, "width": 1.2948122759367051}, {"arrows": "to", "from": 111, "group": 4, "label": "Summon Noble Knight Artorigus", "to": 126, "width": 1.274812275936705}, {"arrows": "to", "from": 111, "group": 4, "label": "Summon Cyber Dragon", "to": 132, "width": 1.2948122759367051}, {"arrows": "to", "from": 111, "group": 4, "label": "Summon Alexandrite Dragon", "to": 138, "width": 1.274812275936705}, {"arrows": "to", "from": 117, "group": 4, "label": "Summon Mekk-Knight Avram", "to": 123, "width": 1.03405168645123}, {"arrows": "to", "from": 117, "group": 4, "label": "Summon Noble Knight Artorigus", "to": 129, "width": 1.05405168645123}, {"arrows": "to", "from": 117, "group": 4, "label": "Summon Cyber Dragon", "to": 135, "width": 1.1140516864512298}, {"arrows": "to", "from": 117, "group": 4, "label": "Summon Alexandrite Dragon", "to": 141, "width": 1.05405168645123}, {"arrows": "to", "from": 117, "group": 4, "label": "Summon Wind-Up Soldier", "to": 144, "width": 1.1340516864512298}, {"arrows": "to", "from": 117, "group": 4, "label": "Repos Krawler Spine", "to": 147, "width": 1.03405168645123}, {"arrows": "to", "from": 117, "group": 4, "label": "MonsterSet Mekk-Knight Avram", "to": 150, "width": 0.997788794747911}, {"arrows": "to", "from": 117, "group": 4, "label": "MonsterSet Noble Knight Artorigus", "to": 153, "width": 1.017788794747911}, {"arrows": "to", "from": 117, "group": 4, "label": "MonsterSet Cyber Dragon", "to": 156, "width": 0.997788794747911}, {"arrows": "to", "from": 117, "group": 4, "label": "MonsterSet Alexandrite Dragon", "to": 159, "width": 1.017788794747911}, {"arrows": "to", "from": 117, "group": 4, "label": "MonsterSet Wind-Up Soldier", "to": 162, "width": 1.09405168645123}, {"arrows": "to", "from": 117, "group": 4, "label": "GoToEndPhase ", "to": 165, "width": 3.5039084737446387}, {"arrows": "to", "from": 123, "group": 5, "label": "Repos Krawler Spine", "to": 183, "width": 1.274812275936705}, {"arrows": "to", "from": 123, "group": 9, "label": "GoToEndPhase ", "to": 225, "width": 1.334812275936705}, {"arrows": "to", "from": 129, "group": 5, "label": "Repos Krawler Spine", "to": 174, "width": 1.314812275936705}, {"arrows": "to", "from": 129, "group": 6, "label": "GoToEndPhase ", "to": 213, "width": 1.2948122759367051}, {"arrows": "to", "from": 135, "group": 5, "label": "NumberSelected 1", "to": 186, "width": 1.157788794747911}, {"arrows": "to", "from": 141, "group": 5, "label": "Repos Krawler Spine", "to": 177, "width": 1.2948122759367051}, {"arrows": "to", "from": 141, "group": 7, "label": "GoToEndPhase ", "to": 219, "width": 1.314812275936705}, {"arrows": "to", "from": 144, "group": 5, "label": "Activate Wind-Up Soldier", "to": 189, "width": 1.434812275936705}, {"arrows": "to", "from": 144, "group": 5, "label": "Repos Krawler Spine", "to": 207, "width": 1.274812275936705}, {"arrows": "to", "from": 147, "group": 5, "label": "Summon Mekk-Knight Avram", "to": 180, "width": 1.314812275936705}, {"arrows": "to", "from": 147, "group": 7, "label": "Summon Noble Knight Artorigus", "to": 216, "width": 1.274812275936705}, {"arrows": "to", "from": 150, "group": 5, "label": "Repos Krawler Spine", "to": 201, "width": 1.274812275936705}, {"arrows": "to", "from": 153, "group": 5, "label": "Repos Krawler Spine", "to": 192, "width": 1.274812275936705}, {"arrows": "to", "from": 156, "group": 5, "label": "NumberSelected 1", "to": 195, "width": 1.254812275936705}, {"arrows": "to", "from": 159, "group": 5, "label": "Repos Krawler Spine", "to": 198, "width": 1.274812275936705}, {"arrows": "to", "from": 162, "group": 5, "label": "Repos Krawler Spine", "to": 168, "width": 1.274812275936705}, {"arrows": "to", "from": 162, "group": 5, "label": "GoToEndPhase ", "to": 210, "width": 1.274812275936705}, {"arrows": "to", "from": 165, "group": 5, "label": "Summon Noble Knight Artorigus", "to": 171, "width": 1.077788794747911}, {"arrows": "to", "from": 165, "group": 5, "label": "Summon Mekk-Knight Avram", "to": 204, "width": 1.057788794747911}, {"arrows": "to", "from": 165, "group": 10, "label": "Summon Cyber Dragon", "to": 228, "width": 1.1940516864512298}, {"arrows": "to", "from": 165, "group": 10, "label": "Summon Alexandrite Dragon", "to": 231, "width": 1.057788794747911}, {"arrows": "to", "from": 165, "group": 10, "label": "Summon Wind-Up Soldier", "to": 234, "width": 1.05405168645123}, {"arrows": "to", "from": 165, "group": 10, "label": "Repos Krawler Spine", "to": 237, "width": 1.017788794747911}, {"arrows": "to", "from": 165, "group": 10, "label": "MonsterSet Noble Knight Artorigus", "to": 240, "width": 1.017788794747911}, {"arrows": "to", "from": 165, "group": 10, "label": "MonsterSet Mekk-Knight Avram", "to": 243, "width": 1.017788794747911}, {"arrows": "to", "from": 165, "group": 10, "label": "MonsterSet Cyber Dragon", "to": 246, "width": 1.017788794747911}, {"arrows": "to", "from": 165, "group": 10, "label": "MonsterSet Alexandrite Dragon", "to": 249, "width": 1.017788794747911}, {"arrows": "to", "from": 165, "group": 10, "label": "MonsterSet Wind-Up Soldier", "to": 252, "width": 1.017788794747911}, {"arrows": "to", "from": 165, "group": 10, "label": "GoToEndPhase ", "to": 255, "width": 1.09405168645123}, {"arrows": "to", "from": 171, "group": 11, "label": "Repos Krawler Spine", "to": 261, "width": 1.274812275936705}, {"arrows": "to", "from": 186, "group": 8, "label": "GoToEndPhase ", "to": 222, "width": 1.394812275936705}, {"arrows": "to", "from": 204, "group": 11, "label": "Repos Krawler Spine", "to": 267, "width": 1.2948122759367051}, {"arrows": "to", "from": 228, "group": 11, "label": "NumberSelected 1", "to": 258, "width": 1.157788794747911}, {"arrows": "to", "from": 231, "group": 11, "label": "Repos Krawler Spine", "to": 270, "width": 1.2948122759367051}, {"arrows": "to", "from": 234, "group": 11, "label": "Activate Wind-Up Soldier", "to": 273, "width": 1.354812275936705}, {"arrows": "to", "from": 234, "group": 12, "label": "Repos Krawler Spine", "to": 297, "width": 1.274812275936705}, {"arrows": "to", "from": 237, "group": 11, "label": "Summon Noble Knight Artorigus", "to": 276, "width": 1.274812275936705}, {"arrows": "to", "from": 240, "group": 11, "label": "Repos Krawler Spine", "to": 279, "width": 1.274812275936705}, {"arrows": "to", "from": 243, "group": 11, "label": "Repos Krawler Spine", "to": 282, "width": 1.274812275936705}, {"arrows": "to", "from": 246, "group": 11, "label": "NumberSelected 1", "to": 285, "width": 1.274812275936705}, {"arrows": "to", "from": 249, "group": 11, "label": "Repos Krawler Spine", "to": 288, "width": 1.274812275936705}, {"arrows": "to", "from": 252, "group": 11, "label": "Repos Krawler Spine", "to": 291, "width": 1.274812275936705}, {"arrows": "to", "from": 255, "group": 11, "label": "NumberSelected 1", "to": 264, "width": 1.117788794747911}, {"arrows": "to", "from": 258, "group": 11, "label": "GoToEndPhase ", "to": 294, "width": 1.374812275936705}, {"arrows": "to", "from": 264, "group": 12, "label": "Activate Block Attack", "to": 300, "width": 1.334812275936705}]);
 
                   nodeColors = {};
                   allNodes = nodes.get({ returnType: "Object" });
@@ -159,6 +237,23 @@
                   
 
 
+                  
+                      network.on("stabilizationProgress", function(params) {
+                          document.getElementById('loadingBar').removeAttribute("style");
+                          var maxWidth = 496;
+                          var minWidth = 20;
+                          var widthFactor = params.iterations/params.total;
+                          var width = Math.max(minWidth,maxWidth * widthFactor);
+                          document.getElementById('bar').style.width = width + 'px';
+                          document.getElementById('text').innerHTML = Math.round(widthFactor*100) + '%';
+                      });
+                      network.once("stabilizationIterationsDone", function() {
+                          document.getElementById('text').innerHTML = '100%';
+                          document.getElementById('bar').style.width = '496px';
+                          document.getElementById('loadingBar').style.opacity = 0;
+                          // really clean the dom element
+                          setTimeout(function () {document.getElementById('loadingBar').style.display = 'none';}, 500);
+                      });
                   
 
                   return network;

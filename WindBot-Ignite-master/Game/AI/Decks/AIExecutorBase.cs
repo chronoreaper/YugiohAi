@@ -163,7 +163,7 @@ namespace WindBot.Game.AI.Decks
             {
                 string action = $"Select" + hint.ToString();
                 string card = SelectStringBuilder(clientCard);
-                Tree.AddPossibleAction(card, action, Duel.Fields);
+                //Tree.AddPossibleAction(card, action, Duel.Fields);
             }
 
 

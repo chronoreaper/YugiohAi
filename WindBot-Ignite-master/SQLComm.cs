@@ -7,12 +7,12 @@ namespace WindBot
 {
     public class SQLComm
     {
-        public static bool IsFirst = false;
+        public static bool IsFirst = true;
         public static bool IsTraining = true;
         public static bool IsRollout = false;
         public static bool ShouldBackPropagate = false;
         public static int TotalGames = 201;
-        public static int RolloutCount = 5;
+        public static int RolloutCount = 2;
 
         public static int GamesPlayed = 0;
         public static int Wins = 0;

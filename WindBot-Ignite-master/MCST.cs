@@ -51,14 +51,16 @@ namespace WindBot
                 {
                     if (StateAfterTurn != null)
                     {
-                        value += StateAfterTurn.BotField.HandCount - StateAfterTurn.EnemyField.HandCount;
+                        value += StateAfterTurn.BotField.HandCount - StateCurrent.BotField.HandCount;
                         value += StateAfterTurn.BotField.FieldCount - StateAfterTurn.EnemyField.FieldCount;
+                        value -= StateAfterTurn.EnemyField.FieldCount - StateCurrent.EnemyField.FieldCount;
+
                     }
 
                     if (StateAfterOtherTurn != null && false)
                     {
-                        value += StateAfterOtherTurn.BotField.HandCount - StateCurrent.EnemyField.HandCount;
-                        value += StateAfterOtherTurn.BotField.FieldCount - StateCurrent.EnemyField.FieldCount;
+                        value += StateAfterOtherTurn.BotField.HandCount - StateAfterOtherTurn.EnemyField.HandCount;
+                        value += StateAfterOtherTurn.BotField.FieldCount - StateAfterOtherTurn.EnemyField.FieldCount;
                     }
                 }
 
@@ -125,8 +127,8 @@ namespace WindBot
 
         public void OnGameEnd(int result, Duel duel)
         {
-            //double reward = result == 0 ? (int)(SQLComm.RolloutCount/2) : (double)duel.Turn / 100;
-            double reward = result == 0 ? 1 : 0;
+            double reward = result == 0 ? (int)(SQLComm.RolloutCount/2) : (double)duel.Turn / 100;
+            //double reward = result == 0 ? 1 : 0;
             Backpropagate(reward);
         }
 
@@ -156,7 +158,7 @@ namespace WindBot
         {
             Node best = current;
             double weight = -1;
-            double c = 0.5;
+            double c = 1;
 
             if (!SQLComm.IsRollout)
             {

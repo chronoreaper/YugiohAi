@@ -1,22 +1,21 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 using Mono.Data.Sqlite;
+using System;
+using System.IO;
 using static WindBot.MCST;
 
 namespace WindBot
 {
     public class SQLComm
     {
+        public static bool IsFirst = false;
         public static bool IsTraining = true;
         public static bool IsRollout = false;
         public static bool ShouldBackPropagate = false;
-        public static int TotalGames = 100;
+        public static int TotalGames = 201;
         public static int RolloutCount = 2;
 
         public static int GamesPlayed = 0;
+        public static int Wins = 0;
         private static SqliteConnection ConnectToDatabase()
         {
             //@"URI=file:\windbot_master\windbot_master\bin\Debug\cards.cdb";
@@ -54,7 +53,7 @@ namespace WindBot
             using (SqliteConnection conn = ConnectToDatabase())
             {
                 conn.Open();
-                string sql = $"SELECT SUM(Visited) FROM MCST";
+                string sql = $"SELECT SUM(Visited) FROM MCST WHERE CardId != \"Result\" AND ParentId = 0";
                 try
                 {
                     using (SqliteCommand cmd = new SqliteCommand(sql, conn))
@@ -79,12 +78,15 @@ namespace WindBot
         /***
          * Result, 0 = win, 1 = lose, 2 = tie
          */
-        public static void Backpropagate(Node node, int result)
+        public static void Backpropagate(Node node, double reward)
         {
             IsRollout = false;
             if (!ShouldBackPropagate)
             {
-                RecordWin(result);
+                RecordWin(reward);
+
+                RecordWin(Math.Max(0, Math.Round(node.Heuristic() / RolloutCount) / 10), true);
+
                 return;
             }
             
@@ -93,27 +95,37 @@ namespace WindBot
                 conn.Open();
 
                 SqliteTransaction transaction = conn.BeginTransaction();
-                double rewards = result == 0 ? 1 : 0;
-                int RolloutCount = 1;
+                double rewards = reward;
+                int rolloutCount = 1;
 
                 int rowsUpdated = 0;
-                string sql = $"SELECT Reward, Visited FROM MCST WHERE CardId = \"Result\" and Action = \"Result\" ";
+                string sql = $"SELECT Reward, Visited FROM MCST WHERE CardId = \"Result\"";
 
                 using (SqliteCommand cmd = new SqliteCommand(sql, conn))
                 {
                     using (SqliteDataReader rdr = cmd.ExecuteReader())
+                    {
+                        double r = 0;
+                        int c = 0;
                         while (rdr.Read())
                         {
-                            rewards = rdr.GetDouble(0);
-                            RolloutCount = rdr.GetInt32(1);
+                            r += rdr.GetDouble(0);
+                            c = rdr.GetInt32(1);
                         }
+
+                        if (c != 0)
+                        {
+                            rewards = r;
+                            rolloutCount = c;
+                        }
+                    }
                 }
 
                 while (node != null)
                 {
-                    if (node.NodeId != -1)
+                    if (node.NodeId != -4)
                     {
-                        sql = $"UPDATE MCST SET Reward = Reward + {rewards / RolloutCount}, " +
+                        sql = $"UPDATE MCST SET Reward = Reward + {rewards / rolloutCount}, " +
                             $"Visited = Visited + 1 WHERE " +
                             $"rowid = \"{node.NodeId}\"";
 
@@ -129,7 +141,7 @@ namespace WindBot
                         {
                             parentId = node.Parent.NodeId;
                         }
-                        sql = $"INSERT INTO MCST (ParentId,CardId,Action,Reward,Visited) VALUES (\"{parentId}\",\"{node.CardId}\",\"{node.Action}\",\"{rewards / RolloutCount}\",\"1\")";
+                        sql = $"INSERT INTO MCST (ParentId,CardId,Action,Reward,Visited) VALUES (\"{parentId}\",\"{node.CardId}\",\"{node.Action}\",\"{rewards / rolloutCount}\",\"1\")";
                         using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                         {
                             rowsUpdated = cmd2.ExecuteNonQuery();
@@ -140,7 +152,7 @@ namespace WindBot
                 }
 
                 // Remove the rollout
-                sql = $"DELETE FROM MCST WHERE CardId = \"Result\" and Action = \"Result\" ";
+                sql = $"DELETE FROM MCST WHERE CardId = \"Result\"";
                 using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                 {
                     rowsUpdated = cmd2.ExecuteNonQuery();
@@ -154,10 +166,10 @@ namespace WindBot
             IsRollout = false;
         }
 
-        private static void RecordWin(int result)
+        private static void RecordWin(double reward, bool isHeurstic = false)
         {
-            double reward = result == 0 ? 1 : 0;
             int rowsUpdated = 0;
+            string lable = isHeurstic ? "Heurstic" : "Result";
 
             using (SqliteConnection conn = ConnectToDatabase())
             {
@@ -167,7 +179,7 @@ namespace WindBot
 
                 string sql = $"UPDATE MCST SET Reward = Reward + {reward}, " +
                            $"Visited = Visited + 1 WHERE " +
-                           $"CardId = \"Result\" AND Action = \"Result\"";
+                           $"CardId = \"Result\" AND Action = \"{lable}\"";
 
                 using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                 {
@@ -177,7 +189,7 @@ namespace WindBot
                 // If there was no update, add it instead
                 if (rowsUpdated <= 0)
                 {
-                    sql = $"INSERT INTO MCST (ParentId,CardId,Action,Reward,Visited) VALUES (\"-1\",\"Result\",\"Result\",\"{reward}\",\"1\")";
+                    sql = $"INSERT INTO MCST (ParentId,CardId,Action,Reward,Visited) VALUES (\"-4\",\"Result\",\"{lable}\",\"{reward}\",\"1\")";
                     using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                     {
                         rowsUpdated = cmd2.ExecuteNonQuery();

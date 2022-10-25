@@ -239,7 +239,7 @@ namespace WindBot.Game
 
         private void OnRematch(BinaryReader packet)
         {
-            Logger.WriteLine($"Total Games Played: {++SQLComm.GamesPlayed} / {SQLComm.TotalGames}");
+            Logger.WriteLine($"Total Games Played: {++SQLComm.GamesPlayed} / {SQLComm.TotalGames} | Win Rate: {Math.Round((double)SQLComm.Wins / SQLComm.GamesPlayed * 1000) / 10}%");
 
             if (SQLComm.RolloutCount <= 0)
             {
@@ -453,6 +453,7 @@ namespace WindBot.Game
             string otherName = _room.Position == 0 ? _room.Names[1] : _room.Names[0];
             string textResult = (result == 2 ? "Draw" : result == 0 ? "Win" : "Lose");
             Logger.DebugWriteLine("Duel finished against " + otherName + ", result: " + textResult);
+            SQLComm.Wins += result == 0 ? 1 : 0;
 
             _ai.OnWin(result);
         }

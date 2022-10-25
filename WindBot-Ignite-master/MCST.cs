@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using WindBot.Game;
 using WindBot.Game.AI;
+using WindBot.Game.AI.Decks.Util;
 
 namespace WindBot
 {
@@ -16,7 +18,17 @@ namespace WindBot
             public int Visited = 0;
             public string CardId;
             public string Action;
-            public long NodeId = -1;
+            public long NodeId = -4;
+            public MLUtil.GameState StateCurrent = null;
+            public MLUtil.GameState StateAfterPlay = null;
+            public MLUtil.GameState StateAfterTurn = null;
+            public MLUtil.GameState StateAfterOtherTurn = null;
+
+            public Node(Node parent, string cardId, string action, ClientField[] field)
+                : this(parent, cardId, action)
+            {
+                StateCurrent = new MLUtil.GameState(field);
+            }
 
             public Node(Node parent, string cardId, string action)
             {
@@ -24,11 +36,43 @@ namespace WindBot
                 Parent = parent;
                 CardId = cardId;
                 Action = action;
+                StateCurrent = new MLUtil.GameState();
 
                 if (Parent == null)
                     NodeId = 0;
 
                 SQLComm.GetNodeInfo(this);
+            }
+
+            public double Heuristic()
+            {
+                double value = 0;
+                if (StateCurrent != null)
+                {
+                    if (StateAfterTurn != null)
+                    {
+                        value += StateAfterTurn.BotField.HandCount - StateAfterTurn.EnemyField.HandCount;
+                        value += StateAfterTurn.BotField.FieldCount - StateAfterTurn.EnemyField.FieldCount;
+                    }
+
+                    if (StateAfterOtherTurn != null && false)
+                    {
+                        value += StateAfterOtherTurn.BotField.HandCount - StateCurrent.EnemyField.HandCount;
+                        value += StateAfterOtherTurn.BotField.FieldCount - StateCurrent.EnemyField.FieldCount;
+                    }
+                }
+
+                return value;
+            }
+
+            public override string ToString()
+            {
+                string s = "";
+                s += NodeId.ToString() + " | ";
+                s += CardId + ": " + Action + " | ";
+                s += Heuristic();
+
+                return s;
             }
         }
 
@@ -46,20 +90,61 @@ namespace WindBot
             current = new Node(null, "", "");
         }
 
+        public void OnNewAction(ClientField[] fields)
+        {
+
+        }
+
+        public void OnNewTurn(ClientField[] fields)
+        {
+            Node cur = current;
+
+            while (cur != null && cur.StateAfterOtherTurn == null)
+            {
+                if (cur.StateAfterTurn != null)
+                {
+                    cur.StateAfterOtherTurn = new MLUtil.GameState(fields);
+
+                    Logger.WriteLine(cur.ToString());
+                }
+
+                cur = cur.Parent;
+            }
+
+            cur = current;
+
+            while (cur != null && cur.StateAfterTurn == null)
+            {
+                cur.StateAfterTurn = new MLUtil.GameState(fields);
+
+                Logger.WriteLine(cur.ToString());
+
+                cur = cur.Parent;
+            }
+        }
+
+        public void OnGameEnd(int result, Duel duel)
+        {
+            //double reward = result == 0 ? (int)(SQLComm.RolloutCount/2) : (double)duel.Turn / 100;
+            double reward = result == 0 ? 1 : 0;
+            Backpropagate(reward);
+        }
+
+
         /*
          * For Multiple Actions
          */
 
-        public void AddPossibleAction(string cardId, string action)
+        public void AddPossibleAction(string cardId, string action, ClientField[] field)
         {
-            current.Children.Add(new Node(current, cardId, action));
+            current.Children.Add(new Node(current, cardId, action, field));
         }
 
-        public bool ShouldActivate(string cardId, string action)
+        public bool ShouldActivate(string cardId, string action, ClientField[] field)
         {
-            Node toActivate = new Node(current, cardId, action);
+            Node toActivate = new Node(current, cardId, action, field);
             current.Children.Add(toActivate);
-            current.Children.Add(new Node(current, cardId, ""));
+            current.Children.Add(new Node(current, cardId, "", field));
             current = GetNextAction();
             return current == toActivate;
         }
@@ -71,7 +156,7 @@ namespace WindBot
         {
             Node best = current;
             double weight = -1;
-            double c = 0.5;
+            double c = 1;
 
             if (!SQLComm.IsRollout)
             {
@@ -90,7 +175,9 @@ namespace WindBot
                 {
                     current = best;
                     if (best.Visited <= 0)
+                    {
                         SQLComm.IsRollout = true;
+                    }
                 }
                 current.Children.Clear();
             }
@@ -103,9 +190,9 @@ namespace WindBot
             return best;
         }
 
-        public void Backpropagate(int result)
+        private void Backpropagate(double reward)
         {
-            SQLComm.Backpropagate(current, result);
+            SQLComm.Backpropagate(current, reward);
         }
     }
 }

@@ -1,0 +1,265 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 1000px;
+                 height: 1000px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+             #loadingBar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width: 1000px;
+                 height: 1000px;
+                 background-color:rgba(200,200,200,0.8);
+                 -webkit-transition: all 0.5s ease;
+                 -moz-transition: all 0.5s ease;
+                 -ms-transition: all 0.5s ease;
+                 -o-transition: all 0.5s ease;
+                 transition: all 0.5s ease;
+                 opacity:1;
+             }
+
+             #bar {
+                 position:absolute;
+                 top:0px;
+                 left:0px;
+                 width:20px;
+                 height:20px;
+                 margin:auto auto auto auto;
+                 border-radius:11px;
+                 border:2px solid rgba(30,30,30,0.05);
+                 background: rgb(0, 173, 246); /* Old browsers */
+                 box-shadow: 2px 0px 4px rgba(0,0,0,0.4);
+             }
+
+             #border {
+                 position:absolute;
+                 top:10px;
+                 left:10px;
+                 width:500px;
+                 height:23px;
+                 margin:auto auto auto auto;
+                 box-shadow: 0px 0px 4px rgba(0,0,0,0.2);
+                 border-radius:10px;
+             }
+
+             #text {
+                 position:absolute;
+                 top:8px;
+                 left:530px;
+                 width:30px;
+                 height:50px;
+                 margin:auto auto auto auto;
+                 font-size:22px;
+                 color: #000000;
+             }
+
+             div.outerBorder {
+                 position:relative;
+                 top:400px;
+                 width:600px;
+                 height:44px;
+                 margin:auto auto auto auto;
+                 border:8px solid rgba(0,0,0,0.1);
+                 background: rgb(252,252,252); /* Old browsers */
+                 background: -moz-linear-gradient(top,  rgba(252,252,252,1) 0%, rgba(237,237,237,1) 100%); /* FF3.6+ */
+                 background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(252,252,252,1)), color-stop(100%,rgba(237,237,237,1))); /* Chrome,Safari4+ */
+                 background: -webkit-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Chrome10+,Safari5.1+ */
+                 background: -o-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* Opera 11.10+ */
+                 background: -ms-linear-gradient(top,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* IE10+ */
+                 background: linear-gradient(to bottom,  rgba(252,252,252,1) 0%,rgba(237,237,237,1) 100%); /* W3C */
+                 filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#fcfcfc', endColorstr='#ededed',GradientType=0 ); /* IE6-9 */
+                 border-radius:72px;
+                 box-shadow: 0px 0px 10px rgba(0,0,0,0.2);
+             }
+             
+
+             
+             #config {
+                 float: left;
+                 width: 400px;
+                 height: 600px;
+             }
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+            <div id="loadingBar">
+              <div class="outerBorder">
+                <div id="text">0%</div>
+                <div id="border">
+                  <div id="bar"></div>
+                </div>
+              </div>
+            </div>
+        
+        
+            <div id="config"></div>
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "id": 0, "label": 0, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 3, "label": 3, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 6, "label": 6, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 9, "label": 9, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 12, "label": 12, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 15, "label": 15, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 18, "label": 18, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 21, "label": 21, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 24, "label": 24, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 48, "label": 48, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 66, "label": 66, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 75, "label": 75, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 78, "label": 78, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 81, "label": 81, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 87, "label": 87, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 30, "label": 30, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 51, "label": 51, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 69, "label": 69, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 90, "label": 90, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 33, "label": 33, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 54, "label": 54, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 36, "label": 36, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 57, "label": 57, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 39, "label": 39, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 60, "label": 60, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 27, "label": 27, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 45, "label": 45, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 42, "label": 42, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 63, "label": 63, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 108, "label": 108, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 72, "label": 72, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 84, "label": 84, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 93, "label": 93, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 96, "label": 96, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 117, "label": 117, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 150, "label": 150, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 225, "label": 225, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 246, "label": 246, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 249, "label": 249, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 252, "label": 252, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 255, "label": 255, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 99, "label": 99, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 120, "label": 120, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 102, "label": 102, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 123, "label": 123, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 105, "label": 105, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 126, "label": 126, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 111, "label": 111, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 138, "label": 138, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 114, "label": 114, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 267, "label": 267, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 129, "label": 129, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 132, "label": 132, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 228, "label": 228, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 135, "label": 135, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 240, "label": 240, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 141, "label": 141, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 243, "label": 243, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 273, "label": 273, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 312, "label": 312, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 156, "label": 156, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 144, "label": 144, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 153, "label": 153, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 237, "label": 237, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 147, "label": 147, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 168, "label": 168, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 174, "label": 174, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 165, "label": 165, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 159, "label": 159, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 171, "label": 171, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 192, "label": 192, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 207, "label": 207, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 231, "label": 231, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 183, "label": 183, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 276, "label": 276, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 162, "label": 162, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 177, "label": 177, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 180, "label": 180, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 186, "label": 186, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 198, "label": 198, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 204, "label": 204, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 216, "label": 216, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 234, "label": 234, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 189, "label": 189, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 201, "label": 201, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 210, "label": 210, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 219, "label": 219, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 195, "label": 195, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 213, "label": 213, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 222, "label": 222, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 270, "label": 270, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 288, "label": 288, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 258, "label": 258, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 291, "label": 291, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 279, "label": 279, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 261, "label": 261, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 285, "label": 285, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 264, "label": 264, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 327, "label": 327, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 297, "label": 297, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 282, "label": 282, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 300, "label": 300, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 303, "label": 303, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 306, "label": 306, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 330, "label": 330, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 333, "label": 333, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 336, "label": 336, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 339, "label": 339, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 342, "label": 342, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 345, "label": 345, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 348, "label": 348, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 309, "label": 309, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 321, "label": 321, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 315, "label": 315, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 360, "label": 360, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 294, "label": 294, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 318, "label": 318, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 324, "label": 324, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 351, "label": 351, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 387, "label": 387, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 363, "label": 363, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 390, "label": 390, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 408, "label": 408, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 369, "label": 369, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 354, "label": 354, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 384, "label": 384, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 414, "label": 414, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 357, "label": 357, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 393, "label": 393, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 372, "label": 372, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 399, "label": 399, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 375, "label": 375, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 402, "label": 402, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 378, "label": 378, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 366, "label": 366, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 405, "label": 405, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 381, "label": 381, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 417, "label": 417, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 396, "label": 396, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 411, "label": 411, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 423, "label": 423, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 432, "label": 432, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 420, "label": 420, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 426, "label": 426, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 435, "label": 435, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 441, "label": 441, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 444, "label": 444, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 447, "label": 447, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 429, "label": 429, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 438, "label": 438, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 462, "label": 462, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 456, "label": 456, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 483, "label": 483, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 450, "label": 450, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 453, "label": 453, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 459, "label": 459, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 465, "label": 465, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 480, "label": 480, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 486, "label": 486, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 489, "label": 489, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 501, "label": 501, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 504, "label": 504, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 507, "label": 507, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 510, "label": 510, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 513, "label": 513, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 516, "label": 516, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 468, "label": 468, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 471, "label": 471, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 477, "label": 477, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 492, "label": 492, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 498, "label": 498, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 474, "label": 474, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 495, "label": 495, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 519, "label": 519, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 549, "label": 549, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 573, "label": 573, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 522, "label": 522, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 552, "label": 552, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 525, "label": 525, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 558, "label": 558, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 537, "label": 537, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 528, "label": 528, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 555, "label": 555, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 531, "label": 531, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 561, "label": 561, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 540, "label": 540, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 564, "label": 564, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 543, "label": 543, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 567, "label": 567, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 546, "label": 546, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 534, "label": 534, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 582, "label": 582, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 570, "label": 570, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 576, "label": 576, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 579, "label": 579, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 585, "label": 585, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 597, "label": 597, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 588, "label": 588, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 591, "label": 591, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 600, "label": 600, "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 594, "label": 594, "shape": "dot", "size": 10}, {"group": 49, "id": 25, "label": "GoToEndPhase ", "shape": "dot", "size": 10, "title": "GoToEndPhase "}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": 0, "group": 0, "label": "Activate Pot of Greed", "to": 3, "width": 12.488711134106923}, {"arrows": "to", "from": 0, "group": 0, "label": "SpSummon Cyber Dragon", "to": 6, "width": 1.4227916020401181}, {"arrows": "to", "from": 0, "group": 0, "label": "Summon Noble Knight Artorigus", "to": 9, "width": 1.355319173363798}, {"arrows": "to", "from": 0, "group": 0, "label": "Summon Sabersaurus", "to": 12, "width": 1.4495177253209743}, {"arrows": "to", "from": 0, "group": 0, "label": "MonsterSet Noble Knight Artorigus", "to": 15, "width": 1.4495177253209743}, {"arrows": "to", "from": 0, "group": 0, "label": "MonsterSet Sabersaurus", "to": 18, "width": 1.322791602040118}, {"arrows": "to", "from": 0, "group": 0, "label": "GoToEndPhase ", "to": 21, "width": 1.4495177253209743}, {"arrows": "to", "from": 3, "group": 1, "label": "Activate Block Attack", "to": 24, "width": 1.355319173363798}, {"arrows": "to", "from": 3, "group": 2, "label": "SpSummon Cyber Dragon", "to": 48, "width": 10.725461979271998}, {"arrows": "to", "from": 3, "group": 5, "label": "Summon Noble Knight Artorigus", "to": 66, "width": 1.3489320996376533}, {"arrows": "to", "from": 3, "group": 5, "label": "Summon Sabersaurus", "to": 75, "width": 1.3744660498188266}, {"arrows": "to", "from": 3, "group": 5, "label": "MonsterSet Noble Knight Artorigus", "to": 78, "width": 1.322791602040118}, {"arrows": "to", "from": 3, "group": 5, "label": "MonsterSet Sabersaurus", "to": 81, "width": 1.355319173363798}, {"arrows": "to", "from": 3, "group": 5, "label": "GoToEndPhase ", "to": 87, "width": 1.2553191733637978}, {"arrows": "to", "from": 6, "group": 1, "label": "Activate Pot of Greed", "to": 30, "width": 2.6106383467275958}, {"arrows": "to", "from": 6, "group": 2, "label": "Summon Noble Knight Artorigus", "to": 51, "width": 2.6106383467275958}, {"arrows": "to", "from": 6, "group": 5, "label": "Summon Cyber Dragon", "to": 69, "width": 2.5106383467275957}, {"arrows": "to", "from": 6, "group": 6, "label": "Summon Sabersaurus", "to": 90, "width": 2.6106383467275958}, {"arrows": "to", "from": 9, "group": 1, "label": "Activate Pot of Greed", "to": 33, "width": 1.8752894000780655}, {"arrows": "to", "from": 9, "group": 2, "label": "GoToEndPhase ", "to": 54, "width": 2.5106383467275957}, {"arrows": "to", "from": 12, "group": 1, "label": "Activate Pot of Greed", "to": 36, "width": 2.5106383467275957}, {"arrows": "to", "from": 12, "group": 3, "label": "GoToEndPhase ", "to": 57, "width": 2.5106383467275957}, {"arrows": "to", "from": 15, "group": 1, "label": "Activate Pot of Greed", "to": 39, "width": 2.5106383467275957}, {"arrows": "to", "from": 15, "group": 4, "label": "GoToEndPhase ", "to": 60, "width": 2.5106383467275957}, {"arrows": "to", "from": 18, "group": 1, "label": "Activate Pot of Greed", "to": 27, "width": 1.8752894000780655}, {"arrows": "to", "from": 18, "group": 1, "label": "GoToEndPhase ", "to": 45, "width": 1.7752894000780655}, {"arrows": "to", "from": 21, "group": 1, "label": "Activate Block Attack", "to": 42, "width": 2.5106383467275957}, {"arrows": "to", "from": 21, "group": 5, "label": "Activate Pot of Greed", "to": 63, "width": 2.5106383467275957}, {"arrows": "to", "from": 24, "group": 6, "label": "NumberSelected 1", "to": 108, "width": 1.5495177253209744}, {"arrows": "to", "from": 27, "group": 5, "label": "Activate Block Attack", "to": 72, "width": 2.5106383467275957}, {"arrows": "to", "from": 33, "group": 5, "label": "Activate Block Attack", "to": 84, "width": 2.5106383467275957}, {"arrows": "to", "from": 45, "group": 6, "label": "Activate Block Attack", "to": 93, "width": 2.5106383467275957}, {"arrows": "to", "from": 48, "group": 6, "label": "Activate Block Attack", "to": 96, "width": 1.5495177253209744}, {"arrows": "to", "from": 48, "group": 6, "label": "Summon Noble Knight Artorigus", "to": 117, "width": 1.7495177253209744}, {"arrows": "to", "from": 48, "group": 11, "label": "Summon Cyber Dragon", "to": 150, "width": 1.5495177253209744}, {"arrows": "to", "from": 48, "group": 17, "label": "Summon Sabersaurus", "to": 225, "width": 1.8227916020401183}, {"arrows": "to", "from": 48, "group": 17, "label": "MonsterSet Noble Knight Artorigus", "to": 246, "width": 1.7227916020401182}, {"arrows": "to", "from": 48, "group": 17, "label": "MonsterSet Cyber Dragon", "to": 249, "width": 1.7752894000780655}, {"arrows": "to", "from": 48, "group": 17, "label": "MonsterSet Sabersaurus", "to": 252, "width": 1.822791602040118}, {"arrows": "to", "from": 48, "group": 17, "label": "GoToEndPhase ", "to": 255, "width": 8.154916701738722}, {"arrows": "to", "from": 66, "group": 6, "label": "Activate Block Attack", "to": 99, "width": 1.5495177253209744}, {"arrows": "to", "from": 66, "group": 6, "label": "GoToEndPhase ", "to": 120, "width": 1.6495177253209743}, {"arrows": "to", "from": 75, "group": 6, "label": "Activate Block Attack", "to": 102, "width": 1.161395801020059}, {"arrows": "to", "from": 75, "group": 7, "label": "GoToEndPhase ", "to": 123, "width": 1.1489320996376533}, {"arrows": "to", "from": 78, "group": 6, "label": "Activate Block Attack", "to": 105, "width": 1.7752894000780655}, {"arrows": "to", "from": 78, "group": 8, "label": "GoToEndPhase ", "to": 126, "width": 1.8752894000780655}, {"arrows": "to", "from": 81, "group": 6, "label": "Activate Block Attack", "to": 111, "width": 2.5106383467275957}, {"arrows": "to", "from": 81, "group": 9, "label": "GoToEndPhase ", "to": 138, "width": 1.8752894000780655}, {"arrows": "to", "from": 87, "group": 6, "label": "NumberSelected 1", "to": 114, "width": 1.4495177253209743}, {"arrows": "to", "from": 96, "group": 19, "label": "NumberSelected 1", "to": 267, "width": 1.7752894000780655}, {"arrows": "to", "from": 99, "group": 9, "label": "NumberSelected 1", "to": 129, "width": 1.7752894000780655}, {"arrows": "to", "from": 102, "group": 9, "label": "NumberSelected 1", "to": 132, "width": 1.0759799387980853}, {"arrows": "to", "from": 105, "group": 17, "label": "NumberSelected 1", "to": 228, "width": 2.5106383467275957}, {"arrows": "to", "from": 108, "group": 9, "label": "Activate Stop Defense", "to": 135, "width": 2.5106383467275957}, {"arrows": "to", "from": 108, "group": 17, "label": "SpSummon Cyber Dragon", "to": 240, "width": 2.6106383467275958}, {"arrows": "to", "from": 114, "group": 10, "label": "Activate Block Attack", "to": 141, "width": 2.5106383467275957}, {"arrows": "to", "from": 114, "group": 17, "label": "SpSummon Cyber Dragon", "to": 243, "width": 2.5106383467275957}, {"arrows": "to", "from": 117, "group": 19, "label": "Activate Block Attack", "to": 273, "width": 2.6106383467275958}, {"arrows": "to", "from": 117, "group": 23, "label": "GoToEndPhase ", "to": 312, "width": 2.710638346727596}, {"arrows": "to", "from": 120, "group": 11, "label": "GoToEndPhase ", "to": 156, "width": 1.8752894000780655}, {"arrows": "to", "from": 123, "group": 10, "label": "GoToEndPhase ", "to": 144, "width": 1.1249638130245605}, {"arrows": "to", "from": 126, "group": 11, "label": "Activate Block Attack", "to": 153, "width": 2.5106383467275957}, {"arrows": "to", "from": 129, "group": 17, "label": "Activate Stop Defense", "to": 237, "width": 2.5106383467275957}, {"arrows": "to", "from": 132, "group": 11, "label": "Activate Stop Defense", "to": 147, "width": 1.122791602040118}, {"arrows": "to", "from": 132, "group": 12, "label": "GoToEndPhase ", "to": 168, "width": 1.1489320996376533}, {"arrows": "to", "from": 132, "group": 13, "label": "Select514 Sabersaurus;MonsterZone;1;1", "to": 174, "width": 1.2249638130245604}, {"arrows": "to", "from": 138, "group": 12, "label": "Activate Block Attack", "to": 165, "width": 2.5106383467275957}, {"arrows": "to", "from": 144, "group": 12, "label": "Activate Block Attack", "to": 159, "width": 2.5106383467275957}, {"arrows": "to", "from": 144, "group": 13, "label": "SpSummon Cyber Dragon", "to": 171, "width": 2.5106383467275957}, {"arrows": "to", "from": 144, "group": 15, "label": "Summon Mekk-Knight Avram", "to": 192, "width": 2.5106383467275957}, {"arrows": "to", "from": 144, "group": 16, "label": "Summon Noble Knight Artorigus", "to": 207, "width": 2.5106383467275957}, {"arrows": "to", "from": 144, "group": 17, "label": "MonsterSet Mekk-Knight Avram", "to": 231, "width": 2.5106383467275957}, {"arrows": "to", "from": 147, "group": 15, "label": "NumberSelected 1", "to": 183, "width": 1.2553191733637978}, {"arrows": "to", "from": 150, "group": 19, "label": "NumberSelected 1", "to": 276, "width": 1.8752894000780655}, {"arrows": "to", "from": 156, "group": 12, "label": "Activate Block Attack", "to": 162, "width": 2.5106383467275957}, {"arrows": "to", "from": 168, "group": 13, "label": "GoToEndPhase ", "to": 177, "width": 1.1249638130245605}, {"arrows": "to", "from": 174, "group": 14, "label": "GoToEndPhase ", "to": 180, "width": 1.2227916020401182}, {"arrows": "to", "from": 177, "group": 15, "label": "SpSummon Cyber Dragon", "to": 186, "width": 2.5106383467275957}, {"arrows": "to", "from": 177, "group": 16, "label": "Summon Mekk-Knight Avram", "to": 198, "width": 2.5106383467275957}, {"arrows": "to", "from": 177, "group": 16, "label": "Summon Noble Knight Artorigus", "to": 204, "width": 2.5106383467275957}, {"arrows": "to", "from": 177, "group": 16, "label": "MonsterSet Mekk-Knight Avram", "to": 216, "width": 2.5106383467275957}, {"arrows": "to", "from": 177, "group": 17, "label": "MonsterSet Noble Knight Artorigus", "to": 234, "width": 2.5106383467275957}, {"arrows": "to", "from": 180, "group": 15, "label": "SpSummon Cyber Dragon", "to": 189, "width": 2.5106383467275957}, {"arrows": "to", "from": 180, "group": 16, "label": "Summon Mekk-Knight Avram", "to": 201, "width": 2.5106383467275957}, {"arrows": "to", "from": 180, "group": 16, "label": "Summon Noble Knight Artorigus", "to": 210, "width": 2.5106383467275957}, {"arrows": "to", "from": 180, "group": 16, "label": "MonsterSet Mekk-Knight Avram", "to": 219, "width": 2.5106383467275957}, {"arrows": "to", "from": 183, "group": 15, "label": "GoToEndPhase ", "to": 195, "width": 1.7752894000780655}, {"arrows": "to", "from": 183, "group": 16, "label": "Select528 Sabersaurus;MonsterZone;4;1", "to": 213, "width": 2.5106383467275957}, {"arrows": "to", "from": 195, "group": 16, "label": "GoToEndPhase ", "to": 222, "width": 2.5106383467275957}, {"arrows": "to", "from": 225, "group": 19, "label": "Activate Block Attack", "to": 270, "width": 1.9752894000780654}, {"arrows": "to", "from": 225, "group": 20, "label": "GoToEndPhase ", "to": 288, "width": 2.1752894000780656}, {"arrows": "to", "from": 246, "group": 18, "label": "Activate Block Attack", "to": 258, "width": 1.7752894000780655}, {"arrows": "to", "from": 246, "group": 21, "label": "GoToEndPhase ", "to": 291, "width": 2.1752894000780656}, {"arrows": "to", "from": 249, "group": 19, "label": "NumberSelected 1", "to": 279, "width": 2.5106383467275957}, {"arrows": "to", "from": 252, "group": 18, "label": "Activate Block Attack", "to": 261, "width": 1.8752894000780655}, {"arrows": "to", "from": 252, "group": 19, "label": "GoToEndPhase ", "to": 285, "width": 2.1752894000780656}, {"arrows": "to", "from": 255, "group": 18, "label": "GoToEndPhase ", "to": 264, "width": 7.956240953256136}, {"arrows": "to", "from": 258, "group": 26, "label": "NumberSelected 1", "to": 327, "width": 2.5106383467275957}, {"arrows": "to", "from": 261, "group": 23, "label": "NumberSelected 1", "to": 297, "width": 2.5106383467275957}, {"arrows": "to", "from": 264, "group": 19, "label": "Activate Block Attack", "to": 282, "width": 1.5495177253209744}, {"arrows": "to", "from": 264, "group": 23, "label": "Summon Mekk-Knight Avram", "to": 300, "width": 1.7495177253209744}, {"arrows": "to", "from": 264, "group": 23, "label": "Summon Noble Knight Artorigus", "to": 303, "width": 1.8227916020401183}, {"arrows": "to", "from": 264, "group": 23, "label": "Summon Cyber Dragon", "to": 306, "width": 1.7752894000780655}, {"arrows": "to", "from": 264, "group": 26, "label": "Summon Sabersaurus", "to": 330, "width": 5.8090382174085855}, {"arrows": "to", "from": 264, "group": 26, "label": "Repos Cyber Dragon", "to": 333, "width": 1.8495177253209745}, {"arrows": "to", "from": 264, "group": 26, "label": "MonsterSet Mekk-Knight Avram", "to": 336, "width": 1.6495177253209743}, {"arrows": "to", "from": 264, "group": 26, "label": "MonsterSet Noble Knight Artorigus", "to": 339, "width": 1.6495177253209743}, {"arrows": "to", "from": 264, "group": 26, "label": "MonsterSet Cyber Dragon", "to": 342, "width": 1.7752894000780655}, {"arrows": "to", "from": 264, "group": 26, "label": "MonsterSet Sabersaurus", "to": 345, "width": 1.5495177253209744}, {"arrows": "to", "from": 264, "group": 26, "label": "GoToEndPhase ", "to": 348, "width": 1.7752894000780655}, {"arrows": "to", "from": 267, "group": 23, "label": "Activate Stop Defense", "to": 309, "width": 2.5106383467275957}, {"arrows": "to", "from": 270, "group": 25, "label": "NumberSelected 1", "to": 321, "width": 2.6106383467275958}, {"arrows": "to", "from": 276, "group": 24, "label": "Activate Block Attack", "to": 315, "width": 2.5106383467275957}, {"arrows": "to", "from": 282, "group": 27, "label": "NumberSelected 1", "to": 360, "width": 1.7752894000780655}, {"arrows": "to", "from": 285, "group": 22, "label": "GoToEndPhase ", "to": 294, "width": 2.710638346727596}, {"arrows": "to", "from": 288, "group": 24, "label": "GoToEndPhase ", "to": 318, "width": 2.710638346727596}, {"arrows": "to", "from": 291, "group": 25, "label": "GoToEndPhase ", "to": 324, "width": 2.710638346727596}, {"arrows": "to", "from": 300, "group": 27, "label": "Activate Block Attack", "to": 351, "width": 2.6106383467275958}, {"arrows": "to", "from": 300, "group": 28, "label": "Repos Cyber Dragon", "to": 387, "width": 2.5106383467275957}, {"arrows": "to", "from": 303, "group": 27, "label": "Activate Block Attack", "to": 363, "width": 2.0752894000780655}, {"arrows": "to", "from": 303, "group": 28, "label": "Repos Cyber Dragon", "to": 390, "width": 2.6106383467275958}, {"arrows": "to", "from": 303, "group": 28, "label": "GoToEndPhase ", "to": 408, "width": 2.710638346727596}, {"arrows": "to", "from": 306, "group": 27, "label": "NumberSelected 1", "to": 369, "width": 2.5106383467275957}, {"arrows": "to", "from": 330, "group": 27, "label": "Activate Block Attack", "to": 354, "width": 4.829662965509633}, {"arrows": "to", "from": 330, "group": 28, "label": "Repos Cyber Dragon", "to": 384, "width": 1.7495177253209744}, {"arrows": "to", "from": 330, "group": 29, "label": "GoToEndPhase ", "to": 414, "width": 1.7553191733637978}, {"arrows": "to", "from": 333, "group": 27, "label": "Activate Block Attack", "to": 357, "width": 2.5106383467275957}, {"arrows": "to", "from": 333, "group": 28, "label": "Summon Mekk-Knight Avram", "to": 393, "width": 2.710638346727596}, {"arrows": "to", "from": 336, "group": 27, "label": "Activate Block Attack", "to": 372, "width": 2.6106383467275958}, {"arrows": "to", "from": 336, "group": 28, "label": "Repos Cyber Dragon", "to": 399, "width": 2.6106383467275958}, {"arrows": "to", "from": 339, "group": 27, "label": "Activate Block Attack", "to": 375, "width": 2.6106383467275958}, {"arrows": "to", "from": 339, "group": 28, "label": "Repos Cyber Dragon", "to": 402, "width": 2.6106383467275958}, {"arrows": "to", "from": 342, "group": 27, "label": "NumberSelected 1", "to": 378, "width": 2.5106383467275957}, {"arrows": "to", "from": 345, "group": 27, "label": "Activate Block Attack", "to": 366, "width": 2.5106383467275957}, {"arrows": "to", "from": 345, "group": 28, "label": "Repos Cyber Dragon", "to": 405, "width": 2.5106383467275957}, {"arrows": "to", "from": 348, "group": 27, "label": "GoToEndPhase ", "to": 381, "width": 2.5106383467275957}, {"arrows": "to", "from": 354, "group": 30, "label": "NumberSelected 1", "to": 417, "width": 4.6325421727129}, {"arrows": "to", "from": 360, "group": 28, "label": "Activate Stop Defense", "to": 396, "width": 2.5106383467275957}, {"arrows": "to", "from": 363, "group": 29, "label": "NumberSelected 1", "to": 411, "width": 2.6106383467275958}, {"arrows": "to", "from": 384, "group": 31, "label": "Activate Block Attack", "to": 423, "width": 2.6106383467275958}, {"arrows": "to", "from": 384, "group": 31, "label": "GoToEndPhase ", "to": 432, "width": 2.710638346727596}, {"arrows": "to", "from": 414, "group": 30, "label": "GoToEndPhase ", "to": 420, "width": 1.7495177253209744}, {"arrows": "to", "from": 417, "group": 31, "label": "Activate Stop Defense", "to": 426, "width": 1.4495177253209743}, {"arrows": "to", "from": 417, "group": 32, "label": "Repos Cyber Dragon", "to": 435, "width": 1.6495177253209743}, {"arrows": "to", "from": 417, "group": 32, "label": "GoToEndPhase ", "to": 441, "width": 3.3969667778309387}, {"arrows": "to", "from": 417, "group": 33, "label": "Select514 Cyber Dragon;MonsterZone;1;1", "to": 444, "width": 1.6489320996376533}, {"arrows": "to", "from": 417, "group": 33, "label": "Select514 Noble Knight Artorigus;MonsterZone;1;1", "to": 447, "width": 1.6495177253209743}, {"arrows": "to", "from": 420, "group": 31, "label": "Activate Block Attack", "to": 429, "width": 2.5106383467275957}, {"arrows": "to", "from": 420, "group": 32, "label": "Summon Exiled Force", "to": 438, "width": 2.6106383467275958}, {"arrows": "to", "from": 426, "group": 36, "label": "NumberSelected 1", "to": 462, "width": 1.7752894000780655}, {"arrows": "to", "from": 435, "group": 35, "label": "Activate Stop Defense", "to": 456, "width": 2.5106383467275957}, {"arrows": "to", "from": 435, "group": 36, "label": "GoToEndPhase ", "to": 483, "width": 2.6106383467275958}, {"arrows": "to", "from": 441, "group": 33, "label": "GoToEndPhase ", "to": 450, "width": 3.202023883333748}, {"arrows": "to", "from": 444, "group": 34, "label": "GoToEndPhase ", "to": 453, "width": 1.5249638130245604}, {"arrows": "to", "from": 447, "group": 35, "label": "GoToEndPhase ", "to": 459, "width": 1.8752894000780655}, {"arrows": "to", "from": 450, "group": 36, "label": "Summon Exiled Force", "to": 465, "width": 1.856985943670331}, {"arrows": "to", "from": 450, "group": 36, "label": "Summon Mekk-Knight Avram", "to": 480, "width": 1.7495177253209744}, {"arrows": "to", "from": 450, "group": 37, "label": "Summon Noble Knight Artorigus", "to": 486, "width": 1.6495177253209743}, {"arrows": "to", "from": 450, "group": 37, "label": "Summon Cyber Dragon", "to": 489, "width": 1.4495177253209743}, {"arrows": "to", "from": 450, "group": 37, "label": "Repos Cyber Dragon", "to": 501, "width": 1.7495177253209744}, {"arrows": "to", "from": 450, "group": 37, "label": "MonsterSet Exiled Force", "to": 504, "width": 1.5495177253209744}, {"arrows": "to", "from": 450, "group": 37, "label": "MonsterSet Mekk-Knight Avram", "to": 507, "width": 1.6495177253209743}, {"arrows": "to", "from": 450, "group": 37, "label": "MonsterSet Noble Knight Artorigus", "to": 510, "width": 1.5495177253209744}, {"arrows": "to", "from": 450, "group": 37, "label": "MonsterSet Cyber Dragon", "to": 513, "width": 1.4495177253209743}, {"arrows": "to", "from": 450, "group": 37, "label": "GoToEndPhase ", "to": 516, "width": 1.7495177253209744}, {"arrows": "to", "from": 453, "group": 36, "label": "Summon Exiled Force", "to": 468, "width": 2.710638346727596}, {"arrows": "to", "from": 453, "group": 36, "label": "Summon Mekk-Knight Avram", "to": 471, "width": 2.6106383467275958}, {"arrows": "to", "from": 453, "group": 36, "label": "Summon Noble Knight Artorigus", "to": 477, "width": 2.5106383467275957}, {"arrows": "to", "from": 453, "group": 37, "label": "Summon Cyber Dragon", "to": 492, "width": 2.5106383467275957}, {"arrows": "to", "from": 453, "group": 37, "label": "Repos Cyber Dragon", "to": 498, "width": 2.5106383467275957}, {"arrows": "to", "from": 459, "group": 36, "label": "Summon Exiled Force", "to": 474, "width": 2.5106383467275957}, {"arrows": "to", "from": 462, "group": 37, "label": "Repos Cyber Dragon", "to": 495, "width": 2.5106383467275957}, {"arrows": "to", "from": 465, "group": 38, "label": "Activate Exiled Force", "to": 519, "width": 1.655319173363798}, {"arrows": "to", "from": 465, "group": 39, "label": "Repos Cyber Dragon", "to": 549, "width": 1.6495177253209743}, {"arrows": "to", "from": 465, "group": 44, "label": "GoToEndPhase ", "to": 573, "width": 1.8495177253209745}, {"arrows": "to", "from": 480, "group": 38, "label": "Repos Cyber Dragon", "to": 522, "width": 2.6106383467275958}, {"arrows": "to", "from": 480, "group": 39, "label": "GoToEndPhase ", "to": 552, "width": 2.6106383467275958}, {"arrows": "to", "from": 486, "group": 38, "label": "Repos Cyber Dragon", "to": 525, "width": 2.5106383467275957}, {"arrows": "to", "from": 486, "group": 40, "label": "GoToEndPhase ", "to": 558, "width": 2.6106383467275958}, {"arrows": "to", "from": 489, "group": 39, "label": "NumberSelected 1", "to": 537, "width": 1.7752894000780655}, {"arrows": "to", "from": 501, "group": 38, "label": "Summon Exiled Force", "to": 528, "width": 2.6106383467275958}, {"arrows": "to", "from": 501, "group": 40, "label": "Summon Mekk-Knight Avram", "to": 555, "width": 2.6106383467275958}, {"arrows": "to", "from": 504, "group": 38, "label": "Repos Cyber Dragon", "to": 531, "width": 2.5106383467275957}, {"arrows": "to", "from": 504, "group": 41, "label": "GoToEndPhase ", "to": 561, "width": 2.5106383467275957}, {"arrows": "to", "from": 507, "group": 39, "label": "Repos Cyber Dragon", "to": 540, "width": 2.6106383467275958}, {"arrows": "to", "from": 507, "group": 42, "label": "GoToEndPhase ", "to": 564, "width": 2.6106383467275958}, {"arrows": "to", "from": 510, "group": 39, "label": "Repos Cyber Dragon", "to": 543, "width": 2.6106383467275958}, {"arrows": "to", "from": 510, "group": 43, "label": "GoToEndPhase ", "to": 567, "width": 2.5106383467275957}, {"arrows": "to", "from": 513, "group": 39, "label": "NumberSelected 1", "to": 546, "width": 1.7752894000780655}, {"arrows": "to", "from": 516, "group": 38, "label": "GoToEndPhase ", "to": 534, "width": 1.9752894000780654}, {"arrows": "to", "from": 519, "group": 47, "label": "NumberSelected 1", "to": 582, "width": 1.6495177253209743}, {"arrows": "to", "from": 534, "group": 44, "label": "SpSummon Cyber Dragon", "to": 570, "width": 2.710638346727596}, {"arrows": "to", "from": 537, "group": 45, "label": "GoToEndPhase ", "to": 576, "width": 2.5106383467275957}, {"arrows": "to", "from": 546, "group": 46, "label": "GoToEndPhase ", "to": 579, "width": 2.5106383467275957}, {"arrows": "to", "from": 549, "group": 47, "label": "Activate Exiled Force", "to": 585, "width": 2.6106383467275958}, {"arrows": "to", "from": 549, "group": 48, "label": "GoToEndPhase ", "to": 597, "width": 2.5106383467275957}, {"arrows": "to", "from": 573, "group": 47, "label": "GoToEndPhase ", "to": 588, "width": 2.0752894000780655}, {"arrows": "to", "from": 582, "group": 48, "label": "Repos Cyber Dragon", "to": 591, "width": 2.5106383467275957}, {"arrows": "to", "from": 582, "group": 49, "label": "GoToEndPhase ", "to": 600, "width": 2.5106383467275957}, {"arrows": "to", "from": 588, "group": 48, "label": "SpSummon Cyber Dragon", "to": 594, "width": 2.6106383467275958}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": true,
+        "filter": [
+            "physics"
+        ]
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+                  // if this network requires displaying the configure window,
+                  // put it in its div
+                  options.configure["container"] = document.getElementById("config");
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+                      network.on("stabilizationProgress", function(params) {
+                          document.getElementById('loadingBar').removeAttribute("style");
+                          var maxWidth = 496;
+                          var minWidth = 20;
+                          var widthFactor = params.iterations/params.total;
+                          var width = Math.max(minWidth,maxWidth * widthFactor);
+                          document.getElementById('bar').style.width = width + 'px';
+                          document.getElementById('text').innerHTML = Math.round(widthFactor*100) + '%';
+                      });
+                      network.once("stabilizationIterationsDone", function() {
+                          document.getElementById('text').innerHTML = '100%';
+                          document.getElementById('bar').style.width = '496px';
+                          document.getElementById('loadingBar').style.opacity = 0;
+                          // really clean the dom element
+                          setTimeout(function () {document.getElementById('loadingBar').style.display = 'none';}, 500);
+                      });
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

@@ -61,6 +61,7 @@
     <Compile Include="Game\AI\Decks\AIExecutor2.cs" />
     <Compile Include="Game\AI\Decks\AIExecutorBase.cs" />
     <Compile Include="Game\AI\Decks\AIMasterExecutor.cs" />
+    <Compile Include="Game\AI\Decks\Util\MLUtil.cs" />
     <Compile Include="Game\AI\Decks\[HealingJAMExecutor].cs" />
     <Compile Include="Game\AI\Decks\[ImaginaryArkExecutor].cs" />
     <Compile Include="Game\DecksManager.cs" />

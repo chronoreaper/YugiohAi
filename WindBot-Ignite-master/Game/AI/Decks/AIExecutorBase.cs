@@ -64,33 +64,39 @@ namespace WindBot.Game.AI.Decks
             base.SetMain(main);
             BestAction = null;
 
-            Tree.AddPossibleAction("",ExecutorType.GoToEndPhase.ToString());
+            Tree.AddPossibleAction("",ExecutorType.GoToEndPhase.ToString(), Duel.Fields);
+
+            if (Duel.Phase == DuelPhase.Main2)
+            {
+                BestAction = Tree.GetNextAction();
+                return;
+            }
 
             foreach (ClientCard card in main.MonsterSetableCards)
             {
-                Tree.AddPossibleAction(card?.Name, ExecutorType.MonsterSet.ToString());
+                Tree.AddPossibleAction(card?.Name, ExecutorType.MonsterSet.ToString(), Duel.Fields);
                 //card.ActionIndex[(int)ExecutorType.MonsterSet];
             }
             //loop through cards that can change position
             foreach (ClientCard card in main.ReposableCards)
             {
-                Tree.AddPossibleAction(card?.Name, ExecutorType.Repos.ToString());
+                Tree.AddPossibleAction(card?.Name, ExecutorType.Repos.ToString(), Duel.Fields);
             }
             //Loop through normal summonable monsters
             foreach (ClientCard card in main.SummonableCards)
             {
-                Tree.AddPossibleAction(card?.Name, ExecutorType.Summon.ToString());
+                Tree.AddPossibleAction(card?.Name, ExecutorType.Summon.ToString(), Duel.Fields);
             }
             //loop through special summonable monsters
             foreach (ClientCard card in main.SpecialSummonableCards)
             {
-                Tree.AddPossibleAction(card?.Name, ExecutorType.SpSummon.ToString());
+                Tree.AddPossibleAction(card?.Name, ExecutorType.SpSummon.ToString(), Duel.Fields);
             }
             //loop through activatable cards
             for (int i = 0; i < main.ActivableCards.Count; ++i)
             {
                 ClientCard card = main.ActivableCards[i];
-                Tree.AddPossibleAction(card?.Name, ExecutorType.Activate.ToString());
+                Tree.AddPossibleAction(card?.Name, ExecutorType.Activate.ToString(), Duel.Fields);
                 //choice.SetBest(ExecutorType.Activate, card, card.ActionActivateIndex[main.ActivableDescs[i]]);
             }
 
@@ -113,7 +119,7 @@ namespace WindBot.Game.AI.Decks
             for (int i = 0; i < battle.ActivableCards.Count; ++i)
             {
                 ClientCard card = battle.ActivableCards[i];
-                Tree.AddPossibleAction(card?.Name, ExecutorType.Repos.ToString());
+                Tree.AddPossibleAction(card?.Name, ExecutorType.Repos.ToString(), Duel.Fields);
                 //choice.SetBest(ExecutorType.Activate, card, battle.ActivableDescs[i]);
             }
 
@@ -121,8 +127,14 @@ namespace WindBot.Game.AI.Decks
 
         public override bool OnSelectHand()
         {
-            bool choice = true;
+            bool choice = SQLComm.IsFirst;
             return choice;
+        }
+
+        public override void OnNewTurn()
+        {
+            base.OnNewTurn();
+            Tree.OnNewTurn(Duel.Fields);
         }
 
         public override IList<ClientCard> OnSelectCard(IList<ClientCard> _cards, int min, int max, long hint, bool cancelable)
@@ -143,7 +155,7 @@ namespace WindBot.Game.AI.Decks
             //get number of cards to select
             for (int i = min; i <= max; i++)
             {
-                Tree.AddPossibleAction(i.ToString(), "NumberSelected");
+                Tree.AddPossibleAction(i.ToString(), "NumberSelected", Duel.Fields);
             }
             numToSelect = int.Parse(Tree.GetNextAction().CardId);
 
@@ -151,7 +163,7 @@ namespace WindBot.Game.AI.Decks
             {
                 string action = $"Select" + hint.ToString();
                 string card = SelectStringBuilder(clientCard);
-                Tree.AddPossibleAction(card, action);
+                Tree.AddPossibleAction(card, action, Duel.Fields);
             }
 
 
@@ -239,7 +251,7 @@ namespace WindBot.Game.AI.Decks
         {
             foreach(long o in options)
             {
-                Tree.AddPossibleAction(o.ToString(), "SelectOption");
+                Tree.AddPossibleAction(o.ToString(), "SelectOption", Duel.Fields);
             }
 
             long best = long.Parse(Tree.GetNextAction().CardId);
@@ -262,13 +274,13 @@ namespace WindBot.Game.AI.Decks
                 }
             }
 
-            return Tree.ShouldActivate(Card.Name, Type.ToString());
+            return Tree.ShouldActivate(Card.Name, Type.ToString(), Duel.Fields);
 
         }
 
         public override void OnWin(int result)
         {
-            Tree.Backpropagate(result);
+            Tree.OnGameEnd(result, Duel);
             Tree.OnNewGame();
         }
 

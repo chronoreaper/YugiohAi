@@ -127,8 +127,8 @@ namespace WindBot
 
         public void OnGameEnd(int result, Duel duel)
         {
-            double reward = result == 0 ? (int)(SQLComm.RolloutCount/2) : (double)duel.Turn / 100;
-            //double reward = result == 0 ? 1 : 0;
+            //double reward = result == 0 ? (int)(SQLComm.RolloutCount/2) : (double)duel.Turn / 100;
+            double reward = result == 0 ? 1 : 0;
             Backpropagate(reward);
         }
 

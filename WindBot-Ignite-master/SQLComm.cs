@@ -7,7 +7,7 @@ namespace WindBot
 {
     public class SQLComm
     {
-        public static bool IsFirst = false;
+        public static bool IsFirst = true;
         public static bool IsTraining = true;
         public static bool IsRollout = false;
         public static bool ShouldBackPropagate = false;

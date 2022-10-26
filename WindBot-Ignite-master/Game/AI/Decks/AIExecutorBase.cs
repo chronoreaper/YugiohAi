@@ -19,7 +19,7 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.Activate, ShouldPerform);
 
             AddExecutor(ExecutorType.MonsterSet, ShouldPerform);
-            AddExecutor(ExecutorType.Repos, ShouldPerform);
+            //AddExecutor(ExecutorType.Repos, ShouldPerform);
             AddExecutor(ExecutorType.SpellSet, ShouldPerform);
             AddExecutor(ExecutorType.SpSummon, ShouldPerform);
             AddExecutor(ExecutorType.Summon, ShouldPerform);
@@ -80,7 +80,7 @@ namespace WindBot.Game.AI.Decks
             //loop through cards that can change position
             foreach (ClientCard card in main.ReposableCards)
             {
-                Tree.AddPossibleAction(card?.Name, ExecutorType.Repos.ToString(), Duel.Fields);
+                //Tree.AddPossibleAction(card?.Name, ExecutorType.Repos.ToString(), Duel.Fields);
             }
             //Loop through normal summonable monsters
             foreach (ClientCard card in main.SummonableCards)

@@ -51,14 +51,32 @@ namespace WindBot
                 {
                     if (StateAfterTurn != null)
                     {
-                        value += StateAfterTurn.BotField.HandCount - StateCurrent.BotField.HandCount;
-                        value += StateAfterTurn.BotField.FieldCount - StateAfterTurn.EnemyField.FieldCount;
-                        value -= StateAfterTurn.EnemyField.FieldCount - StateCurrent.EnemyField.FieldCount;
+                        double cardAdvantageHand = StateAfterTurn.BotField.HandCount - StateCurrent.BotField.HandCount + StateCurrent.EnemyField.HandCount - StateAfterTurn.EnemyField.HandCount;
+                        double cardAdvantageField = StateAfterTurn.BotField.FieldCount - StateCurrent.BotField.FieldCount + StateCurrent.EnemyField.FieldCount - StateAfterTurn.EnemyField.FieldCount;
+
+                        double fieldAdvantage = StateAfterTurn.BotField.FieldCount - StateAfterTurn.EnemyField.FieldCount;
+                        double enemyFieldLoss = StateAfterTurn.EnemyField.FieldCount - StateCurrent.EnemyField.FieldCount;
+                        double playerFieldGain = StateAfterTurn.BotField.FieldCount - StateCurrent.BotField.FieldCount;
+                        double advantageGain = cardAdvantageHand + cardAdvantageField;
+                        value += Math.Sign(fieldAdvantage);
+                        value += Math.Sign(enemyFieldLoss);
+                        value += Math.Sign(playerFieldGain);
+                        value += Math.Sign(advantageGain);
+
+                        /*value += StateAfterTurn.BotField.HandCount - StateCurrent.BotField.HandCount;
+                        value += StateAfterTurn.BotField.FieldCount - StateCurrent.BotField.FieldCount;
+                        value -= StateAfterTurn.EnemyField.FieldCount - StateCurrent.EnemyField.FieldCount;*/
 
                     }
 
                     if (StateAfterOtherTurn != null && false)
                     {
+                        double cardAdvantageHand = StateAfterTurn.BotField.HandCount - StateCurrent.BotField.HandCount + StateCurrent.EnemyField.HandCount - StateAfterTurn.EnemyField.HandCount;
+                        double cardAdvantageField = StateAfterTurn.BotField.FieldCount - StateCurrent.BotField.FieldCount + StateCurrent.EnemyField.FieldCount - StateAfterTurn.EnemyField.FieldCount;
+
+                        double advantageGain = cardAdvantageHand + cardAdvantageField;
+                        double cardAdvantage = StateAfterTurn.BotField.FieldCount - StateAfterTurn.EnemyField.FieldCount + StateAfterTurn.BotField.HandCount - StateAfterTurn.EnemyField.HandCount;
+
                         value += StateAfterOtherTurn.BotField.HandCount - StateAfterOtherTurn.EnemyField.HandCount;
                         value += StateAfterOtherTurn.BotField.FieldCount - StateAfterOtherTurn.EnemyField.FieldCount;
                     }
@@ -101,6 +119,7 @@ namespace WindBot
         {
             Node cur = current;
 
+            Logger.WriteLine("Prev Turn actions");
             while (cur != null && cur.StateAfterOtherTurn == null)
             {
                 if (cur.StateAfterTurn != null)
@@ -114,7 +133,7 @@ namespace WindBot
             }
 
             cur = current;
-
+            Logger.WriteLine("Cur Turn actions");
             while (cur != null && cur.StateAfterTurn == null)
             {
                 cur.StateAfterTurn = new MLUtil.GameState(fields);
@@ -128,7 +147,7 @@ namespace WindBot
         public void OnGameEnd(int result, Duel duel)
         {
             //double reward = result == 0 ? (int)(SQLComm.RolloutCount/2) : (double)duel.Turn / 100;
-            double reward = result == 0 ? 1 : 0;
+            double reward = result == 0 ? 2 : 0;
             Backpropagate(reward);
         }
 
@@ -158,14 +177,15 @@ namespace WindBot
         {
             Node best = current;
             double weight = -1;
-            double c = 1;
+            double c = 0.5;
 
             if (!SQLComm.IsRollout)
             {
                 foreach (Node n in current.Children)
                 {
                     double visited = Math.Max(0.0001, n.Visited);
-                    double w = n.Rewards + c * Math.Sqrt((Math.Log(TotalGames + 1) + 1) / visited);
+                    double estimate = SQLComm.GetNodeEstimate(n);
+                    double w = n.Rewards + c * Math.Sqrt((Math.Log(TotalGames + 1) + 1) / visited) + estimate;
                     if (w >= weight)
                     {
                         weight = w;
@@ -173,7 +193,7 @@ namespace WindBot
                     }
                 }
 
-                if (best != null)
+                if (best != null && current.Children.Count > 1)
                 {
                     current = best;
                     if (best.Visited <= 0)

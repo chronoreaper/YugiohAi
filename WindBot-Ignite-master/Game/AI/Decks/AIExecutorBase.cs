@@ -153,11 +153,14 @@ namespace WindBot.Game.AI.Decks
             int numToSelect = min;
 
             //get number of cards to select
-            for (int i = min; i <= max; i++)
+            for (int i = min; i < max; i++)
             {
                 Tree.AddPossibleAction(i.ToString(), "NumberSelected", Duel.Fields);
             }
-            numToSelect = int.Parse(Tree.GetNextAction().CardId);
+            if (min != max)
+            {
+                numToSelect = int.Parse(Tree.GetNextAction().CardId);
+            }
 
             foreach (ClientCard clientCard in cards)
             {

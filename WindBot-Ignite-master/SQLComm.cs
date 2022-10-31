@@ -12,7 +12,7 @@ namespace WindBot
         public static bool IsRollout = false;
         public static bool ShouldBackPropagate = false;
         public static int TotalGames = 201;
-        public static int RolloutCount = 2;
+        public static int RolloutCount = 1;
 
         public static int GamesPlayed = 0;
         public static int Wins = 0;
@@ -45,6 +45,42 @@ namespace WindBot
                 }
                 conn.Close();
             }
+        }
+
+        public static double GetNodeEstimate(Node node)
+        {
+            double value = 0;
+            if (node.Action == "GoToEndPhase")
+                return value;
+            using (SqliteConnection conn = ConnectToDatabase())
+            {
+                conn.Open();
+                string sql = $"SELECT SUM(Reward), SUM(Visited) from MCST WHERE CardId = \"{node.CardId}\" AND Action = \"{node.Action}\"";
+                double reward = 0;
+                int visited = 0;
+                using (SqliteCommand cmd = new SqliteCommand(sql, conn))
+                {
+                    try
+                    {
+                        using (SqliteDataReader rdr = cmd.ExecuteReader())
+                            while (rdr.Read())
+                            {
+                                reward = rdr.GetDouble(0);
+                                visited = rdr.GetInt32(1);
+                            }
+                    }
+                    catch(InvalidCastException)
+                    {
+
+                    }
+                }
+                conn.Close();
+
+                value = reward / Math.Max(1,visited) * 1000;
+            }
+
+
+            return value;
         }
 
         public static int GetTotalGames()

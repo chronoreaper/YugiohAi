@@ -22,15 +22,22 @@ group_count = 0
 for record in records:
     rowid = record[0]
     parentid = record[1]
-    cardid = record[2]
-    action = record[3]
-    reward = record[4]
-    visited = max(0.0001, record[5])
+    childid = record[2]
+    cardid = record[3]
+    action = record[4]
+    reward = record[5]
+    visited = max(0.0001, record[6])
+
+    if visited < 2:
+      continue
 
     activation = reward + const * math.sqrt((math.log(total + 1) + 1) / visited)
-    activation = min(activation * 2, 50)
-    nx_graph.add_node(25, label=f'{action} {cardid}', title=f'{action} {cardid}', group=group_count)
-    nx_graph.add_edge(parentid, rowid, label=f'{action} {cardid}', weight=activation, group=group_count)
+    activation = min(activation, 25)
+    nx_graph.add_node(25, label=f'{action} {cardid}', title=f'{action} {cardid}', group=1)
+    if parentid != -4:
+      nx_graph.add_edge(parentid, rowid, label=f'{action} {cardid}', weight=activation, group=2)
+    if childid != -4:
+      nx_graph.add_edge(rowid, childid, weight=activation, group=3)
 
     if (action == "GoToEndPhase"):
       group_count += 1
@@ -45,8 +52,12 @@ for record in records:
     visited =record[3]
     #const = 0
 
-    activation = round((reward + const * math.sqrt((math.log(total + 1) + 1) / visited)) * 100)/100
-    activation2 = round(reward / visited * 1000)/10
+    activation = 0
+    activation2 = 0
+    if (visited > 0):
+      actication = round((reward + const * math.sqrt((math.log(total + 1) + 1) / (visited))) * 100)/100
+      activation2 = round(reward / (visited) * 1000)/10
+
     print(f"{activation}| {activation2} | {cardid} | {action}")
 
 c.close()

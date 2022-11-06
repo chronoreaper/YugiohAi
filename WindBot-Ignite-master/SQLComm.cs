@@ -1,6 +1,9 @@
 using Mono.Data.Sqlite;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
+using static System.Net.Mime.MediaTypeNames;
 using static WindBot.MCST;
 
 namespace WindBot
@@ -19,20 +22,22 @@ namespace WindBot
         private static SqliteConnection ConnectToDatabase()
         {
             //@"URI=file:\windbot_master\windbot_master\bin\Debug\cards.cdb";
-            string dir = Directory.GetCurrentDirectory();
+            string dir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             //Go to the YugiohAi Directory
             dir = dir.Remove(dir.IndexOf(@"WindBot-Ignite-master\bin\Debug")) + "cardData.cdb";
             string absolutePath = $@"URI = file: {dir}";
             return new SqliteConnection(absolutePath);
         }
 
-        public static void GetNodeInfo(Node node)
+        public static bool GetNodeInfo(Node node)
         {
+            bool gotInfo = false;
+
             using(SqliteConnection conn = ConnectToDatabase())
             {
                 conn.Open();
                 string sql = $"SELECT rowid, Reward, Visited FROM MCST WHERE " +
-                    $"ParentId = \"{node.Parent?.NodeId}\" AND CardId = \"{node.CardId}\" AND Action = \"{node.Action}\"";
+                    $"ParentId = \"{node.Parent?.NodeId ?? -4}\" AND CardId = \"{node.CardId}\" AND Action = \"{node.Action}\"";
                 using (SqliteCommand cmd = new SqliteCommand(sql, conn))
                 {
                     using (SqliteDataReader rdr = cmd.ExecuteReader())
@@ -41,10 +46,13 @@ namespace WindBot
                         node.NodeId = long.Parse(rdr["rowid"].ToString());
                         node.Rewards = rdr.GetDouble(1);
                         node.Visited = rdr.GetInt32(2);
+                        gotInfo = true;
                     }
                 }
                 conn.Close();
             }
+
+            return gotInfo;
         }
 
         public static double GetNodeEstimate(Node node)
@@ -111,13 +119,43 @@ namespace WindBot
             return total;
         }
 
+        public static void InsertNode(Node node)
+        {
+            using (SqliteConnection conn = ConnectToDatabase())
+            {
+                conn.Open();
+
+                SqliteTransaction transaction = conn.BeginTransaction();
+
+                long parentId = -4;
+                long childId = -4;
+                if (node.Parent != null && node.Parent.NodeId != -4)
+                {
+                    parentId = node.Parent.NodeId;
+                }
+                if (node.Children.Count == 1)
+                {
+                    childId = node.Children[0].NodeId;
+                }
+
+                string sql = $"INSERT INTO MCST (ParentId,ChildId,CardId,Action,Reward,Visited) VALUES (\"{parentId}\",\"{childId}\",\"{node.CardId}\",\"{node.Action}\",\"0\",\"0\")";
+                using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                {
+                    cmd2.ExecuteNonQuery();
+                }
+
+                transaction.Commit();
+                conn.Close();
+            }
+        }
+
         /***
          * Result, 0 = win, 1 = lose, 2 = tie
          */
-        public static void Backpropagate(Node node, double reward)
+        public static void Backpropagate(Dictionary<int, Node> nodes, Node node, double reward)
         {
             IsRollout = false;
-            if (!ShouldBackPropagate)
+            if (!ShouldBackPropagate && RolloutCount != 1)
             {
                 RecordWin(reward);
 
@@ -156,14 +194,18 @@ namespace WindBot
                         }
                     }
                 }
+                Queue<Node> q = new Queue<Node>();
+                foreach (int turn in nodes.Keys)
+                    q.Enqueue(nodes[turn]);
 
-                while (node != null)
+                while (q.Count > 0)
                 {
-                    if (node.NodeId != -4)
+                    Node n = q.Dequeue();
+                    if (n.NodeId != -4)
                     {
                         sql = $"UPDATE MCST SET Reward = Reward + {rewards / rolloutCount}, " +
                             $"Visited = Visited + 1 WHERE " +
-                            $"rowid = \"{node.NodeId}\"";
+                            $"rowid = \"{n.NodeId}\"";
 
                         using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                         {
@@ -173,18 +215,29 @@ namespace WindBot
                     else
                     {
                         long parentId = 0;
-                        if (node.Parent != null)
+                        long childId = -4;
+                        if (n.Parent != null && n.Parent.NodeId != -4)
                         {
-                            parentId = node.Parent.NodeId;
+                            parentId = n.Parent.NodeId;
                         }
-                        sql = $"INSERT INTO MCST (ParentId,CardId,Action,Reward,Visited) VALUES (\"{parentId}\",\"{node.CardId}\",\"{node.Action}\",\"{rewards / rolloutCount}\",\"1\")";
+                        if (n.Children.Count == 1)
+                        {
+                            if (n.Children[0].NodeId == -4)
+                                continue;
+                            childId = n.Children[0].NodeId;
+                        }
+
+                        sql = $"INSERT INTO MCST (ParentId,ChildId,CardId,Action,Reward,Visited) VALUES (\"{parentId}\",\"{childId}\",\"{n.CardId}\",\"{n.Action}\",\"{rewards / rolloutCount}\",\"1\")";
                         using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                         {
                             rowsUpdated = cmd2.ExecuteNonQuery();
                         }
                     }
 
-                    node = node.Parent;
+                    foreach(Node c in n.Children)
+                    {
+                        q.Enqueue(c);
+                    }
                 }
 
                 // Remove the rollout
@@ -225,7 +278,7 @@ namespace WindBot
                 // If there was no update, add it instead
                 if (rowsUpdated <= 0)
                 {
-                    sql = $"INSERT INTO MCST (ParentId,CardId,Action,Reward,Visited) VALUES (\"-4\",\"Result\",\"{lable}\",\"{reward}\",\"1\")";
+                    sql = $"INSERT INTO MCST (ParentId,ChildId,CardId,Action,Reward,Visited) VALUES (\"-4\",\"-4\",\"Result\",\"{lable}\",\"{reward}\",\"1\")";
                     using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                     {
                         rowsUpdated = cmd2.ExecuteNonQuery();

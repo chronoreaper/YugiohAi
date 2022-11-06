@@ -30,7 +30,18 @@ namespace WindBot
                 StateCurrent = new MLUtil.GameState(field);
             }
 
+            public Node(Node parent, Node child, string cardId, string action, ClientField[] field)
+                :this(parent, child, cardId, action)
+            {
+                StateCurrent = new MLUtil.GameState(field);
+            }
+
             public Node(Node parent, string cardId, string action)
+                :this(parent, null, cardId, action)
+            {
+            }
+
+            public Node(Node parent, Node child, string cardId, string action)
             {
                 Children = new List<Node>();
                 Parent = parent;
@@ -38,10 +49,16 @@ namespace WindBot
                 Action = action;
                 StateCurrent = new MLUtil.GameState();
 
-                if (Parent == null)
-                    NodeId = 0;
+                if (child != null)
+                {
+                    Children.Add(child);
+                }
 
-                SQLComm.GetNodeInfo(this);
+                if (!SQLComm.GetNodeInfo(this))
+                {
+                    SQLComm.InsertNode(this);
+                    SQLComm.GetNodeInfo(this);
+                }
             }
 
             public double Heuristic()
@@ -82,6 +99,8 @@ namespace WindBot
                     }
                 }
 
+                //value /= Math.Max(Visited,1);
+
                 return value;
             }
 
@@ -96,8 +115,13 @@ namespace WindBot
             }
         }
 
+        Dictionary<int, Node> TurnNodes;
         Node current;
+        Node lastNode = null;
+        public List<Node> possibleActions;
         int TotalGames = 0;
+        int actionNumber = 0;
+        Node nextActionNode = null;
 
         public MCST()
         {
@@ -106,8 +130,12 @@ namespace WindBot
 
         public void OnNewGame()
         {
+            TurnNodes = new Dictionary<int, Node>();
+            possibleActions = new List<Node>();
             TotalGames = SQLComm.GetTotalGames();
             current = new Node(null, "", "");
+            current.NodeId = 0;
+            lastNode = current;
         }
 
         public void OnNewAction(ClientField[] fields)
@@ -115,32 +143,57 @@ namespace WindBot
 
         }
 
-        public void OnNewTurn(ClientField[] fields)
+        public void OnNewTurn(ClientField[] fields, int turn)
         {
+            actionNumber = 0;
             Node cur = current;
+            Node pre = null;
 
-            Logger.WriteLine("Prev Turn actions");
-            while (cur != null && cur.StateAfterOtherTurn == null)
+            if (TurnNodes.ContainsKey(turn - 2))
             {
-                if (cur.StateAfterTurn != null)
-                {
-                    cur.StateAfterOtherTurn = new MLUtil.GameState(fields);
-
-                    Logger.WriteLine(cur.ToString());
-                }
-
-                cur = cur.Parent;
+                pre = TurnNodes[turn - 2];
             }
 
-            cur = current;
-            Logger.WriteLine("Cur Turn actions");
-            while (cur != null && cur.StateAfterTurn == null)
+            if (TurnNodes.ContainsKey(turn - 1))
             {
-                cur.StateAfterTurn = new MLUtil.GameState(fields);
+                cur = TurnNodes[turn - 1];
+            }
 
-                Logger.WriteLine(cur.ToString());
+            Node future = new Node(cur, $"turn:{turn}", "");
+            current = future;
+            TurnNodes.Add(turn, future);
 
-                cur = cur.Parent;
+            Logger.WriteLine("Prev Turn actions");
+            Queue<Node> q = new Queue<Node>();
+            if (pre != null)
+                q.Enqueue(pre);
+
+            while (q.Count > 0)
+            {
+                Node n = q.Dequeue();
+                n.StateAfterOtherTurn = new MLUtil.GameState(fields);
+                Logger.WriteLine(n.ToString());
+
+                foreach(Node child in n.Children)
+                {
+                    q.Enqueue(child);
+                }
+            }
+
+            Logger.WriteLine("Cur Turn actions");
+            if (cur != null)
+                q.Enqueue(cur);
+
+            while (q.Count > 0)
+            {
+                Node n = q.Dequeue();
+                n.StateAfterTurn = new MLUtil.GameState(fields);
+                Logger.WriteLine(n.ToString());
+
+                foreach (Node child in n.Children)
+                {
+                    q.Enqueue(child);
+                }
             }
         }
 
@@ -156,18 +209,24 @@ namespace WindBot
          * For Multiple Actions
          */
 
-        public void AddPossibleAction(string cardId, string action, ClientField[] field)
+        public void AddPossibleAction(string cardId, string action, ClientField[] field, int turn)
         {
-            current.Children.Add(new Node(current, cardId, action, field));
+            if (nextActionNode == null)
+            {
+                nextActionNode = new Node(null, $"Turn{turn}Action{actionNumber}", "", field);
+            }
+
+            Node node = new Node(current, nextActionNode, cardId, action, field);
+            possibleActions.Add(node);
         }
 
         public bool ShouldActivate(string cardId, string action, ClientField[] field)
         {
             Node toActivate = new Node(current, cardId, action, field);
-            current.Children.Add(toActivate);
-            current.Children.Add(new Node(current, cardId, "", field));
-            current = GetNextAction();
-            return current == toActivate;
+            possibleActions.Add(toActivate);
+            possibleActions.Add(new Node(current, cardId, "Dont"+action, field));
+            Node best = GetNextAction();
+            return best == toActivate;
         }
 
         /**
@@ -181,11 +240,12 @@ namespace WindBot
 
             if (!SQLComm.IsRollout)
             {
-                foreach (Node n in current.Children)
+                foreach (Node n in possibleActions)
                 {
                     double visited = Math.Max(0.0001, n.Visited);
                     double estimate = SQLComm.GetNodeEstimate(n);
                     double w = n.Rewards + c * Math.Sqrt((Math.Log(TotalGames + 1) + 1) / visited) + estimate;
+
                     if (w >= weight)
                     {
                         weight = w;
@@ -193,28 +253,34 @@ namespace WindBot
                     }
                 }
 
-                if (best != null && current.Children.Count > 1)
+                if (best != null && possibleActions.Count > 1 && best != current)
                 {
-                    current = best;
+                    current.Children.Add(best);
                     if (best.Visited <= 0)
                     {
+                        lastNode = best;
                         SQLComm.IsRollout = true;
                     }
                 }
-                current.Children.Clear();
+
             }
-            else if (current.Children.Count > 0)
+            else if (possibleActions.Count > 0)
             {
-                best = current.Children[Program.Rand.Next(0, current.Children.Count)];
-                current.Children.Clear();
+                best = possibleActions[Program.Rand.Next(0, possibleActions.Count)];
             }
+
+            current = best.Children[0];
+
+            possibleActions.Clear();
+            nextActionNode = null;
+            actionNumber++;
 
             return best;
         }
 
         private void Backpropagate(double reward)
         {
-            SQLComm.Backpropagate(current, reward);
+            SQLComm.Backpropagate(TurnNodes, lastNode, reward);
         }
     }
 }

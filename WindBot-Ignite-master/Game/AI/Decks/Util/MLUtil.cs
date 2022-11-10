@@ -11,6 +11,7 @@ namespace WindBot.Game.AI.Decks.Util
         {
             public FieldState EnemyField;
             public FieldState BotField;
+            public List<string> CardsInPlay = new List<string>();
 
             public class FieldState
             {
@@ -34,6 +35,14 @@ namespace WindBot.Game.AI.Decks.Util
                     HandCount = enemy.GetHandCount(),
                     FieldCount = enemy.GetFieldCount(),
                 };
+
+                for (int i = 0; i <= 1; i++)
+                {
+                    foreach (ClientCard card in fields[i].GetMonsters())
+                    {
+                        CardsInPlay.Add(CardStateStringBuilder(card, i));
+                    }
+                }
             }
 
             public GameState()
@@ -49,6 +58,15 @@ namespace WindBot.Game.AI.Decks.Util
                     HandCount = 5,
                     FieldCount = 0,
                 };
+            }
+
+            string CardStateStringBuilder(ClientCard card, int owner)
+            {
+                string state = "";
+                state += owner + ";";
+                state += card?.Name ?? "FaceDown;";
+                state += card.Location.ToString();
+                return state;
             }
         }
     }

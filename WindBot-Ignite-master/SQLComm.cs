@@ -10,7 +10,7 @@ namespace WindBot
 {
     public class SQLComm
     {
-        public static bool IsFirst = false;
+        public static bool IsFirst = true;
         public static bool IsTraining = true;
         public static bool IsRollout = false;
         public static bool ShouldBackPropagate = false;
@@ -163,14 +163,16 @@ namespace WindBot
 
                 return;
             }
-            
+
+            double totalRewards = reward;
+            int rolloutCount = 1;
+
             using (SqliteConnection conn = ConnectToDatabase())
             {
                 conn.Open();
 
                 SqliteTransaction transaction = conn.BeginTransaction();
-                double rewards = reward;
-                int rolloutCount = 1;
+
 
                 int rowsUpdated = 0;
                 string sql = $"SELECT Reward, Visited FROM MCST WHERE CardId = \"Result\"";
@@ -189,7 +191,7 @@ namespace WindBot
 
                         if (c != 0)
                         {
-                            rewards = r;
+                            totalRewards = r;
                             rolloutCount = c;
                         }
                     }
@@ -203,7 +205,7 @@ namespace WindBot
                     Node n = q.Dequeue();
                     if (n.NodeId != -4)
                     {
-                        sql = $"UPDATE MCST SET Reward = Reward + {rewards / rolloutCount}, " +
+                        sql = $"UPDATE MCST SET Reward = Reward + {totalRewards / rolloutCount}, " +
                             $"Visited = Visited + 1 WHERE " +
                             $"rowid = \"{n.NodeId}\"";
 
@@ -227,7 +229,7 @@ namespace WindBot
                             childId = n.Children[0].NodeId;
                         }
 
-                        sql = $"INSERT INTO MCST (ParentId,ChildId,CardId,Action,Reward,Visited) VALUES (\"{parentId}\",\"{childId}\",\"{n.CardId}\",\"{n.Action}\",\"{rewards / rolloutCount}\",\"1\")";
+                        sql = $"INSERT INTO MCST (ParentId,ChildId,CardId,Action,Reward,Visited) VALUES (\"{parentId}\",\"{childId}\",\"{n.CardId}\",\"{n.Action}\",\"{totalRewards / rolloutCount}\",\"1\")";
                         using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                         {
                             rowsUpdated = cmd2.ExecuteNonQuery();
@@ -250,6 +252,8 @@ namespace WindBot
                 transaction.Commit();
                 conn.Close();
             }
+
+            UpdateWeightTree(nodes, totalRewards, rolloutCount);
 
             ShouldBackPropagate = false;
             IsRollout = false;
@@ -282,6 +286,61 @@ namespace WindBot
                     using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                     {
                         rowsUpdated = cmd2.ExecuteNonQuery();
+                    }
+                }
+
+                transaction.Commit();
+                conn.Close();
+            }
+        }
+
+        private static void UpdateWeightTree(Dictionary<int, Node> nodes, double reward, double visited)
+        {
+            using (SqliteConnection conn = ConnectToDatabase())
+            {
+                conn.Open();
+
+                SqliteTransaction transaction = conn.BeginTransaction();
+
+
+                int rowsUpdated = 0;
+                string sql;
+
+                Queue<Node> q = new Queue<Node>();
+                foreach (int turn in nodes.Keys)
+                    q.Enqueue(nodes[turn]);
+
+                while (q.Count > 0)
+                {
+                    Node n = q.Dequeue();
+
+                    foreach (string verify in n.StateCurrent.CardsInPlay)
+                    {
+                        sql = $"UPDATE WeightTree SET Reward = Reward + {reward / visited}, " +
+                            $"Visited = Visited + 1 WHERE " +
+                            $"CardId = \"{n.CardId}\" AND " +
+                            $"Action = \"{n.Action}\" AND " +
+                            $"Verify = \"{verify}\"";
+
+                        using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                        {
+                            rowsUpdated = cmd2.ExecuteNonQuery();
+                        }
+
+                        if (rowsUpdated <= 0)
+                        {
+
+                            sql = $"INSERT INTO WeightTree (CardId,Action,Verify,Reward,Visited) VALUES (\"{n.CardId}\",\"{n.Action}\",\"{verify}\",\"{reward / visited}\",\"1\")";
+                            using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                            {
+                                rowsUpdated = cmd2.ExecuteNonQuery();
+                            }
+                        }
+                    }
+
+                    foreach (Node c in n.Children)
+                    {
+                        q.Enqueue(c);
                     }
                 }
 

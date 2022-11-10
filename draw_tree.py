@@ -33,9 +33,9 @@ for record in records:
 
     activation = reward + const * math.sqrt((math.log(total + 1) + 1) / visited)
     activation = min(activation, 25)
-    nx_graph.add_node(25, label=f'{action} {cardid}', title=f'{action} {cardid}', group=1)
+    nx_graph.add_node(rowid, label=f'{action} {cardid}', title=f'{action} {cardid}', group=1)
     if parentid != -4:
-      nx_graph.add_edge(parentid, rowid, label=f'{action} {cardid}', weight=activation, group=2)
+      nx_graph.add_edge(parentid, rowid, weight=activation, group=2)
     if childid != -4:
       nx_graph.add_edge(rowid, childid, weight=activation, group=3)
 

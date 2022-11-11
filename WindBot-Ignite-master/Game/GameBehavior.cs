@@ -239,7 +239,7 @@ namespace WindBot.Game
 
         private void OnRematch(BinaryReader packet)
         {
-            Logger.WriteLine($"Total Games Played: {++SQLComm.GamesPlayed} / {SQLComm.TotalGames} | Win Rate: {Math.Round((double)SQLComm.Wins / SQLComm.GamesPlayed * 1000) / 10}%");
+            Logger.WriteLine($"Total Games Played: {++SQLComm.GamesPlayed} / {SQLComm.TotalGames} | Win Rate: {Math.Round((double)SQLComm.Wins / SQLComm.GamesPlayed * 1000) / 10}% Past {PastWinsLimit} Games: {PastXWins / PreviousWins.Length * 1000) / 10}%");
 
             if (SQLComm.RolloutCount <= 0)
             {
@@ -252,7 +252,7 @@ namespace WindBot.Game
             }
 
             int response = 1;
-            if (SQLComm.GamesPlayed >= SQLComm.TotalGames) // For some reason, if the value is SQLComm.TotalGames set from Program.cs, it sets response to 0  for some dumb reason. Doesn't even pass through here Throws a System.ObjectDisposedException in System.dll
+            if (SQLComm.GamesPlayed >= SQLComm.TotalGames)
             {
                 response = 0;
                 SQLComm.Cleanup();
@@ -455,6 +455,10 @@ namespace WindBot.Game
             string textResult = (result == 2 ? "Draw" : result == 0 ? "Win" : "Lose");
             Logger.DebugWriteLine("Duel finished against " + otherName + ", result: " + textResult);
             SQLComm.Wins += result == 0 ? 1 : 0;
+
+            if (PreviousWins.Length > PastWinsLimit)
+                PastXWins -= PreviousWins.Dequeue();
+            PreviousWins.Queue(result == 0 ? 1 : 0);
 
             _ai.OnWin(result);
         }

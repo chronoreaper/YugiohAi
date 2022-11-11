@@ -126,11 +126,12 @@ namespace WindBot
             Info.Chat = Config.GetBool("Chat", Info.Chat);
             Info.RoomId = Config.GetInt("RoomId", Info.RoomId);
 
-            if (!SQLComm.HasParameters)
+            if (!SQLComm.HasParameters) // Need to set a flag, or the program will overwrite these values for some reason
             {
                 SQLComm.RolloutCount = Config.GetInt("RolloutCount", SQLComm.RolloutCount);
                 SQLComm.TotalGames = Config.GetInt("TotalGames", SQLComm.TotalGames);
                 SQLComm.IsFirst = Config.GetBool("IsFirst", SQLComm.IsFirst);
+                SQLComm.IsTraining = Config.GetBool("IsFirst", SQLComm.IsTraining);
                 SQLComm.HasParameters = true;
             }
 

@@ -13,6 +13,7 @@ namespace WindBot
         public static bool HasParameters = false;
         public static bool IsFirst = true;
         public static bool IsTraining = true;
+        public static bool IsMCTS = true;
         public static bool IsRollout = false;
         public static bool ShouldBackPropagate = false;
         public static int TotalGames = 201;
@@ -20,7 +21,13 @@ namespace WindBot
 
         public static int GamesPlayed = 0;
         public static int Wins = 0;
-        public static List<int> PreviousWins = new List<int>();
+
+        public static int PastWinsLimit = 20;
+        public static int PastXWins = 0;
+        public static Queue<int> PreviousWins = new Queue<int>();
+        public static int WinsThreshold = 50;
+        public static int WinsDeviation = 10;
+
         private static SqliteConnection ConnectToDatabase()
         {
             //@"URI=file:\windbot_master\windbot_master\bin\Debug\cards.cdb";
@@ -123,6 +130,8 @@ namespace WindBot
 
         public static void InsertNode(Node node)
         {
+            if (!IsTraining)
+                return;
             using (SqliteConnection conn = ConnectToDatabase())
             {
                 conn.Open();
@@ -156,6 +165,9 @@ namespace WindBot
          */
         public static void Backpropagate(Dictionary<int, Node> nodes, Node node, double reward)
         {
+            if (!IsTraining)
+                return;
+
             IsRollout = false;
             if (!ShouldBackPropagate && RolloutCount > 1)
             {
@@ -255,7 +267,8 @@ namespace WindBot
                 conn.Close();
             }
 
-            UpdateWeightTree(nodes, totalRewards, rolloutCount);
+            if (false)
+                UpdateWeightTree(nodes, totalRewards, rolloutCount);
 
             ShouldBackPropagate = false;
             IsRollout = false;
@@ -280,6 +293,9 @@ namespace WindBot
 
         private static void RecordWin(double reward, bool isHeurstic = false)
         {
+            if (!IsTraining)
+                return;
+
             int rowsUpdated = 0;
             string lable = isHeurstic ? "Heurstic" : "Result";
 
@@ -315,6 +331,9 @@ namespace WindBot
 
         private static void UpdateWeightTree(Dictionary<int, Node> nodes, double reward, double visited)
         {
+            if (!IsTraining)
+                return;
+
             using (SqliteConnection conn = ConnectToDatabase())
             {
                 conn.Open();

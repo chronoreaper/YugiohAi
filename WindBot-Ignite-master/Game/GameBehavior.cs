@@ -255,6 +255,7 @@ namespace WindBot.Game
             if (SQLComm.GamesPlayed >= SQLComm.TotalGames) // For some reason, if the value is SQLComm.TotalGames set from Program.cs, it sets response to 0  for some dumb reason. Doesn't even pass through here Throws a System.ObjectDisposedException in System.dll
             {
                 response = 0;
+                SQLComm.Cleanup();
             }
             Connection.Send(CtosMessage.RematchResponse, (byte)(response));
         }

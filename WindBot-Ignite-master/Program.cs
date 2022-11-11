@@ -126,10 +126,13 @@ namespace WindBot
             Info.Chat = Config.GetBool("Chat", Info.Chat);
             Info.RoomId = Config.GetInt("RoomId", Info.RoomId);
 
-            SQLComm.ShouldBackPropagate = Config.GetBool("Backpropagate", SQLComm.ShouldBackPropagate);
-            SQLComm.IsRollout = Config.GetBool("Rollout", SQLComm.IsRollout);
-            //SQLComm.RolloutCount = Config.GetInt("RolloutCount", SQLComm.RolloutCount); // Causes errors
-            //SQLComm.TotalGames = Config.GetInt("TotalGames", SQLComm.TotalGames);
+            if (!SQLComm.HasParameters)
+            {
+                SQLComm.RolloutCount = Config.GetInt("RolloutCount", SQLComm.RolloutCount);
+                SQLComm.TotalGames = Config.GetInt("TotalGames", SQLComm.TotalGames);
+                SQLComm.IsFirst = Config.GetBool("IsFirst", SQLComm.IsFirst);
+                SQLComm.HasParameters = true;
+            }
 
             string b64CreateGame = Config.GetString("CreateGame");
             if (b64CreateGame != null)

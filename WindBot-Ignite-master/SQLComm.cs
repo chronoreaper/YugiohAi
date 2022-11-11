@@ -26,8 +26,8 @@ namespace WindBot
             //@"URI=file:\windbot_master\windbot_master\bin\Debug\cards.cdb";
             string dir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
             //Go to the YugiohAi Directory
-            dir = dir.Remove(dir.IndexOf(@"WindBot-Ignite-master\bin\Debug")) + "cardData.cdb";
-            string absolutePath = $@"URI = file: {dir}";
+            dir = dir.Remove(dir.Length - (@"WindBot-Ignite-master\bin\Debug").Length) + "cardData.cdb";
+            string absolutePath = $@"Data Source={dir}";
             return new SqliteConnection(absolutePath);
         }
 

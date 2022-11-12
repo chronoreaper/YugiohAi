@@ -266,7 +266,10 @@ namespace WindBot
             }
             else if (possibleActions.Count > 0)
             {
-                best = possibleActions[Program.Rand.Next(0, possibleActions.Count)];
+                if (SQLComm.IsTraining)
+                    best = possibleActions[Program.Rand.Next(0, possibleActions.Count)];
+                else
+                    best = possibleActions[0];
             }
 
             current = best.Children[0];

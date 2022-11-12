@@ -163,7 +163,7 @@ namespace WindBot
             current = future;
             TurnNodes.Add(turn, future);
 
-            Logger.WriteLine("Prev Turn actions");
+            //Logger.WriteLine("Prev Turn actions");
             Queue<Node> q = new Queue<Node>();
             if (pre != null)
                 q.Enqueue(pre);
@@ -172,7 +172,7 @@ namespace WindBot
             {
                 Node n = q.Dequeue();
                 n.StateAfterOtherTurn = new MLUtil.GameState(fields);
-                Logger.WriteLine(n.ToString());
+                //Logger.WriteLine(n.ToString());
 
                 foreach(Node child in n.Children)
                 {
@@ -180,7 +180,7 @@ namespace WindBot
                 }
             }
 
-            Logger.WriteLine("Cur Turn actions");
+            //Logger.WriteLine("Cur Turn actions");
             if (cur != null)
                 q.Enqueue(cur);
 
@@ -188,7 +188,7 @@ namespace WindBot
             {
                 Node n = q.Dequeue();
                 n.StateAfterTurn = new MLUtil.GameState(fields);
-                Logger.WriteLine(n.ToString());
+                //Logger.WriteLine(n.ToString());
 
                 foreach (Node child in n.Children)
                 {

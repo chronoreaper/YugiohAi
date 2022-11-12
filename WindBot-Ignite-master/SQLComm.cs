@@ -25,17 +25,12 @@ namespace WindBot
         public static int PastWinsLimit = 20;
         public static int PastXWins = 0;
         public static Queue<int> PreviousWins = new Queue<int>();
-        public static int WinsThreshold = 50;
-        public static int WinsDeviation = 10;
+        public static int WinsThreshold = 30;
+        public static string sqlPath = $@"Data Source=./cardData.cdb";
 
         private static SqliteConnection ConnectToDatabase()
         {
-            //@"URI=file:\windbot_master\windbot_master\bin\Debug\cards.cdb";
-            string dir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
-            //Go to the YugiohAi Directory
-            dir = dir.Remove(dir.Length - (@"WindBot-Ignite-master\bin\Debug").Length) + "cardData.cdb";
-            string absolutePath = $@"Data Source={dir}";
-            return new SqliteConnection(absolutePath);
+            return new SqliteConnection(sqlPath);
         }
 
         public static bool GetNodeInfo(Node node)
@@ -219,7 +214,7 @@ namespace WindBot
                     Node n = q.Dequeue();
                     if (n.NodeId != -4)
                     {
-                        sql = $"UPDATE MCST SET Reward = Reward + {totalRewards / rolloutCount +  n.Heuristic()}, " +
+                        sql = $"UPDATE MCST SET Reward = Reward + {totalRewards / rolloutCount}, " + //+ Math.Max(0, Math.Round(node.Heuristic() / RolloutCount) / 10
                             $"Visited = Visited + 1 WHERE " +
                             $"rowid = \"{n.NodeId}\" AND IsFirst = \"{IsFirst}\"";
 

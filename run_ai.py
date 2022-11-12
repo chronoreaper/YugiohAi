@@ -1,0 +1,2 @@
+Deck=Random1 Hand=1 Name=Random1 TotalGames=200 RolloutCount=1 IsFirst=true IsTraining=true WinsTreshold=30 PastWinsLimit=20
+.\WindBot.exe Deck=Master Hand=3 Name=Master TotalGames=200 RolloutCount=1 IsFirst=False IsTraining=true WinsTreshold=30 PastWinsLimit=20

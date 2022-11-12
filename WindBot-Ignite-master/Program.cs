@@ -7,6 +7,7 @@ using WindBot.Game;
 using WindBot.Game.AI;
 using YGOSharp.OCGWrapper;
 using System.Runtime.Serialization.Json;
+using System.Reflection;
 
 namespace WindBot
 {
@@ -131,8 +132,16 @@ namespace WindBot
                 SQLComm.RolloutCount = Config.GetInt("RolloutCount", SQLComm.RolloutCount);
                 SQLComm.TotalGames = Config.GetInt("TotalGames", SQLComm.TotalGames);
                 SQLComm.IsFirst = Config.GetBool("IsFirst", SQLComm.IsFirst);
-                SQLComm.IsTraining = Config.GetBool("IsFirst", SQLComm.IsTraining);
-                SQLComm.HasParameters = true;
+                SQLComm.IsTraining = Config.GetBool("IsTraining", SQLComm.IsTraining);
+                SQLComm.WinsThreshold = Config.GetInt("WinsThreshold", SQLComm.WinsThreshold);
+                SQLComm.PastWinsLimit = Config.GetInt("PastWinsLimit", SQLComm.PastWinsLimit);
+
+                //@"URI=file:\windbot_master\windbot_master\bin\Debug\cards.cdb";
+                string dir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+                //Go to the YugiohAi Directory
+                dir = dir.Remove(dir.Length - (@"WindBot-Ignite-master\bin\Debug").Length) + "cardData.cdb";
+                string absolutePath = $@"Data Source={dir}";
+                SQLComm.sqlPath = absolutePath;
             }
 
             string b64CreateGame = Config.GetString("CreateGame");

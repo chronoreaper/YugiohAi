@@ -25,7 +25,7 @@ namespace WindBot
         public static int PastWinsLimit = 20;
         public static int PastXWins = 0;
         public static Queue<int> PreviousWins = new Queue<int>();
-        public static int WinsThreshold = 30;
+        public static int WinsThreshold = 45;
         public static string sqlPath = $@"Data Source=./cardData.cdb";
 
         private static SqliteConnection ConnectToDatabase()
@@ -88,7 +88,7 @@ namespace WindBot
                 }
                 conn.Close();
 
-                value = reward / Math.Max(1,visited) * 1000;
+                value = reward / Math.Max(1,visited);
             }
 
 
@@ -214,7 +214,7 @@ namespace WindBot
                     Node n = q.Dequeue();
                     if (n.NodeId != -4)
                     {
-                        sql = $"UPDATE MCST SET Reward = Reward + {totalRewards / rolloutCount}, " + //+ Math.Max(0, Math.Round(node.Heuristic() / RolloutCount) / 10
+                        sql = $"UPDATE MCST SET Reward = Reward + {totalRewards / rolloutCount + Math.Max(0, Math.Round(node.Heuristic() / Math.Max(1, n.Visited))) }, " + //+ Math.Max(0, Math.Round(node.Heuristic() / RolloutCount) / 10)
                             $"Visited = Visited + 1 WHERE " +
                             $"rowid = \"{n.NodeId}\" AND IsFirst = \"{IsFirst}\"";
 
@@ -278,6 +278,23 @@ namespace WindBot
                 SqliteTransaction transaction = conn.BeginTransaction();
                 // Remove the rollout
                 string sql = $"DELETE FROM MCST WHERE CardId = \"Result\" AND IsFirst = \"{IsFirst}\"";
+                using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                {
+                }
+                transaction.Commit();
+                conn.Close();
+            }
+        }
+
+        public static void Reset()
+        {
+            using (SqliteConnection conn = ConnectToDatabase())
+            {
+                conn.Open();
+
+                SqliteTransaction transaction = conn.BeginTransaction();
+                // Remove the rollout
+                string sql = $"DELETE FROM MCST WHERE IsFirst = \"{IsFirst}\"";
                 using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                 {
                 }

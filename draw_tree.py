@@ -28,7 +28,7 @@ for record in records:
     reward = record[5]
     visited = max(0.0001, record[6])
 
-    if visited < 2:
+    if visited < 1:
       continue
 
     activation = reward + const * math.sqrt((math.log(total + 1) + 1) / visited)

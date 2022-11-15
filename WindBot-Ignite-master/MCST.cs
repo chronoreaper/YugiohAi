@@ -200,7 +200,7 @@ namespace WindBot
         public void OnGameEnd(int result, Duel duel)
         {
             //double reward = result == 0 ? (int)(SQLComm.RolloutCount/2) : (double)duel.Turn / 100;
-            double reward = result == 0 ? 2 : 0;
+            double reward = result == 0 ? 1 : 0;
             Backpropagate(reward);
         }
 
@@ -236,7 +236,7 @@ namespace WindBot
         {
             Node best = current;
             double weight = -1;
-            double c = 0.5;
+            double c = 1;
 
             if (!SQLComm.IsRollout)
             {
@@ -244,7 +244,8 @@ namespace WindBot
                 {
                     double visited = Math.Max(0.0001, n.Visited);
                     double estimate = SQLComm.GetNodeEstimate(n);
-                    double w = n.Rewards + c * Math.Sqrt((Math.Log(TotalGames + 1) + 1) / visited) + estimate;
+                    double w = n.Rewards + c * Math.Sqrt((Math.Log(TotalGames + 1) + 1) / visited);
+                    w += estimate;
 
                     if (w >= weight)
                     {
@@ -259,7 +260,7 @@ namespace WindBot
                     if (best.Visited <= 0)
                     {
                         lastNode = best;
-                        SQLComm.IsRollout = true;
+                        SQLComm.IsRollout = SQLComm.IsTraining;
                     }
                 }
 

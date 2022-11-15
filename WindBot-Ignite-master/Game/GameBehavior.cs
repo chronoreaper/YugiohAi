@@ -258,10 +258,26 @@ namespace WindBot.Game
                 response = 0;
                 SQLComm.Cleanup();
             }
-            else if (SQLComm.TotalGames <= 0 && winRate > SQLComm.WinsThreshold)
+            else if (SQLComm.GamesPlayed >= SQLComm.PastWinsLimit)
             {
-                response = 0;
-                SQLComm.Cleanup();
+                if (winRate > SQLComm.WinsThreshold && SQLComm.IsTraining)
+                {
+                    SQLComm.IsTraining = false;
+                    SQLComm.PastXWins = 0;
+                    SQLComm.PreviousWins.Clear();
+                    Logger.WriteLine("Now is not training");
+
+                    //response = 0;
+                    //SQLComm.Cleanup();
+                }
+                else if (winRate < SQLComm.WinsThreshold && !SQLComm.IsTraining)
+                {
+                    Logger.WriteLine("Now is training");
+                    SQLComm.IsTraining = true;
+                    SQLComm.Reset();
+                    SQLComm.PastXWins = 0;
+                    SQLComm.PreviousWins.Clear();
+                }
             }
 
             Connection.Send(CtosMessage.RematchResponse, (byte)(response));
@@ -465,6 +481,7 @@ namespace WindBot.Game
 
             if (SQLComm.PreviousWins.Count >= SQLComm.PastWinsLimit)
                 SQLComm.PastXWins -= SQLComm.PreviousWins.Dequeue();
+            SQLComm.PastXWins += result == 0 ? 1 : 0;
             SQLComm.PreviousWins.Enqueue(result == 0 ? 1 : 0);
 
             _ai.OnWin(result);

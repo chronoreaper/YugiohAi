@@ -32,15 +32,14 @@ if "--pastwinslimit" in sys.argv:
 	PastWinsLimit = int(sys.argv[sys.argv.index("--pastwinslimit")+1])
 
 p = subprocess.Popen(["WindBot.exe","Deck="+Deck,
-                        "Name="+Name,
-                        "Hand="+Hand,
-                        "IsTraining="+IsTraining, 
-                        "TotalGames="+TotalGames, 
-                        "RolloutCount="+RolloutCount, 
-                        "IsFirst="+IsFirst, 
-                        "IsTraining="+IsTraining, 
-                        "WinsThreshold="+WinsThreshold, 
-                        "PastWinsLimit="+PastWinsLimit],
+                        "Name="+str(Name),
+                        "Hand="+str(Hand),
+                        "IsTraining="+str(IsTraining), 
+                        "TotalGames="+str(TotalGames), 
+                        "RolloutCount="+str(RolloutCount), 
+                        "IsFirst="+str(IsFirst), 
+                        "WinsThreshold="+str(WinsThreshold), 
+                        "PastWinsLimit="+str(PastWinsLimit)],
                         #"Chat=false"],
                shell=True, stdout=subprocess.PIPE, stderr = subprocess.PIPE, universal_newlines=True)
 output, stderr = p.communicate()
@@ -48,7 +47,8 @@ output, stderr = p.communicate()
 #if recordDeck == '1':
 #for line in output.split("\n"):
 #	print(line)
-#print(output)
+# print(output)
+# print(stderr)
     
 # result = 0
 # if format(output).find(': Win') > 0:

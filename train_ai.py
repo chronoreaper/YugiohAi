@@ -1,6 +1,6 @@
 import datetime
 import glob
-import sys, string, os, time, keyboard
+import sys, string, os, time
 import subprocess
 import shutil
 import sqlite3
@@ -18,7 +18,7 @@ AIMaster = 'Master'
 deck1 = 'AI_Random.ydk'
 deck2 = 'AI_Random2.ydk'
 
-totalGames = 1
+totalGames = 10
 rolloutCount = 1
 isFirst = True
 IsTraining = True
@@ -92,7 +92,7 @@ def main_game_runner():
   #subprocess.Popen - does not wait to finish
   #subprocess.run - waits to finish
 
-  g = subprocess.Popen([os.getcwd() + "/edopro_bin/ygopro.exe", "-c"])
+  g = subprocess.Popen([os.getcwd() + "/edopro_bin/ygopro.exe"])
 
   while(g.poll() == None and not isrespondingPID(g.pid)):
     time.sleep(1)
@@ -103,42 +103,42 @@ def main_game_runner():
   
   print("	runningAi1")
 
-  p1 = subprocess.Popen([os.getcwd() + "/run_ai.py",
-              "--deck "+AI1Deck,
-              "--name "+AIName1,
-              "--hand 1",
-              "--total "+totalGames,
-              "--rollout "+rolloutCount,
-              "--first "+isFirst,
-              "--training "+isTraining,
-              "--winthresh "+winThresh,
-              "--pastwinslimit "+pastWinLim
+  p1 = subprocess.Popen(["python " + os.getcwd() + "/run_ai.py",
+              "--deck",AI1Deck,
+              "--name",AIName1,
+              "--hand", str(1),
+              "--total",str(totalGames),
+              "--rollout",str(rolloutCount),
+              "--first",str(isFirst),
+              "--training",str(isTraining),
+              "--winthresh",str(winThresh),
+              "--pastwinslimit",str(pastWinLim)
               ],
               shell=True,stdout=subprocess.PIPE, 
               stderr = subprocess.PIPE,
               universal_newlines=True)
   time.sleep(1)
   print("	runningAi2")
-  p2 = subprocess.Popen([os.getcwd() + "/run_ai.py",
-              "--deck "+AI2Deck,
-              "--name "+AIName2,
-              "--hand 2",
-              "--total "+totalGames,
-              "--rollout "+rolloutCount,
-              "--first "+(not isFirst),
-              "--training "+isTraining,
-              "--winthresh "+winThresh,
-              "--pastwinslimit "+pastWinLim
+  p2 = subprocess.Popen(["python " + os.getcwd() + "/run_ai.py",
+              "--deck",AI2Deck,
+              "--name",AIName2,
+              "--hand", str(2),
+              "--total",str(totalGames),
+              "--rollout",str(rolloutCount),
+              "--first",str(not isFirst),
+              "--training",str(isTraining),
+              "--winthresh",str(winThresh),
+              "--pastwinslimit",str(pastWinLim)
               ],
               shell=True)
-  
+
   if (p1.poll() == None or p2.poll() == None):
     time.sleep(1)
   
   if (not (p1.poll() == None or p2.poll() == None)) and check == 0:
     print("	WARNING! ai is not running")
     check = 1
-    
+
   timer = 0
   timeout = 30 * 60 # Length of run
   
@@ -159,7 +159,7 @@ def main_game_runner():
   end = time.time()
 
   print("Time Past:" + str(datetime.timedelta(seconds=int(end - start))))
-  print("Average Game Time:"+str(datetime.timedelta(seconds=int((end)/(gamesToPlay)))))
+  print("Average Game Time:"+str(datetime.timedelta(seconds=int((end - start)/(totalGames)))))
 
 def main():
   parseArg()

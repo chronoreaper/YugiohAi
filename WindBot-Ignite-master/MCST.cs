@@ -162,6 +162,7 @@ namespace WindBot
             Node future = new Node(cur, $"turn:{turn}", "");
             current = future;
             TurnNodes.Add(turn, future);
+            // Update Game states
 
             //Logger.WriteLine("Prev Turn actions");
             Queue<Node> q = new Queue<Node>();
@@ -236,7 +237,7 @@ namespace WindBot
         {
             Node best = current;
             double weight = -1;
-            double c = 1;
+            double c = 0.5;
 
             if (!SQLComm.IsRollout)
             {

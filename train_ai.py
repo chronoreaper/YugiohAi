@@ -9,6 +9,8 @@ import subprocess
 import sys
 import time
 import random
+from sys import platform
+from pathlib import Path
 
 AIName1 = 'bot1'
 AIName2 = 'bot2'	
@@ -31,18 +33,21 @@ pastWinLim = 5
 reset = False
 
 def isrespondingPID(PID):
-	#https://stackoverflow.com/questions/16580285/how-to-tell-if-process-is-responding-in-python-on-windows
-	os.system('tasklist /FI "PID eq %d" /FI "STATUS eq running" > tmp.txt' % PID)
-	tmp = open('tmp.txt', 'r')
-	a = tmp.readlines()
-	tmp.close()
-	try:
-		if int(a[-1].split()[1]) == PID:
-			return True
-		else:
-			return False
-	except:
-		return False
+  #if platform == "linux" or platform == "linux2":
+  return True
+
+  #https://stackoverflow.com/questions/16580285/how-to-tell-if-process-is-responding-in-python-on-windows
+  os.system('tasklist /FI "PID eq %d" /FI "STATUS eq running" > tmp.txt' % PID)
+  tmp = open('tmp.txt', 'r')
+  a = tmp.readlines()
+  tmp.close()
+  try:
+    if int(a[-1].split()[1]) == PID:
+      return True
+    else:
+      return False
+  except:
+    return False
 
 def resetDB():
   dbfile = './cardData.cdb'
@@ -95,15 +100,21 @@ def runAi(Deck = "Random1",
 
   currentdir = os.getcwd()
   os.chdir(os.getcwd()+'/WindBot-Ignite-master/bin/Debug')
-  p = subprocess.Popen(["WindBot.exe","Deck="+Deck,
-                          "Name="+str(Name),
-                          "Hand="+str(Hand),
-                          "IsTraining="+str(IsTraining), 
-                          "TotalGames="+str(TotalGames), 
-                          "RolloutCount="+str(RolloutCount), 
-                          "IsFirst="+str(IsFirst), 
-                          "WinsThreshold="+str(WinsThreshold), 
-                          "PastWinsLimit="+str(PastWinsLimit)])
+
+  file_name = "WindBot.exe"
+
+  if platform == "linux" or platform == "linux2":
+    file_name = os.getcwd() + "/WindBot.exe"
+
+  p = subprocess.Popen([file_name,"Deck="+Deck,
+                        "Name="+str(Name),
+                        "Hand="+str(Hand),
+                        "IsTraining="+str(IsTraining), 
+                        "TotalGames="+str(TotalGames), 
+                        "RolloutCount="+str(RolloutCount), 
+                        "IsFirst="+str(IsFirst), 
+                        "WinsThreshold="+str(WinsThreshold), 
+                        "PastWinsLimit="+str(PastWinsLimit)])
     
   os.chdir(currentdir)
   
@@ -180,13 +191,18 @@ def main_game_runner():
   #subprocess.Popen - does not wait to finish
   #subprocess.run - waits to finish
 
-  g = subprocess.Popen([os.getcwd() + "/edopro_bin/ygopro.exe"])
+  file_path = os.getcwd() + "/edopro_bin/ygopro.exe"
+
+  if platform == "linux" or platform == "linux2":
+    file_path = str(Path(__file__).resolve().parent.parent) + "/ProjectIgnisLinux/ygopro"
+ 
+  
+  g = subprocess.Popen([file_path])
+
 
   while(g.poll() == None and not isrespondingPID(g.pid)):
     time.sleep(1)
 
-  check = 0
-  
   time.sleep(3)
   
   print("	runningAi1")
@@ -225,22 +241,25 @@ def main_game_runner():
   if (p1.poll() == None or p2.poll() == None):
     time.sleep(1)
   
-  if (not (p1.poll() == None or p2.poll() == None)) and check == 0:
+  if (not (p1.poll() == None or p2.poll() == None)):
     print("	WARNING! ai is not running")
-    check = 1
 
   timer = 0
   timeout = 30 * 60 # Length of run
   
-  print(p1.pid)
-  print(p2.pid)
+  # print(p1.pid)
+  # print(p2.pid)
   #make sure the game does not run longer than needed
   #ends the ygopro program as soon as the ais are done. Ais play faster than what you see.
   
   while (p1.poll() == None and p2.poll() == None):
     continue
-   
-  os.system("	TASKKILL /F /IM ygopro.exe")
+     
+     
+  if platform == "linux" or platform == "linux2":
+    os.system("kill -9 " + str(g.pid))
+  else
+    os.system("	TASKKILL /F /IM ygopro.exe")
   
   end = time.time()
 

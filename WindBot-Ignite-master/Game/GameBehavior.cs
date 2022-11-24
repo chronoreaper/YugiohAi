@@ -240,7 +240,7 @@ namespace WindBot.Game
         private void OnRematch(BinaryReader packet)
         {
             double winRate = (double)SQLComm.PastXWins / (double)SQLComm.PreviousWins.Count * 100;
-            Logger.WriteLine($"Total Games Played: {++SQLComm.GamesPlayed} / {SQLComm.TotalGames} | Win Rate: {Math.Round((double)SQLComm.Wins / SQLComm.GamesPlayed * 1000) / 10}% Past {SQLComm.PastWinsLimit} Games: {Math.Round(winRate * 10) / 10}%");
+            Logger.WriteLine($"{SQLComm.Name}| Total Games Played: {++SQLComm.GamesPlayed} / {SQLComm.TotalGames} | Win Rate: {Math.Round((double)SQLComm.Wins / SQLComm.GamesPlayed * 1000) / 10}% Past {SQLComm.PastWinsLimit} Games: {Math.Round(winRate * 10) / 10}%");
 
             if (SQLComm.RolloutCount <= 0)
             {
@@ -255,13 +255,15 @@ namespace WindBot.Game
             int response = 1;
             if (SQLComm.GamesPlayed >= SQLComm.TotalGames && SQLComm.TotalGames > 0)
             {
+                Logger.WriteLine("Done Games, Cleaning up");
                 response = 0;
                 SQLComm.Cleanup();
             }
-            else if (SQLComm.GamesPlayed >= SQLComm.PastWinsLimit)
+            else if (SQLComm.PreviousWins.Count >= SQLComm.PastWinsLimit)
             {
                 if (winRate > SQLComm.WinsThreshold && SQLComm.IsTraining)
                 {
+                    SQLComm.Reset();
                     SQLComm.IsTraining = false;
                     SQLComm.PastXWins = 0;
                     SQLComm.PreviousWins.Clear();
@@ -274,7 +276,6 @@ namespace WindBot.Game
                 {
                     Logger.WriteLine("Now is training");
                     SQLComm.IsTraining = true;
-                    SQLComm.Reset();
                     SQLComm.PastXWins = 0;
                     SQLComm.PreviousWins.Clear();
                 }

@@ -22,7 +22,9 @@ namespace WindBot
         public static int GamesPlayed = 0;
         public static int Wins = 0;
 
-        public static int PastWinsLimit = 20;
+        public static string Name = "Bot";
+
+        public static int PastWinsLimit = 10;
         public static int PastXWins = 0;
         public static Queue<int> PreviousWins = new Queue<int>();
         public static int WinsThreshold = 45;
@@ -41,7 +43,7 @@ namespace WindBot
             {
                 conn.Open();
                 string sql = $"SELECT rowid, Reward, Visited FROM MCST WHERE " +
-                    $"ParentId = \"{node.Parent?.NodeId ?? -4}\" AND CardId = \"{node.CardId}\" AND Action = \"{node.Action}\" AND IsFirst = \"{IsFirst}\"";
+                    $"ParentId = \"{node.Parent?.NodeId ?? -4}\" AND CardId = \"{node.CardId}\" AND Action = \"{node.Action}\" AND IsFirst = \"{IsFirst}\" AND IsTraining = \"{IsTraining}\"";
                 using (SqliteCommand cmd = new SqliteCommand(sql, conn))
                 {
                     using (SqliteDataReader rdr = cmd.ExecuteReader())
@@ -67,7 +69,7 @@ namespace WindBot
             using (SqliteConnection conn = ConnectToDatabase())
             {
                 conn.Open();
-                string sql = $"SELECT SUM(Reward), SUM(Visited) from MCST WHERE CardId = \"{node.CardId}\" AND Action = \"{node.Action}\" AND IsFirst = \"{IsFirst}\"";
+                string sql = $"SELECT SUM(Reward), SUM(Visited) from MCST WHERE CardId = \"{node.CardId}\" AND Action = \"{node.Action}\" AND IsFirst = \"{IsFirst}\" AND IsTraining = \"{IsTraining}\"";
                 double reward = 0;
                 int visited = 0;
                 using (SqliteCommand cmd = new SqliteCommand(sql, conn))
@@ -101,7 +103,7 @@ namespace WindBot
             using (SqliteConnection conn = ConnectToDatabase())
             {
                 conn.Open();
-                string sql = $"SELECT SUM(Visited) FROM MCST WHERE CardId != \"Result\" AND ParentId = 0 AND IsFirst = \"{IsFirst}\"";
+                string sql = $"SELECT SUM(Visited) FROM MCST WHERE CardId != \"Result\" AND ParentId = 0 AND IsFirst = \"{IsFirst}\" AND IsTraining = \"{IsTraining}\"";
                 try
                 {
                     using (SqliteCommand cmd = new SqliteCommand(sql, conn))
@@ -144,7 +146,7 @@ namespace WindBot
                     childId = node.Children[0].NodeId;
                 }
 
-                string sql = $"INSERT INTO MCST (ParentId,ChildId,CardId,Action,Reward,Visited,IsFirst) VALUES (\"{parentId}\",\"{childId}\",\"{node.CardId}\",\"{node.Action}\",\"0\",\"0\",\"{IsFirst}\")";
+                string sql = $"INSERT INTO MCST (ParentId,ChildId,CardId,Action,Reward,Visited,IsFirst,IsTraining) VALUES (\"{parentId}\",\"{childId}\",\"{node.CardId}\",\"{node.Action}\",\"0\",\"0\",\"{IsFirst}\",\"{IsTraining}\")";
                 using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                 {
                     cmd2.ExecuteNonQuery();
@@ -184,7 +186,7 @@ namespace WindBot
 
 
                 int rowsUpdated = 0;
-                string sql = $"SELECT Reward, Visited FROM MCST WHERE CardId = \"Result\" AND IsFirst = \"{IsFirst}\"";
+                string sql = $"SELECT Reward, Visited FROM MCST WHERE CardId = \"Result\" AND IsFirst = \"{IsFirst}\" AND IsTraining = \"{IsTraining}\"";
 
                 using (SqliteCommand cmd = new SqliteCommand(sql, conn))
                 {
@@ -216,7 +218,7 @@ namespace WindBot
                     {
                         sql = $"UPDATE MCST SET Reward = Reward + {totalRewards / rolloutCount + Math.Max(0, Math.Round(node.Heuristic() / Math.Max(1, n.Visited))) }, " + //+ Math.Max(0, Math.Round(node.Heuristic() / RolloutCount) / 10)
                             $"Visited = Visited + 1 WHERE " +
-                            $"rowid = \"{n.NodeId}\" AND IsFirst = \"{IsFirst}\"";
+                            $"rowid = \"{n.NodeId}\" AND IsFirst = \"{IsFirst}\" AND IsTraining = \"{IsTraining}\"";
 
                         using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                         {
@@ -238,7 +240,7 @@ namespace WindBot
                             childId = n.Children[0].NodeId;
                         }
 
-                        sql = $"INSERT INTO MCST (ParentId,ChildId,CardId,Action,Reward,Visited,IsFirst) VALUES (\"{parentId}\",\"{childId}\",\"{n.CardId}\",\"{n.Action}\",\"{totalRewards / rolloutCount}\",\"1\",\"{IsFirst}\")";
+                        sql = $"INSERT INTO MCST (ParentId,ChildId,CardId,Action,Reward,Visited,IsFirst,IsTraining) VALUES (\"{parentId}\",\"{childId}\",\"{n.CardId}\",\"{n.Action}\",\"{totalRewards / rolloutCount}\",\"1\",\"{IsFirst}\".\"{IsTraining}\")";
                         using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                         {
                             rowsUpdated = cmd2.ExecuteNonQuery();
@@ -252,7 +254,7 @@ namespace WindBot
                 }
 
                 // Remove the rollout
-                sql = $"DELETE FROM MCST WHERE CardId = \"Result\" AND IsFirst = \"{IsFirst}\"";
+                sql = $"DELETE FROM MCST WHERE CardId = \"Result\" AND IsFirst = \"{IsFirst}\" AND IsTraining = \"{IsTraining}\"";
                 using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                 {
                     rowsUpdated = cmd2.ExecuteNonQuery();
@@ -277,9 +279,10 @@ namespace WindBot
 
                 SqliteTransaction transaction = conn.BeginTransaction();
                 // Remove the rollout
-                string sql = $"DELETE FROM MCST WHERE CardId = \"Result\" AND IsFirst = \"{IsFirst}\"";
+                string sql = $"DELETE FROM MCST WHERE CardId = \"Result\" AND IsFirst = \"{IsFirst}\" AND IsTraining = \"{IsTraining}\"";
                 using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                 {
+                    cmd2.ExecuteNonQuery();
                 }
                 transaction.Commit();
                 conn.Close();
@@ -294,10 +297,18 @@ namespace WindBot
 
                 SqliteTransaction transaction = conn.BeginTransaction();
                 // Remove the rollout
-                string sql = $"DELETE FROM MCST WHERE IsFirst = \"{IsFirst}\"";
+                string sql = $"DELETE FROM MCST WHERE IsFirst = \"{IsFirst}\" AND IsTraining = \"False\"";
                 using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                 {
+                    cmd2.ExecuteNonQuery();
                 }
+
+                sql = $"UPDATE MCST SET IsTraining = \"False\" WHERE IsFirst = \"{IsFirst}\" AND IsTraining = \"True\"";
+                using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                {
+                    var v = cmd2.ExecuteNonQuery();
+                }
+
                 transaction.Commit();
                 conn.Close();
             }
@@ -319,7 +330,7 @@ namespace WindBot
 
                 string sql = $"UPDATE MCST SET Reward = Reward + {reward}, " +
                            $"Visited = Visited + 1 WHERE " +
-                           $"CardId = \"Result\" AND Action = \"{lable}\" AND IsFirst = \"{IsFirst}\"";
+                           $"CardId = \"Result\" AND Action = \"{lable}\" AND IsFirst = \"{IsFirst}\" AND IsTraining = \"{IsTraining}\"";
 
                 using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                 {
@@ -329,7 +340,7 @@ namespace WindBot
                 // If there was no update, add it instead
                 if (rowsUpdated <= 0)
                 {
-                    sql = $"INSERT INTO MCST (ParentId,ChildId,CardId,Action,Reward,Visited,IsFirst) VALUES (\"-4\",\"-4\",\"Result\",\"{lable}\",\"{reward}\",\"1\", \"{IsFirst}\")";
+                    sql = $"INSERT INTO MCST (ParentId,ChildId,CardId,Action,Reward,Visited,IsFirst) VALUES (\"-4\",\"-4\",\"Result\",\"{lable}\",\"{reward}\",\"1\", \"{IsFirst}\",\"{IsTraining}\")";
                     using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                     {
                         rowsUpdated = cmd2.ExecuteNonQuery();

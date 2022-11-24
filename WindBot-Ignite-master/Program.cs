@@ -132,9 +132,11 @@ namespace WindBot
                 SQLComm.RolloutCount = Config.GetInt("RolloutCount", SQLComm.RolloutCount);
                 SQLComm.TotalGames = Config.GetInt("TotalGames", SQLComm.TotalGames);
                 SQLComm.IsFirst = Config.GetBool("IsFirst", SQLComm.IsFirst);
+                SQLComm.IsMCTS = Config.GetBool("IsMCTS", SQLComm.IsMCTS);
                 SQLComm.IsTraining = Config.GetBool("IsTraining", SQLComm.IsTraining);
                 SQLComm.WinsThreshold = Config.GetInt("WinsThreshold", SQLComm.WinsThreshold);
                 SQLComm.PastWinsLimit = Config.GetInt("PastWinsLimit", SQLComm.PastWinsLimit);
+                SQLComm.Name = Config.GetString("Name", SQLComm.Name);
 
                 //@"URI=file:\windbot_master\windbot_master\bin\Debug\cards.cdb";
                 string dir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);

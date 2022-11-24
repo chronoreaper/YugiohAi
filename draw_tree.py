@@ -43,7 +43,7 @@ for record in records:
       group_count += 1
 
 # Get Best average moves?
-c.execute("Select cardId,Action, SUM(Reward) as r,SUM(Visited) as v from MCST group by cardid, action order by cardid, action")
+c.execute("Select cardId,Action, SUM(Reward) as r,SUM(Visited) as v from MCST WHERE IsTraining='False' group by cardid, action order by cardid, action")
 records = c.fetchall()
 for record in records:
     cardid = record[0]

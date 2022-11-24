@@ -5,6 +5,7 @@ using WindBot.Game;
 using WindBot.Game.AI;
 using static WindBot.MCST;
 using System.Linq;
+using System;
 
 namespace WindBot.Game.AI.Decks
 {
@@ -166,7 +167,26 @@ namespace WindBot.Game.AI.Decks
             {
                 string action = $"Select" + hint.ToString();
                 string card = SelectStringBuilder(clientCard);
-                //Tree.AddPossibleAction(card, action, Duel.Fields, Duel.Turn);
+                if (min == 1) // Single card seletion
+                    Tree.AddPossibleAction(card, action, Duel.Fields, Duel.Turn);
+            }
+
+            if (min == 1)
+            {
+                string toSelect = Tree.GetNextAction().CardId;
+                string name = toSelect.Split(';')[0];
+                CardLocation location = (CardLocation) Enum.Parse(typeof(CardLocation), toSelect.Split(';')[1]);
+                int position = int.Parse(toSelect.Split(';')[2]);
+                int controller = int.Parse(toSelect.Split(';')[3]);
+
+                ClientCard select = cards.Where(card =>
+                    (card.Name == name || name == "Set Monster") &&
+                    card.Location == location &&
+                    card.Position == position &&
+                    card.Controller == controller
+                    ).ToList()[0];
+                selected.Add(select);
+                cards.Remove(select);
             }
 
 

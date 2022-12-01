@@ -27,13 +27,15 @@ for record in records:
     action = record[4]
     reward = record[5]
     visited = max(0.0001, record[6])
+    isFirst = record[7]
+    isTraining = record[8]
 
     if visited < 1:
       continue
 
     activation = reward + const * math.sqrt((math.log(total + 1) + 1) / visited)
     activation = min(activation, 25)
-    nx_graph.add_node(rowid, label=f'{action} {cardid}', title=f'{action} {cardid}', group=1)
+    nx_graph.add_node(rowid, label=f'{rowid} {isFirst} {isTraining} {action} {cardid}', group=1)
     if parentid != -4:
       nx_graph.add_edge(parentid, rowid, weight=activation, group=2)
     if childid != -4:
@@ -49,6 +51,7 @@ for record in records:
     cardid = record[0]
     action = record[1]
     reward = record[2]
+    
     visited =record[3]
     #const = 0
 

@@ -69,7 +69,8 @@ namespace WindBot
             using (SqliteConnection conn = ConnectToDatabase())
             {
                 conn.Open();
-                string sql = $"SELECT SUM(Reward), SUM(Visited) from MCST WHERE CardId = \"{node.CardId}\" AND Action = \"{node.Action}\" AND IsFirst = \"{IsFirst}\" AND IsTraining = \"{IsTraining}\"";
+                string sql = $"SELECT SUM(Reward), COUNT(Visited) from MCST WHERE CardId = \"{node.CardId}\" AND Action = \"{node.Action}\" AND IsFirst = \"{IsFirst}\" AND Visited > 0" +
+                    $" AND rowid != \"{node.NodeId}\"";
                 double reward = 0;
                 int visited = 0;
                 using (SqliteCommand cmd = new SqliteCommand(sql, conn))
@@ -137,11 +138,11 @@ namespace WindBot
 
                 long parentId = -4;
                 long childId = -4;
-                if (node.Parent != null && node.Parent.NodeId != -4)
+                if (node.Parent != null && node.Parent.NodeId != -4 && node.SaveParent)
                 {
                     parentId = node.Parent.NodeId;
                 }
-                if (node.Children.Count == 1)
+                if (node.Children.Count == 1 && node.SaveChild)
                 {
                     childId = node.Children[0].NodeId;
                 }
@@ -208,15 +209,16 @@ namespace WindBot
                     }
                 }
                 Queue<Node> q = new Queue<Node>();
-                foreach (int turn in nodes.Keys)
-                    q.Enqueue(nodes[turn]);
+                //foreach (int turn in nodes.Keys)
+                //    q.Enqueue(nodes[turn]);
+                q.Enqueue(nodes[1]);
 
                 while (q.Count > 0)
                 {
                     Node n = q.Dequeue();
                     if (n.NodeId != -4)
                     {
-                        sql = $"UPDATE MCST SET Reward = Reward + {totalRewards / rolloutCount + Math.Max(0, Math.Round(node.Heuristic() / Math.Max(1, n.Visited))) }, " + //+ Math.Max(0, Math.Round(node.Heuristic() / RolloutCount) / 10)
+                        sql = $"UPDATE MCST SET Reward = Reward + {totalRewards / rolloutCount + Math.Max(0, Math.Round(n.Heuristic() / Math.Max(1, n.Visited), 3)) }, " + //+ Math.Max(0, Math.Round(node.Heuristic() / RolloutCount) / 10)
                             $"Visited = Visited + 1 WHERE " +
                             $"rowid = \"{n.NodeId}\" AND IsFirst = \"{IsFirst}\" AND IsTraining = \"{IsTraining}\"";
 

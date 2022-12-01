@@ -23,6 +23,8 @@ namespace WindBot
             public MLUtil.GameState StateAfterPlay = null;
             public MLUtil.GameState StateAfterTurn = null;
             public MLUtil.GameState StateAfterOtherTurn = null;
+            public bool SaveParent = true;
+            public bool SaveChild = true;
 
             public Node(Node parent, string cardId, string action, ClientField[] field)
                 : this(parent, cardId, action)
@@ -53,6 +55,13 @@ namespace WindBot
                 {
                     Children.Add(child);
                 }
+                else
+                    SaveChild = false;
+
+                if (parent == null)
+                {
+                    SaveParent = false;
+                }
 
                 if (!SQLComm.GetNodeInfo(this))
                 {
@@ -77,7 +86,7 @@ namespace WindBot
                         double advantageGain = cardAdvantageHand + cardAdvantageField;
                         value += Math.Sign(fieldAdvantage);
                         value += Math.Sign(enemyFieldLoss);
-                        value += Math.Sign(playerFieldGain);
+                        //value += Math.Sign(playerFieldGain);
                         value += Math.Sign(advantageGain);
 
                         /*value += StateAfterTurn.BotField.HandCount - StateCurrent.BotField.HandCount;
@@ -86,10 +95,10 @@ namespace WindBot
 
                     }
 
-                    if (StateAfterOtherTurn != null && false)
+                    if (StateAfterOtherTurn != null)
                     {
-                        double cardAdvantageHand = StateAfterTurn.BotField.HandCount - StateCurrent.BotField.HandCount + StateCurrent.EnemyField.HandCount - StateAfterTurn.EnemyField.HandCount;
-                        double cardAdvantageField = StateAfterTurn.BotField.FieldCount - StateCurrent.BotField.FieldCount + StateCurrent.EnemyField.FieldCount - StateAfterTurn.EnemyField.FieldCount;
+                        double cardAdvantageHand = StateAfterOtherTurn.BotField.HandCount - StateCurrent.BotField.HandCount + 1 + StateCurrent.EnemyField.HandCount - StateAfterOtherTurn.EnemyField.HandCount;
+                        double cardAdvantageField = StateAfterOtherTurn.BotField.FieldCount - StateCurrent.BotField.FieldCount + StateCurrent.EnemyField.FieldCount - StateAfterOtherTurn.EnemyField.FieldCount;
 
                         double advantageGain = cardAdvantageHand + cardAdvantageField;
                         double cardAdvantage = StateAfterTurn.BotField.FieldCount - StateAfterTurn.EnemyField.FieldCount + StateAfterTurn.BotField.HandCount - StateAfterTurn.EnemyField.HandCount;
@@ -101,7 +110,7 @@ namespace WindBot
 
                 //value /= Math.Max(Visited,1);
 
-                return value;
+                return Math.Sign(value);
             }
 
             public override string ToString()
@@ -144,7 +153,7 @@ namespace WindBot
         }
 
         public void OnNewTurn(ClientField[] fields, int turn)
-        {
+        {      
             actionNumber = 0;
             Node cur = current;
             Node pre = null;
@@ -160,6 +169,7 @@ namespace WindBot
             }
 
             Node future = new Node(cur, $"turn:{turn}", "");
+            current.Children.Add(future);
             current = future;
             TurnNodes.Add(turn, future);
             // Update Game states
@@ -201,7 +211,7 @@ namespace WindBot
         public void OnGameEnd(int result, Duel duel)
         {
             //double reward = result == 0 ? (int)(SQLComm.RolloutCount/2) : (double)duel.Turn / 100;
-            double reward = result == 0 ? 1 : 0;
+            double reward = result == 0 ? 2 : 0;
             Backpropagate(reward);
         }
 
@@ -237,7 +247,7 @@ namespace WindBot
         {
             Node best = current;
             double weight = -1;
-            double c = 0.5;
+            double c = 1;
 
             if (!SQLComm.IsRollout)
             {
@@ -258,6 +268,9 @@ namespace WindBot
                 if (best != null && possibleActions.Count > 1 && best != current)
                 {
                     current.Children.Add(best);
+                    current = best.Children[0];
+                    actionNumber++;
+
                     if (best.Visited <= 0)
                     {
                         lastNode = best;
@@ -274,11 +287,8 @@ namespace WindBot
                     best = possibleActions[0];
             }
 
-            current = best.Children[0];
-
-            possibleActions.Clear();
             nextActionNode = null;
-            actionNumber++;
+            possibleActions.Clear();
 
             return best;
         }

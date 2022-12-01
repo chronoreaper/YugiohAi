@@ -240,7 +240,7 @@ namespace WindBot.Game
         private void OnRematch(BinaryReader packet)
         {
             double winRate = (double)SQLComm.PastXWins / (double)SQLComm.PreviousWins.Count * 100;
-            Logger.WriteLine($"{SQLComm.Name}| Total Games Played: {++SQLComm.GamesPlayed} / {SQLComm.TotalGames} | Win Rate: {Math.Round((double)SQLComm.Wins / SQLComm.GamesPlayed * 1000) / 10}% Past {SQLComm.PastWinsLimit} Games: {Math.Round(winRate * 10) / 10}%");
+            Logger.WriteLine($"{SQLComm.Name}:{SQLComm.IsTraining}| Total Games Played: {++SQLComm.GamesPlayed} / {SQLComm.TotalGames} | Win Rate: {Math.Round((double)SQLComm.Wins / SQLComm.GamesPlayed * 1000) / 10}% Past {SQLComm.PastWinsLimit} Games: {Math.Round(winRate * 10) / 10}%");
 
             if (SQLComm.RolloutCount <= 0)
             {

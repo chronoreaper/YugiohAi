@@ -23,7 +23,7 @@ AIMaster = 'Master'
 deck1 = 'AI_Random1.ydk'
 deck2 = 'AI_Random2.ydk'
 
-totalGames = 1000
+totalGames = 200
 rolloutCount = 1
 isFirst = True
 isTraining = True
@@ -258,7 +258,7 @@ def main_game_runner():
      
   if platform == "linux" or platform == "linux2":
     os.system("kill -9 " + str(g.pid))
-  else
+  else:
     os.system("	TASKKILL /F /IM ygopro.exe")
   
   end = time.time()

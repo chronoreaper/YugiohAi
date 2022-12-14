@@ -17,17 +17,18 @@ AIName2 = 'bot2'
 
 #The Deck name and location	
 AI1Deck = 'Random1'
-AI2Deck = 'Random2'
+AI2Deck = 'Master'#'Random2'
 AIMaster = 'Master'
 
 deck1 = 'AI_Random1.ydk'
 deck2 = 'AI_Random2.ydk'
 
-totalGames = 200
+totalGames = 400
+totalRealGames = 100
 rolloutCount = 1
 isFirst = True
 isTraining = True
-winThresh = 50
+winThresh = 90
 pastWinLim = 5
 
 reset = False
@@ -94,10 +95,10 @@ def runAi(Deck = "Random1",
           RolloutCount = 0,
           IsFirst = True,
           IsTraining = True,
+          ShouldUpdate = True,
           WinsThreshold = 50,
           PastWinsLimit = 20
           ):
-
   currentdir = os.getcwd()
   os.chdir(os.getcwd()+'/WindBot-Ignite-master/bin/Debug')
 
@@ -110,6 +111,7 @@ def runAi(Deck = "Random1",
                         "Name="+str(Name),
                         "Hand="+str(Hand),
                         "IsTraining="+str(IsTraining), 
+                        "ShouldUpdate="+str(ShouldUpdate), 
                         "TotalGames="+str(TotalGames), 
                         "RolloutCount="+str(RolloutCount), 
                         "IsFirst="+str(IsFirst), 
@@ -170,7 +172,7 @@ def shuffle_deck(deck_name):
   f.close()
 
 def setup():
-  global AI2Deck, AIName2, isTraining
+  global AI2Deck, AIName2, isTraining, totalGames
 
   if reset:
     resetDB()
@@ -184,6 +186,7 @@ def setup():
   if not isTraining:
     AI2Deck = AIMaster
     AIName2 = AIMaster
+    totalGames = totalRealGames
 
 def main_game_runner():
   start = time.time()
@@ -207,7 +210,17 @@ def main_game_runner():
   
   print("	runningAi1")
 
-  p1 = runAi(AI1Deck, AIName1, 2, totalGames, rolloutCount, isFirst, isTraining, winThresh, pastWinLim)
+  p1 = runAi( Deck = AI1Deck, 
+              Name = AIName1,
+              Hand = 2,
+              TotalGames = totalGames,
+              RolloutCount = rolloutCount,
+              IsFirst = isFirst,
+              IsTraining = isTraining,
+              ShouldUpdate= isTraining,
+              WinsThreshold = winThresh,
+              PastWinsLimit = pastWinLim
+            )
   # p1 = subprocess.Popen(["python " + os.getcwd() + "/run_ai.py",
   #             "--deck",AI1Deck,
   #             "--name",AIName1,
@@ -224,7 +237,18 @@ def main_game_runner():
   #             universal_newlines=True)
   time.sleep(1)
   print("	runningAi2")
-  p2 = runAi(AI2Deck, AIName2, 3, totalGames, rolloutCount, not isFirst, False, winThresh, pastWinLim)
+  p2 = runAi(Deck = AI2Deck, 
+              Name = AIName2,
+              Hand = 3,
+              TotalGames = totalGames,
+              RolloutCount = rolloutCount,
+              IsFirst = (not isFirst),
+              IsTraining = isTraining,
+              ShouldUpdate= False,
+              WinsThreshold = winThresh,
+              PastWinsLimit = pastWinLim
+            )
+  
   # p2 = subprocess.Popen(["python " + os.getcwd() + "/run_ai.py",
   #             "--deck",AI2Deck,
   #             "--name",AIName2,

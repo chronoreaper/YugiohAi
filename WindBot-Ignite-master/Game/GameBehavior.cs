@@ -240,7 +240,7 @@ namespace WindBot.Game
         private void OnRematch(BinaryReader packet)
         {
             double winRate = (double)SQLComm.PastXWins / (double)SQLComm.PreviousWins.Count * 100;
-            Logger.WriteLine($"{SQLComm.Name}:{SQLComm.IsTraining}| Total Games Played: {++SQLComm.GamesPlayed} / {SQLComm.TotalGames} | Win Rate: {Math.Round((double)SQLComm.Wins / SQLComm.GamesPlayed * 1000) / 10}% Past {SQLComm.PastWinsLimit} Games: {Math.Round(winRate * 10) / 10}%");
+            Logger.WriteLine($"{SQLComm.Name}:{SQLComm.IsTraining}:First={SQLComm.IsFirst},Update={SQLComm.ShouldUpdate}| Total Games Played: {++SQLComm.GamesPlayed} / {SQLComm.TotalGames} | Win Rate: {Math.Round((double)SQLComm.Wins / SQLComm.GamesPlayed * 1000) / 10}% Past {SQLComm.PastWinsLimit} Games: {Math.Round(winRate * 10) / 10}%");
 
             if (SQLComm.RolloutCount <= 0)
             {
@@ -259,12 +259,12 @@ namespace WindBot.Game
                 response = 0;
                 SQLComm.Cleanup();
             }
-            else if (SQLComm.PreviousWins.Count >= SQLComm.PastWinsLimit)
+            else if (SQLComm.PreviousWins.Count >= SQLComm.PastWinsLimit && SQLComm.IsTraining)
             {
-                if (winRate > SQLComm.WinsThreshold && SQLComm.IsTraining)
+                if (winRate > SQLComm.WinsThreshold && SQLComm.ShouldUpdate)
                 {
                     SQLComm.Reset();
-                    SQLComm.IsTraining = false;
+                    SQLComm.ShouldUpdate = false;
                     SQLComm.PastXWins = 0;
                     SQLComm.PreviousWins.Clear();
                     Logger.WriteLine("Now is not training");
@@ -272,10 +272,10 @@ namespace WindBot.Game
                     //response = 0;
                     //SQLComm.Cleanup();
                 }
-                else if (winRate < SQLComm.WinsThreshold && !SQLComm.IsTraining)
+                else if (winRate < SQLComm.WinsThreshold && !SQLComm.ShouldUpdate)
                 {
                     Logger.WriteLine("Now is training");
-                    SQLComm.IsTraining = true;
+                    SQLComm.ShouldUpdate = true;
                     SQLComm.PastXWins = 0;
                     SQLComm.PreviousWins.Clear();
                 }

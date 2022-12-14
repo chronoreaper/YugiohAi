@@ -9,7 +9,7 @@ import networkx as nx
 conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
 c = conn.cursor()
 
-c.execute('SELECT SUM(Visited) FROM MCST WHERE CardId != \"Result\" AND ParentId = 0')
+c.execute('SELECT Count(Visited) FROM MCST WHERE CardId != \"Result\" and Visited > 0')
 total = c.fetchone()[0]
 print("Total search made=" + str(total))
 
@@ -45,23 +45,23 @@ for record in records:
       group_count += 1
 
 # Get Best average moves?
-c.execute("Select cardId,Action, SUM(Reward) as r,SUM(Visited) as v from MCST WHERE IsTraining='False' group by cardid, action order by cardid, action")
-records = c.fetchall()
-for record in records:
-    cardid = record[0]
-    action = record[1]
-    reward = record[2]
+# c.execute("Select cardId,Action, SUM(Reward) as r,SUM(Visited) as v from MCST WHERE IsTraining='False' group by cardid, action order by cardid, action")
+# records = c.fetchall()
+# for record in records:
+#     cardid = record[0]
+#     action = record[1]
+#     reward = record[2]
     
-    visited =record[3]
-    #const = 0
+#     visited =record[3]
+#     #const = 0
 
-    activation = 0
-    activation2 = 0
-    if (visited > 0):
-      actication = round((reward + const * math.sqrt((math.log(total + 1) + 1) / (visited))) * 100)/100
-      activation2 = round(reward / (visited) * 1000)/10
+#     activation = 0
+#     activation2 = 0
+#     if (visited > 0):
+#       actication = round((reward + const * math.sqrt((math.log(total + 1) + 1) / (visited))) * 100)/100
+#       activation2 = round(reward / (visited) * 1000)/10
 
-    print(f"{activation}| {activation2} | {cardid} | {action}")
+#     print(f"{activation}| {activation2} | {cardid} | {action}")
 
 c.close()
 

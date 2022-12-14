@@ -13,6 +13,7 @@ namespace WindBot
         public static bool HasParameters = false;
         public static bool IsFirst = true;
         public static bool IsTraining = true;
+        public static bool ShouldUpdate = true;
         public static bool IsMCTS = true;
         public static bool IsRollout = false;
         public static bool ShouldBackPropagate = false;
@@ -128,7 +129,7 @@ namespace WindBot
 
         public static void InsertNode(Node node)
         {
-            if (!IsTraining)
+            if (!ShouldUpdate)
                 return;
             using (SqliteConnection conn = ConnectToDatabase())
             {
@@ -163,7 +164,7 @@ namespace WindBot
          */
         public static void Backpropagate(Dictionary<int, Node> nodes, Node node, double reward)
         {
-            if (!IsTraining)
+            if (!ShouldUpdate)
                 return;
 
             IsRollout = false;
@@ -266,8 +267,7 @@ namespace WindBot
                 conn.Close();
             }
 
-            if (false)
-                UpdateWeightTree(nodes, totalRewards, rolloutCount);
+            UpdateWeightTree(nodes, totalRewards, rolloutCount);
 
             ShouldBackPropagate = false;
             IsRollout = false;

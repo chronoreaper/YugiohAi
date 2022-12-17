@@ -23,12 +23,12 @@ AIMaster = 'Master'
 deck1 = 'AI_Random1.ydk'
 deck2 = 'AI_Random2.ydk'
 
-totalGames = 400
-totalRealGames = 100
+totalGames = 800
+totalRealGames = 10
 rolloutCount = 1
 isFirst = True
 isTraining = True
-winThresh = 90
+winThresh = 60
 pastWinLim = 5
 
 reset = False
@@ -175,7 +175,8 @@ def setup():
   global AI2Deck, AIName2, isTraining, totalGames
 
   if reset:
-    resetDB()
+    if isTraining:
+      resetDB()
     shuffle_deck(deck1)
     src_dir=os.getcwd() + '/WindBot-Ignite-master/bin/Debug/Decks/' + deck1
     dst_dir=os.getcwd() + '/WindBot-Ignite-master/bin/Debug/Decks/' + deck2

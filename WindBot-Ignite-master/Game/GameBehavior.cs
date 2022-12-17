@@ -272,7 +272,7 @@ namespace WindBot.Game
                     //response = 0;
                     //SQLComm.Cleanup();
                 }
-                else if (winRate < SQLComm.WinsThreshold && !SQLComm.ShouldUpdate)
+                else if (winRate < SQLComm.WinsThreshold && SQLComm.ShouldUpdate)
                 {
                     Logger.WriteLine("Now is training");
                     SQLComm.ShouldUpdate = true;

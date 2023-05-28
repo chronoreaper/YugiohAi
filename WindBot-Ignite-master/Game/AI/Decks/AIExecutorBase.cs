@@ -4,34 +4,35 @@ using WindBot;
 using WindBot.Game;
 using WindBot.Game.AI;
 using static WindBot.MCST;
+using static WindBot.NEAT;
 using System.Linq;
 using System;
 
 namespace WindBot.Game.AI.Decks
 {
-    public class AIExecutorBase : DefaultExecutor
+    public class AIExecutorBase : DefaultExecutorun
     {
-        MCST Tree;
-        Node BestAction;
+        NEAT NEAT;
+        NEATNode BestAction;
 
         public AIExecutorBase(GameAI ai, Duel duel)
             : base(ai, duel)
         {
             AddExecutor(ExecutorType.Activate, ShouldPerform);
-
-            AddExecutor(ExecutorType.MonsterSet, ShouldPerform);
-            //AddExecutor(ExecutorType.Repos, ShouldPerform);
-            AddExecutor(ExecutorType.SpellSet, ShouldPerform);
             AddExecutor(ExecutorType.SpSummon, ShouldPerform);
             AddExecutor(ExecutorType.Summon, ShouldPerform);
+            AddExecutor(ExecutorType.MonsterSet, ShouldPerform);
             AddExecutor(ExecutorType.SummonOrSet, ShouldPerform);
+            //AddExecutor(ExecutorType.Repos, ShouldPerform);
+            AddExecutor(ExecutorType.SpellSet, ShouldPerform);
+
 
             AddExecutor(ExecutorType.GoToBattlePhase, ShouldPerform);
             AddExecutor(ExecutorType.GoToMainPhase2, ShouldPerform);
             AddExecutor(ExecutorType.GoToEndPhase, ShouldPerform);
             AddExecutor(ExecutorType.Repos, DefaultMonsterRepos);
 
-            Tree = new MCST();
+            NEAT = new NEAT();
         }
 
         private List<long> HintMsgForEnemy = new List<long>
@@ -65,17 +66,16 @@ namespace WindBot.Game.AI.Decks
             base.SetMain(main);
             BestAction = null;
 
-            Tree.AddPossibleAction("",ExecutorType.GoToEndPhase.ToString(), Duel.Fields, Duel.Turn);
 
             if (Duel.Phase == DuelPhase.Main2)
             {
-                BestAction = Tree.GetNextAction();
+                //
                 return;
             }
 
             foreach (ClientCard card in main.MonsterSetableCards)
             {
-                Tree.AddPossibleAction(card?.Name, ExecutorType.MonsterSet.ToString(), Duel.Fields, Duel.Turn);
+                NEAT.AddNode(BuildActionString(ExecutorType.MonsterSet, card, Duel.Phase.ToString()), false);
                 //card.ActionIndex[(int)ExecutorType.MonsterSet];
             }
             //loop through cards that can change position
@@ -86,22 +86,26 @@ namespace WindBot.Game.AI.Decks
             //Loop through normal summonable monsters
             foreach (ClientCard card in main.SummonableCards)
             {
-                Tree.AddPossibleAction(card?.Name, ExecutorType.Summon.ToString(), Duel.Fields, Duel.Turn);
+                NEAT.AddNode(BuildActionString(ExecutorType.Summon, card, Duel.Phase.ToString()), false);
             }
             //loop through special summonable monsters
             foreach (ClientCard card in main.SpecialSummonableCards)
             {
-                Tree.AddPossibleAction(card?.Name, ExecutorType.SpSummon.ToString(), Duel.Fields, Duel.Turn);
+                NEAT.AddNode(BuildActionString(ExecutorType.SpSummon, card, Duel.Phase.ToString()), false);
             }
             //loop through activatable cards
             for (int i = 0; i < main.ActivableCards.Count; ++i)
             {
                 ClientCard card = main.ActivableCards[i];
-                Tree.AddPossibleAction(card?.Name, ExecutorType.Activate.ToString(), Duel.Fields, Duel.Turn);
+                NEAT.AddNode(BuildActionString(ExecutorType.Activate, card, Duel.Phase.ToString()), false);
                 //choice.SetBest(ExecutorType.Activate, card, card.ActionActivateIndex[main.ActivableDescs[i]]);
             }
 
-            BestAction = Tree.GetNextAction();
+            NEAT.SetInputs(Duel);
+
+            var bestActions = NEAT.GetBestAction(Duel);
+            if (bestActions.Count > 0)
+                BestAction = bestActions[0];
         }
 
         public override void SetBattle(BattlePhase battle)
@@ -120,7 +124,7 @@ namespace WindBot.Game.AI.Decks
             for (int i = 0; i < battle.ActivableCards.Count; ++i)
             {
                 ClientCard card = battle.ActivableCards[i];
-                Tree.AddPossibleAction(card?.Name, ExecutorType.Repos.ToString(), Duel.Fields, Duel.Turn);
+                NEAT.AddNode(BuildActionString(ExecutorType.Activate, card, Duel.Phase.ToString()), false);
                 //choice.SetBest(ExecutorType.Activate, card, battle.ActivableDescs[i]);
             }
 
@@ -135,7 +139,7 @@ namespace WindBot.Game.AI.Decks
         public override void OnNewTurn()
         {
             base.OnNewTurn();
-            Tree.OnNewTurn(Duel.Fields, Duel.Turn);
+            NEAT.ResetConnections();
         }
 
         public override IList<ClientCard> OnSelectCard(IList<ClientCard> _cards, int min, int max, long hint, bool cancelable)
@@ -156,11 +160,7 @@ namespace WindBot.Game.AI.Decks
             //get number of cards to select
             for (int i = min; i < max; i++)
             {
-                Tree.AddPossibleAction(i.ToString(), "NumberSelected", Duel.Fields, Duel.Turn);
-            }
-            if (min != max)
-            {
-                numToSelect = int.Parse(Tree.GetNextAction().CardId);
+                //Tree.AddPossibleAction(i.ToString(), "NumberSelected", Duel.Fields, Duel.Turn);
             }
 
             foreach (ClientCard clientCard in cards)
@@ -168,12 +168,13 @@ namespace WindBot.Game.AI.Decks
                 string action = $"Select" + hint.ToString();
                 string card = SelectStringBuilder(clientCard);
                 if (min == 1) // Single card seletion
-                    Tree.AddPossibleAction(card, action, Duel.Fields, Duel.Turn);
+                    NEAT.AddNode(BuildActionString("Select", clientCard, Duel.Phase.ToString()), false);
+                    //Tree.AddPossibleAction(card, action, Duel.Fields, Duel.Turn);
             }
 
-            if (min == 1)
+            if (min == 1 && false)
             {
-                string toSelect = Tree.GetNextAction().CardId;
+                string toSelect = NEAT.GetBestAction(Duel)[0].Name;
                 string name = toSelect.Split(';')[0];
                 CardLocation location = (CardLocation) Enum.Parse(typeof(CardLocation), toSelect.Split(';')[1]);
                 int position = int.Parse(toSelect.Split(';')[2]);
@@ -272,22 +273,28 @@ namespace WindBot.Game.AI.Decks
 
         public override int OnSelectOption(IList<long> options)
         {
+            return base.OnSelectOption(options);
             foreach(long o in options)
             {
-                Tree.AddPossibleAction(o.ToString(), "SelectOption", Duel.Fields, Duel.Turn);
+                //Tree.AddPossibleAction(o.ToString(), "SelectOption", Duel.Fields, Duel.Turn);
             }
 
-            long best = long.Parse(Tree.GetNextAction().CardId);
-            return options.IndexOf(best);
+            //long best = long.Parse(Tree.GetNextAction().CardId);
+            //return options.IndexOf(best);
         }
 
         public bool ShouldPerform()
         {
+            if (SQLComm.IsTraining)
+                return true;
             if (BestAction != null)
             {
+                string id = BestAction.Name.Split(';')[0];
+                string action = BestAction.Name.Split(';')[1];
                 //ActivateDescription
-                if (Card.Name == BestAction.CardId && Type.ToString() == BestAction.Action)
+                if (Card.Name == id && Type.ToString() == action)
                 {
+                    BestAction.IncrementActivationCount();
                     BestAction = null;
                     return true;
                 }
@@ -297,13 +304,15 @@ namespace WindBot.Game.AI.Decks
                 }
             }
 
-            return Tree.ShouldActivate(Card.Name, Type.ToString(), Duel.Fields);
+            return false;
         }
 
         public override void OnWin(int result)
         {
-            Tree.OnGameEnd(result, Duel);
-            Tree.OnNewGame();
+            //NEAT.OnWin(result);
+            NEAT.games++;
+            NEAT.wins += result == 0 ? 1 : 0;
+            NEAT.SaveNetwork(result == 0 ? 1 : 0);
         }
 
         private string SelectStringBuilder(ClientCard Card, int Quant = 1)
@@ -311,14 +320,22 @@ namespace WindBot.Game.AI.Decks
             return $"{Card.Name ?? "Set Monster" };{Card?.Location.ToString()};{Card?.Position.ToString()};{Card.Controller}";// x{Quant}";
         }
 
-        private string BuildActionString(ExecutorType action, ClientCard card, string Phase)
+        private string BuildActionString(ExecutorType action, ClientCard card, string phase)
         {
-            if (Phase == "Main2")
-                Phase = "Main1";
-            string actionString = action.ToString();
-            if (action == ExecutorType.Repos && card != null)
+            return BuildActionString(action.ToString(), card, phase);
+        }
+
+        private string BuildActionString(string action, ClientCard card, string phase)
+        {
+            if (phase == "Main2")
+                phase = "Main1";
+            string actionString = card.Name ?? "Uknown";
+            actionString += ";";
+            actionString += action.ToString();
+            
+            if (action == ExecutorType.Repos.ToString() && card != null)
                 actionString += $";{card.Position}";
-            actionString += ";" + Phase;
+            actionString += ";" + phase;
             return actionString;
         }
     }

@@ -5,6 +5,7 @@ using System.IO;
 using System.Reflection;
 using static System.Net.Mime.MediaTypeNames;
 using static WindBot.MCST;
+using static WindBot.NEAT;
 
 namespace WindBot
 {
@@ -19,6 +20,7 @@ namespace WindBot
         public static bool ShouldBackPropagate = false;
         public static int TotalGames = 201;
         public static int RolloutCount = 1;
+        public static int Id = 0;
 
         public static int GamesPlayed = 0;
         public static int Wins = 0;
@@ -35,7 +37,7 @@ namespace WindBot
         {
             return new SqliteConnection(sqlPath);
         }
-
+        #region MCST
         public static bool GetNodeInfo(Node node)
         {
             bool gotInfo = false;
@@ -44,7 +46,7 @@ namespace WindBot
             {
                 conn.Open();
                 string sql = $"SELECT rowid, Reward, Visited FROM MCST WHERE " +
-                    $"ParentId = \"{node.Parent?.NodeId ?? -4}\" AND CardId = \"{node.CardId}\" AND Action = \"{node.Action}\" AND IsFirst = \"{IsFirst}\" AND IsTraining = \"{IsTraining}\"";
+                    $"ParentId = \"{node.Parent?.NodeId ?? -4}\" AND CardId = \"{node.CardId}\" AND Action = \"{node.Action}\" AND IsFirst = \"{IsFirst}\" AND IsTraining = \"{ShouldUpdate}\"";
                 using (SqliteCommand cmd = new SqliteCommand(sql, conn))
                 {
                     using (SqliteDataReader rdr = cmd.ExecuteReader())
@@ -105,7 +107,7 @@ namespace WindBot
             using (SqliteConnection conn = ConnectToDatabase())
             {
                 conn.Open();
-                string sql = $"SELECT SUM(Visited) FROM MCST WHERE CardId != \"Result\" AND ParentId = 0 AND IsFirst = \"{IsFirst}\" AND IsTraining = \"{IsTraining}\"";
+                string sql = $"SELECT SUM(Visited) FROM MCST WHERE CardId != \"Result\" AND ParentId = 0 AND IsFirst = \"{IsFirst}\" AND IsTraining = \"{ShouldUpdate}\"";
                 try
                 {
                     using (SqliteCommand cmd = new SqliteCommand(sql, conn))
@@ -318,7 +320,7 @@ namespace WindBot
 
         private static void RecordWin(double reward, bool isHeurstic = false)
         {
-            if (!IsTraining)
+            if (!ShouldUpdate)
                 return;
 
             int rowsUpdated = 0;
@@ -411,5 +413,209 @@ namespace WindBot
                 conn.Close();
             }
         }
+        #endregion
+
+        #region NEAT
+        public static void Setup(NEAT neat)
+        {
+            using (SqliteConnection conn = ConnectToDatabase())
+            {
+                conn.Open();
+                // Get input nodes
+                string sql = $"SELECT Id, Name FROM NodeName WHERE Type = \"1\"";
+                using (SqliteCommand cmd = new SqliteCommand(sql, conn))
+                {
+                    using (SqliteDataReader rdr = cmd.ExecuteReader())
+                        while (rdr.Read())
+                        {
+                            int id = rdr.GetInt32(0);
+                            string name = rdr.GetString(1);
+                            neat.AddNode(name, true);
+                        }
+                }
+
+                // Add Output Nodes
+                sql = $"SELECT Id, Name FROM NodeName WHERE Type = \"-1\"";
+                using (SqliteCommand cmd = new SqliteCommand(sql, conn))
+                {
+                    using (SqliteDataReader rdr = cmd.ExecuteReader())
+                        while (rdr.Read())
+                        {
+                            int id = rdr.GetInt32(0);
+                            string name = rdr.GetString(1);
+                            neat.AddNode(name, false);
+                        }
+                }
+
+                // Add InnovationNumbers
+                sql = $"SELECT rowid, Input, Output FROM InnovationNumber";
+                using (SqliteCommand cmd = new SqliteCommand(sql, conn))
+                {
+                    using (SqliteDataReader rdr = cmd.ExecuteReader())
+                        while (rdr.Read())
+                        {
+                            long id = long.Parse(rdr["rowid"].ToString());
+                            int input = rdr.GetInt32(1);
+                            int output = rdr.GetInt32(2);
+                            neat.Innovation.Add(id, new InnovationNumber() { Id = id, Input = input, Output = output });
+                        }
+                }
+
+                // Add connections
+                sql = $"SELECT InnovationId, Weight, Enabled FROM Connections WHERE SpeciesId = {Id}";
+                using (SqliteCommand cmd = new SqliteCommand(sql, conn))
+                {
+                    using (SqliteDataReader rdr = cmd.ExecuteReader())
+                        while (rdr.Read())
+                        {
+                            long id = rdr.GetInt32(0);
+                            float weight = rdr.GetFloat(1);
+                            bool enabled = rdr.GetBoolean(2);
+                            try
+                            {
+                                if (enabled)
+                                {
+                                    InnovationNumber number = neat.Innovation[id];
+                                    NEATNode input = neat.Nodes[number.Input];
+                                    NEATNode output = neat.Nodes[number.Output];
+                                    neat.AddConnection(id, input, output, weight);
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.WriteErrorLine($"Error when adding connection: {e}");
+                            }
+                        }
+                }
+
+                conn.Close();
+            }
+        }
+
+        public static void SaveNEAT(NEAT neat, int win)
+        {
+            //if (!IsTraining)
+            //    return;
+            win = Math.Max(Math.Min(win, 1), 0);
+
+            using (SqliteConnection conn = ConnectToDatabase())
+            {
+                conn.Open();
+
+                SqliteTransaction transaction = conn.BeginTransaction();
+
+
+                int rowsUpdated = 0;
+                string sql;
+
+                sql = $"UPDATE SpeciesRecord SET Games = Games + 1, " +
+                           $"Wins = Wins + {win} WHERE " +
+                           $"Id = \"{Id}\"";
+
+                using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                {
+                    rowsUpdated = cmd2.ExecuteNonQuery();
+                }
+
+                if (rowsUpdated <= 0)
+                {
+
+                    sql = $"INSERT INTO SpeciesRecord (Id,Games,Wins) VALUES (\"{Id}\",\"{1}\",\"{win}\")";
+                    using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                    {
+                        rowsUpdated = cmd2.ExecuteNonQuery();
+                    }
+                }
+
+                
+                foreach (var edge in neat.Connections)
+                {
+
+                    sql = $"UPDATE Connections SET Wins = Wins + {edge.ActivationCount * win}, Games = Games + {edge.ActivationCount} WHERE InnovationId = {edge.Id} AND SpeciesId = {Id}";
+
+                    using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                    {
+                        {
+                            rowsUpdated = cmd2.ExecuteNonQuery();
+                        }
+
+                        if (rowsUpdated <= 0)
+                        {
+
+                        }
+                    }
+
+                }
+                transaction.Commit();
+                conn.Close();
+            }
+        }
+
+        public static int GetNodeId(string inputName, int type)
+        {
+            int id = -4;
+
+            using (SqliteConnection conn = ConnectToDatabase())
+            {
+                conn.Open();
+                string sql = $"SELECT Id FROM NodeName WHERE " +
+                    $"Name = \"{inputName}\" AND Type = \"{type}\"";
+                using (SqliteCommand cmd = new SqliteCommand(sql, conn))
+                {
+                    using (SqliteDataReader rdr = cmd.ExecuteReader())
+                        while (rdr.Read())
+                        {
+                            id = rdr.GetInt32(0);
+                        }
+                }
+                conn.Close();
+            }
+
+            if (id == -4)
+                return NewNode(inputName, type);
+            return id;
+        }
+
+        private static int NewNode(string inputName, int type)
+        {
+            int id = 0;
+            using (SqliteConnection conn = ConnectToDatabase())
+            {
+                conn.Open();
+                string sql = "SELECT max(Id) from NodeName";
+                try
+                {
+                   
+                    using (SqliteCommand cmd = new SqliteCommand(sql, conn))
+                    {
+                        using (SqliteDataReader rdr = cmd.ExecuteReader())
+                            while (rdr.Read())
+                            {
+                                id = rdr.GetInt32(0);
+                            }
+                    }
+
+                    id++;
+                }
+                catch(System.InvalidCastException)
+                {
+
+                }
+
+                SqliteTransaction transaction = conn.BeginTransaction();
+
+                sql = $"INSERT INTO NodeName (Id, Name, Type) VALUES (\"{id}\", \"{inputName}\", \"{type}\")";
+                using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                {
+                    cmd2.ExecuteNonQuery();
+                }
+
+                transaction.Commit();
+                conn.Close();
+            }
+
+            return id;
+        }
+        #endregion
     }
 }

@@ -1,0 +1,170 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 1000px;
+                 height: 1000px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+             #config {
+                 float: left;
+                 width: 400px;
+                 height: 600px;
+             }
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+            <div id="config"></div>
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"group": 1, "id": 2, "label": "2 True True  turn:1", "shape": "dot", "size": 10}, {"group": 1, "id": 4, "label": "4 True True GoToEndPhase ", "shape": "dot", "size": 10}, {"group": 1, "id": 5, "label": "5 True True MonsterSet Mekk-Knight Avram", "shape": "dot", "size": 10}, {"group": 1, "id": 6, "label": "6 True True MonsterSet Exiled Force", "shape": "dot", "size": 10}, {"group": 1, "id": 7, "label": "7 True True MonsterSet Wind-Up Soldier", "shape": "dot", "size": 10}, {"group": 1, "id": 8, "label": "8 True True Summon Mekk-Knight Avram", "shape": "dot", "size": 10}, {"group": 1, "id": 9, "label": "9 True True Summon Exiled Force", "shape": "dot", "size": 10}, {"group": 1, "id": 10, "label": "10 True True Summon Wind-Up Soldier", "shape": "dot", "size": 10}, {"group": 1, "id": 13, "label": "13 True True  turn:2", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 0, "label": 0, "shape": "dot", "size": 10}, {"group": 1, "id": 3, "label": "3 True True  Turn1Action0", "shape": "dot", "size": 10}, {"group": 1, "id": 14, "label": "14 True True  turn:3", "shape": "dot", "size": 10}, {"group": 1, "id": 16, "label": "16 True True GoToEndPhase ", "shape": "dot", "size": 10}, {"group": 1, "id": 18, "label": "18 True True MonsterSet Wind-Up Soldier", "shape": "dot", "size": 10}, {"group": 1, "id": 19, "label": "19 True True MonsterSet Mekk-Knight Avram", "shape": "dot", "size": 10}, {"group": 1, "id": 21, "label": "21 True True Summon Wind-Up Soldier", "shape": "dot", "size": 10}, {"group": 1, "id": 22, "label": "22 True True Summon Mekk-Knight Avram", "shape": "dot", "size": 10}, {"group": 1, "id": 23, "label": "23 True True SpSummon The Tricky", "shape": "dot", "size": 10}, {"group": 1, "id": 24, "label": "24 True True Activate Block Attack", "shape": "dot", "size": 10}, {"group": 1, "id": 30, "label": "30 True True  turn:4", "shape": "dot", "size": 10}, {"group": 1, "id": 15, "label": "15 True True  Turn3Action0", "shape": "dot", "size": 10}, {"group": 1, "id": 128, "label": "128 True True GoToEndPhase ", "shape": "dot", "size": 10}, {"group": 1, "id": 129, "label": "129 True True SpSummon The Tricky", "shape": "dot", "size": 10}, {"group": 1, "id": 130, "label": "130 True True Activate Block Attack", "shape": "dot", "size": 10}, {"group": 1, "id": 31, "label": "31 True True  turn:5", "shape": "dot", "size": 10}, {"group": 1, "id": 33, "label": "33 True True GoToEndPhase ", "shape": "dot", "size": 10}, {"group": 1, "id": 34, "label": "34 True True MonsterSet Mekk-Knight Avram", "shape": "dot", "size": 10}, {"group": 1, "id": 35, "label": "35 True True MonsterSet Noble Knight Artorigus", "shape": "dot", "size": 10}, {"group": 1, "id": 36, "label": "36 True True Summon Mekk-Knight Avram", "shape": "dot", "size": 10}, {"group": 1, "id": 37, "label": "37 True True Summon Noble Knight Artorigus", "shape": "dot", "size": 10}, {"group": 1, "id": 38, "label": "38 True True  turn:6", "shape": "dot", "size": 10}, {"group": 1, "id": 104, "label": "104 True True MonsterSet Wind-Up Soldier", "shape": "dot", "size": 10}, {"group": 1, "id": 105, "label": "105 True True Summon Wind-Up Soldier", "shape": "dot", "size": 10}, {"group": 1, "id": 116, "label": "116 True True SpSummon The Tricky", "shape": "dot", "size": 10}, {"group": 1, "id": 132, "label": "132 True True MonsterSet The Tricky", "shape": "dot", "size": 10}, {"group": 1, "id": 133, "label": "133 True True Summon The Tricky", "shape": "dot", "size": 10}, {"group": 1, "id": 32, "label": "32 True True  Turn5Action0", "shape": "dot", "size": 10}, {"group": 1, "id": 178, "label": "178 True True GoToEndPhase ", "shape": "dot", "size": 10}, {"group": 1, "id": 179, "label": "179 True True SpSummon The Tricky", "shape": "dot", "size": 10}, {"group": 1, "id": 39, "label": "39 True True  turn:7", "shape": "dot", "size": 10}, {"group": 1, "id": 41, "label": "41 True True GoToEndPhase ", "shape": "dot", "size": 10}, {"group": 1, "id": 43, "label": "43 True True MonsterSet Luster Dragon", "shape": "dot", "size": 10}, {"group": 1, "id": 45, "label": "45 True True Summon Luster Dragon", "shape": "dot", "size": 10}, {"group": 1, "id": 46, "label": "46 True True  turn:8", "shape": "dot", "size": 10}, {"group": 1, "id": 107, "label": "107 True True MonsterSet Wind-Up Soldier", "shape": "dot", "size": 10}, {"group": 1, "id": 108, "label": "108 True True Summon Wind-Up Soldier", "shape": "dot", "size": 10}, {"group": 1, "id": 40, "label": "40 True True  Turn7Action0", "shape": "dot", "size": 10}, {"group": 1, "id": 217, "label": "217 True True GoToEndPhase ", "shape": "dot", "size": 10}, {"group": 1, "id": 218, "label": "218 True True Activate Wind-Up Soldier", "shape": "dot", "size": 10}, {"group": 1, "id": 47, "label": "47 True True  turn:9", "shape": "dot", "size": 10}, {"group": 1, "id": 52, "label": "52 True True  turn:10", "shape": "dot", "size": 10}, {"group": 1, "id": 65, "label": "65 True True  turn:11", "shape": "dot", "size": 10}, {"group": 1, "id": 74, "label": "74 True True  turn:12", "shape": "dot", "size": 10}, {"group": 1, "id": 75, "label": "75 True True  turn:13", "shape": "dot", "size": 10}, {"group": 1, "id": 82, "label": "82 True True  turn:14", "shape": "dot", "size": 10}, {"group": 1, "id": 83, "label": "83 True True  turn:15", "shape": "dot", "size": 10}, {"group": 1, "id": 92, "label": "92 True True  turn:16", "shape": "dot", "size": 10}, {"group": 1, "id": 93, "label": "93 True True  turn:17", "shape": "dot", "size": 10}, {"group": 1, "id": 103, "label": "103 True True  turn:18", "shape": "dot", "size": 10}, {"group": 1, "id": 160, "label": "160 True True  turn:19", "shape": "dot", "size": 10}, {"group": 1, "id": 127, "label": "127 True True  Turn3Action1", "shape": "dot", "size": 10}, {"group": 1, "id": 149, "label": "149 True True GoToEndPhase ", "shape": "dot", "size": 10}, {"group": 1, "id": 150, "label": "150 True True SpSummon The Tricky", "shape": "dot", "size": 10}, {"group": 1, "id": 147, "label": "147 True True  Turn3Action2", "shape": "dot", "size": 10}, {"group": 1, "id": 169, "label": "169 True True  turn:20", "shape": "dot", "size": 10}, {"group": 1, "id": 221, "label": "221 True True  turn:21", "shape": "dot", "size": 10}, {"group": 1, "id": 177, "label": "177 True True  Turn5Action1", "shape": "dot", "size": 10}, {"group": 1, "id": 205, "label": "205 True True Select501 Wind-Up Soldier;Hand;10;0", "shape": "dot", "size": 10}, {"group": 1, "id": 206, "label": "206 True True Select501 Noble Knight Artorigus;Hand;10;0", "shape": "dot", "size": 10}, {"group": 1, "id": 204, "label": "204 True True  Turn5Action2", "shape": "dot", "size": 10}, {"group": 1, "id": 216, "label": "216 True True  Turn7Action1", "shape": "dot", "size": 10}, {"group": 1, "id": 227, "label": "227 True True  turn:22", "shape": "dot", "size": 10}, {"group": 1, "id": 228, "label": "228 True True  turn:23", "shape": "dot", "size": 10}, {"group": 1, "id": 238, "label": "238 True True  turn:24", "shape": "dot", "size": 10}, {"group": 1, "id": 239, "label": "239 True True  turn:25", "shape": "dot", "size": 10}, {"group": 1, "id": 251, "label": "251 True True  turn:26", "shape": "dot", "size": 10}, {"group": 1, "id": 252, "label": "252 True True  turn:27", "shape": "dot", "size": 10}, {"group": 1, "id": 259, "label": "259 True True  turn:28", "shape": "dot", "size": 10}, {"group": 1, "id": 260, "label": "260 True True  turn:29", "shape": "dot", "size": 10}, {"group": 1, "id": 267, "label": "267 True True  turn:30", "shape": "dot", "size": 10}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": 2, "group": 2, "to": 4, "width": 1.1599597659696954}, {"arrows": "to", "from": 2, "group": 2, "to": 5, "width": 1.1599597659696954}, {"arrows": "to", "from": 2, "group": 2, "to": 6, "width": 1.1599597659696954}, {"arrows": "to", "from": 2, "group": 2, "to": 7, "width": 1.1599597659696954}, {"arrows": "to", "from": 2, "group": 2, "to": 8, "width": 2.1599597659696954}, {"arrows": "to", "from": 2, "group": 2, "to": 9, "width": 25}, {"arrows": "to", "from": 2, "group": 2, "to": 10, "width": 2.1599597659696954}, {"arrows": "to", "from": 2, "group": 2, "to": 13, "width": 25}, {"arrows": "to", "from": 0, "group": 2, "to": 2, "width": 25}, {"arrows": "to", "from": 4, "group": 3, "to": 3, "width": 1.1599597659696954}, {"arrows": "to", "from": 5, "group": 3, "to": 3, "width": 1.1599597659696954}, {"arrows": "to", "from": 6, "group": 3, "to": 3, "width": 1.1599597659696954}, {"arrows": "to", "from": 7, "group": 3, "to": 3, "width": 1.1599597659696954}, {"arrows": "to", "from": 8, "group": 3, "to": 3, "width": 2.1599597659696954}, {"arrows": "to", "from": 9, "group": 3, "to": 3, "width": 25}, {"arrows": "to", "from": 10, "group": 3, "to": 3, "width": 2.1599597659696954}, {"arrows": "to", "from": 13, "group": 2, "to": 14, "width": 25}, {"arrows": "to", "from": 14, "group": 2, "to": 16, "width": 1.1599597659696954}, {"arrows": "to", "from": 14, "group": 2, "to": 18, "width": 1.1599597659696954}, {"arrows": "to", "from": 14, "group": 2, "to": 19, "width": 3.1599597659696954}, {"arrows": "to", "from": 14, "group": 2, "to": 21, "width": 3.1599597659696954}, {"arrows": "to", "from": 14, "group": 2, "to": 22, "width": 25}, {"arrows": "to", "from": 14, "group": 2, "to": 23, "width": 1.1599597659696954}, {"arrows": "to", "from": 14, "group": 2, "to": 24, "width": 1.1599597659696954}, {"arrows": "to", "from": 14, "group": 2, "to": 30, "width": 25}, {"arrows": "to", "from": 15, "group": 2, "to": 128, "width": 3.1599597659696954}, {"arrows": "to", "from": 15, "group": 2, "to": 129, "width": 1.1599597659696954}, {"arrows": "to", "from": 15, "group": 2, "to": 130, "width": 25}, {"arrows": "to", "from": 16, "group": 3, "to": 15, "width": 1.1599597659696954}, {"arrows": "to", "from": 18, "group": 3, "to": 15, "width": 1.1599597659696954}, {"arrows": "to", "from": 19, "group": 3, "to": 15, "width": 3.1599597659696954}, {"arrows": "to", "from": 21, "group": 3, "to": 15, "width": 3.1599597659696954}, {"arrows": "to", "from": 22, "group": 3, "to": 15, "width": 25}, {"arrows": "to", "from": 23, "group": 3, "to": 15, "width": 1.1599597659696954}, {"arrows": "to", "from": 24, "group": 3, "to": 15, "width": 1.1599597659696954}, {"arrows": "to", "from": 30, "group": 2, "to": 31, "width": 25}, {"arrows": "to", "from": 31, "group": 2, "to": 33, "width": 3.1599597659696954}, {"arrows": "to", "from": 31, "group": 2, "to": 34, "width": 3.1599597659696954}, {"arrows": "to", "from": 31, "group": 2, "to": 35, "width": 3.1599597659696954}, {"arrows": "to", "from": 31, "group": 2, "to": 36, "width": 25}, {"arrows": "to", "from": 31, "group": 2, "to": 37, "width": 3.1599597659696954}, {"arrows": "to", "from": 31, "group": 2, "to": 38, "width": 25}, {"arrows": "to", "from": 31, "group": 2, "to": 104, "width": 3.1599597659696954}, {"arrows": "to", "from": 31, "group": 2, "to": 105, "width": 3.1599597659696954}, {"arrows": "to", "from": 31, "group": 2, "to": 116, "width": 3.1599597659696954}, {"arrows": "to", "from": 31, "group": 2, "to": 132, "width": 1.1599597659696954}, {"arrows": "to", "from": 31, "group": 2, "to": 133, "width": 1.1599597659696954}, {"arrows": "to", "from": 32, "group": 2, "to": 178, "width": 4.159959765969695}, {"arrows": "to", "from": 32, "group": 2, "to": 179, "width": 25}, {"arrows": "to", "from": 33, "group": 3, "to": 32, "width": 3.1599597659696954}, {"arrows": "to", "from": 34, "group": 3, "to": 32, "width": 3.1599597659696954}, {"arrows": "to", "from": 35, "group": 3, "to": 32, "width": 3.1599597659696954}, {"arrows": "to", "from": 36, "group": 3, "to": 32, "width": 25}, {"arrows": "to", "from": 37, "group": 3, "to": 32, "width": 3.1599597659696954}, {"arrows": "to", "from": 38, "group": 2, "to": 39, "width": 25}, {"arrows": "to", "from": 39, "group": 2, "to": 41, "width": 4.159959765969695}, {"arrows": "to", "from": 39, "group": 2, "to": 43, "width": 3.1599597659696954}, {"arrows": "to", "from": 39, "group": 2, "to": 45, "width": 3.1599597659696954}, {"arrows": "to", "from": 39, "group": 2, "to": 46, "width": 25}, {"arrows": "to", "from": 39, "group": 2, "to": 107, "width": 1.1599597659696954}, {"arrows": "to", "from": 39, "group": 2, "to": 108, "width": 25}, {"arrows": "to", "from": 40, "group": 2, "to": 217, "width": 3.1599597659696954}, {"arrows": "to", "from": 40, "group": 2, "to": 218, "width": 25}, {"arrows": "to", "from": 41, "group": 3, "to": 40, "width": 4.159959765969695}, {"arrows": "to", "from": 43, "group": 3, "to": 40, "width": 3.1599597659696954}, {"arrows": "to", "from": 45, "group": 3, "to": 40, "width": 3.1599597659696954}, {"arrows": "to", "from": 46, "group": 2, "to": 47, "width": 25}, {"arrows": "to", "from": 47, "group": 2, "to": 52, "width": 22.716304253048428}, {"arrows": "to", "from": 52, "group": 2, "to": 65, "width": 24.11633156685646}, {"arrows": "to", "from": 65, "group": 2, "to": 74, "width": 12.31774102869363}, {"arrows": "to", "from": 74, "group": 2, "to": 75, "width": 11.176811485462009}, {"arrows": "to", "from": 75, "group": 2, "to": 82, "width": 7.610107708210366}, {"arrows": "to", "from": 82, "group": 2, "to": 83, "width": 7.723551591463991}, {"arrows": "to", "from": 83, "group": 2, "to": 92, "width": 4.518749777574597}, {"arrows": "to", "from": 92, "group": 2, "to": 93, "width": 4.518749777574597}, {"arrows": "to", "from": 93, "group": 2, "to": 103, "width": 2.5799798829848477}, {"arrows": "to", "from": 103, "group": 2, "to": 160, "width": 2.669703083131739}, {"arrows": "to", "from": 104, "group": 3, "to": 32, "width": 3.1599597659696954}, {"arrows": "to", "from": 105, "group": 3, "to": 32, "width": 3.1599597659696954}, {"arrows": "to", "from": 107, "group": 3, "to": 40, "width": 1.1599597659696954}, {"arrows": "to", "from": 108, "group": 3, "to": 40, "width": 25}, {"arrows": "to", "from": 116, "group": 3, "to": 32, "width": 3.1599597659696954}, {"arrows": "to", "from": 127, "group": 2, "to": 149, "width": 25}, {"arrows": "to", "from": 127, "group": 2, "to": 150, "width": 3.1599597659696954}, {"arrows": "to", "from": 128, "group": 3, "to": 127, "width": 3.1599597659696954}, {"arrows": "to", "from": 129, "group": 3, "to": 127, "width": 1.1599597659696954}, {"arrows": "to", "from": 130, "group": 3, "to": 127, "width": 25}, {"arrows": "to", "from": 132, "group": 3, "to": 32, "width": 1.1599597659696954}, {"arrows": "to", "from": 133, "group": 3, "to": 32, "width": 1.1599597659696954}, {"arrows": "to", "from": 149, "group": 3, "to": 147, "width": 25}, {"arrows": "to", "from": 150, "group": 3, "to": 147, "width": 3.1599597659696954}, {"arrows": "to", "from": 160, "group": 2, "to": 169, "width": 0.8202154164207323}, {"arrows": "to", "from": 169, "group": 2, "to": 221, "width": 1.1599597659696954}, {"arrows": "to", "from": 177, "group": 2, "to": 205, "width": 3.1599597659696954}, {"arrows": "to", "from": 177, "group": 2, "to": 206, "width": 25}, {"arrows": "to", "from": 178, "group": 3, "to": 177, "width": 4.159959765969695}, {"arrows": "to", "from": 179, "group": 3, "to": 177, "width": 25}, {"arrows": "to", "from": 205, "group": 3, "to": 204, "width": 3.1599597659696954}, {"arrows": "to", "from": 206, "group": 3, "to": 204, "width": 25}, {"arrows": "to", "from": 217, "group": 3, "to": 216, "width": 3.1599597659696954}, {"arrows": "to", "from": 218, "group": 3, "to": 216, "width": 25}, {"arrows": "to", "from": 221, "group": 2, "to": 227, "width": 1.1599597659696954}, {"arrows": "to", "from": 227, "group": 2, "to": 228, "width": 1.1599597659696954}, {"arrows": "to", "from": 228, "group": 2, "to": 238, "width": 1.1599597659696954}, {"arrows": "to", "from": 238, "group": 2, "to": 239, "width": 1.1599597659696954}, {"arrows": "to", "from": 239, "group": 2, "to": 251, "width": 1.1599597659696954}, {"arrows": "to", "from": 251, "group": 2, "to": 252, "width": 1.1599597659696954}, {"arrows": "to", "from": 252, "group": 2, "to": 259, "width": 1.1599597659696954}, {"arrows": "to", "from": 259, "group": 2, "to": 260, "width": 1.1599597659696954}, {"arrows": "to", "from": 260, "group": 2, "to": 267, "width": 1.1599597659696954}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": true,
+        "filter": [
+            "physics"
+        ]
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+                  // if this network requires displaying the configure window,
+                  // put it in its div
+                  options.configure["container"] = document.getElementById("config");
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

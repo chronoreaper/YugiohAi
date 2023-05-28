@@ -242,6 +242,17 @@ namespace WindBot.Game
             double winRate = (double)SQLComm.PastXWins / (double)SQLComm.PreviousWins.Count * 100;
             Logger.WriteLine($"{SQLComm.Name}:{SQLComm.IsTraining}:First={SQLComm.IsFirst},Update={SQLComm.ShouldUpdate}| Total Games Played: {++SQLComm.GamesPlayed} / {SQLComm.TotalGames} | Win Rate: {Math.Round((double)SQLComm.Wins / SQLComm.GamesPlayed * 1000) / 10}% Past {SQLComm.PastWinsLimit} Games: {Math.Round(winRate * 10) / 10}%");
 
+            try
+            {
+                string newFileName = "result.csv";
+                string gameDetail = SQLComm.Name + "," + SQLComm.IsTraining +"," + SQLComm.ShouldUpdate + "," + SQLComm.GamesPlayed + "," + (double)SQLComm.Wins / SQLComm.GamesPlayed + Environment.NewLine;
+                File.AppendAllText(newFileName, gameDetail);
+            }
+            catch (IOException)
+            {
+                //Logger.WriteErrorLine($"Could not write result {SQLComm.Name}");
+            }
+
             if (SQLComm.RolloutCount <= 0)
             {
                 SQLComm.ShouldBackPropagate = true;
@@ -280,6 +291,8 @@ namespace WindBot.Game
                     SQLComm.PreviousWins.Clear();
                 }
             }
+
+
 
             Connection.Send(CtosMessage.RematchResponse, (byte)(response));
         }
@@ -474,6 +487,8 @@ namespace WindBot.Game
         private void OnWin(BinaryReader packet)
         {
             int result = GetLocalPlayer(packet.ReadByte());
+            if (_ai.Duel.Turn > 25)
+                result = 2;
 
             string otherName = _room.Position == 0 ? _room.Names[1] : _room.Names[0];
             string textResult = (result == 2 ? "Draw" : result == 0 ? "Win" : "Lose");
@@ -663,6 +678,8 @@ namespace WindBot.Game
             _duel.Turn++;
             _duel.Player = GetLocalPlayer(packet.ReadByte());
             _ai.OnNewTurn();
+            if (_duel.Turn > 25)
+                Connection.Send(CtosMessage.Surrender);
         }
 
         private void OnNewPhase(BinaryReader packet)

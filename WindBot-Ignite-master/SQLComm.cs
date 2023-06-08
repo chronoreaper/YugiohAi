@@ -6,6 +6,7 @@ using System.Reflection;
 using static System.Net.Mime.MediaTypeNames;
 using static WindBot.MCST;
 using static WindBot.NEAT;
+using static WindBot.PlayHistory;
 
 namespace WindBot
 {
@@ -14,6 +15,7 @@ namespace WindBot
         public static bool HasParameters = false;
         public static bool IsFirst = true;
         public static bool IsTraining = true;
+        public static bool IsManual = false;
         public static bool ShouldUpdate = true;
         public static bool IsMCTS = true;
         public static bool IsRollout = false;
@@ -616,6 +618,216 @@ namespace WindBot
 
             return id;
         }
+        #endregion
+
+        #region Recording
+
+        public static void SavePlayHistory(List<History> records)
+        {
+            if (!IsTraining)
+                return;
+
+
+            using (SqliteConnection conn = ConnectToDatabase())
+            {
+                conn.Open();
+
+                SqliteTransaction transaction = conn.BeginTransaction();
+
+                string sql;
+                long id;
+
+                int gameId = 0;
+
+                sql = "SELECT max(GameId) from L_PlayRecord";
+                try
+                {
+
+                    using (SqliteCommand cmd = new SqliteCommand(sql, conn))
+                    {
+                        using (SqliteDataReader rdr = cmd.ExecuteReader())
+                            while (rdr.Read())
+                            {
+                                gameId = rdr.GetInt32(0);
+                            }
+                    }
+                    gameId++;
+                }
+                catch (System.InvalidCastException)
+                {
+
+                }
+
+     
+                foreach (var record in records)
+                {
+
+                    sql = $"INSERT INTO L_PlayRecord (GameId, TurnId, ActionId) VALUES (\"{gameId}\", \"{record.Info.Turn}\", \"{record.Info.ActionNumber}\")";
+                    using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                    {
+                        cmd2.ExecuteNonQuery();
+                    }
+
+                    sql = "select last_insert_rowid()";
+                    using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                    {
+                        id = (long)cmd2.ExecuteScalar();
+                    }
+
+                    foreach (var action in record.ActionInfo)
+                    {
+                        sql = $"INSERT INTO L_ActionState (ActionId, HistoryId, Performed) VALUES (\"{action.ActionId}\", \"{id}\", \"{action.Performed}\")";
+                        using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                        {
+                            cmd2.ExecuteNonQuery();
+                        }
+                    }
+
+
+                    foreach (var compare in record.Compares)
+                    {
+                        sql = $"INSERT INTO L_FieldState (CompareId, HistoryId) VALUES (\"{compare.Id}\", \"{id}\")";
+                        using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                        {
+                            cmd2.ExecuteNonQuery();
+                        }
+                    }
+                }
+
+                transaction.Commit();
+                conn.Close();
+            }
+        }
+
+        public static long GetComparisonId(CompareTo compare)
+        {
+            long id = -4;
+
+            using (SqliteConnection conn = ConnectToDatabase())
+            {
+                conn.Open();
+                string sql = $"SELECT rowid FROM L_CompareTo WHERE " +
+                    $"Location = \"{compare.Location}\" AND Compare = \"{compare.Compare}\" AND Value = \"{compare.Value}\"";
+                using (SqliteCommand cmd = new SqliteCommand(sql, conn))
+                {
+                    using (SqliteDataReader rdr = cmd.ExecuteReader())
+                        while (rdr.Read())
+                        {
+                            id = rdr.GetInt64(0);
+                        }
+                }
+                conn.Close();
+            }
+
+            if (id == -4)
+                return NewComparisonId(compare);
+            return id;
+        }
+
+        private static long NewComparisonId(CompareTo compare)
+        {
+            long id = 0;
+            using (SqliteConnection conn = ConnectToDatabase())
+            {
+                conn.Open();
+
+                SqliteTransaction transaction = conn.BeginTransaction();
+
+                string sql = $"INSERT INTO L_CompareTo (Location, Compare, Value) VALUES (\"{compare.Location}\", \"{compare.Compare}\", \"{compare.Value}\")";
+                using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                {
+                    cmd2.ExecuteNonQuery();
+                }
+
+                sql = "select last_insert_rowid()";
+                using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                {
+                    id = (long)cmd2.ExecuteScalar();
+                }
+
+                transaction.Commit();
+                conn.Close();
+            }
+
+            return id;
+        }
+
+        public static long GetActionId(ActionInfo action)
+        {
+            long id = -4;
+
+            using (SqliteConnection conn = ConnectToDatabase())
+            {
+                conn.Open();
+                string sql = $"SELECT rowid FROM L_ActionList WHERE " +
+                    $"Name = \"{action.Name}\" AND Action = \"{action.Action}\"";
+                using (SqliteCommand cmd = new SqliteCommand(sql, conn))
+                {
+                    using (SqliteDataReader rdr = cmd.ExecuteReader())
+                        while (rdr.Read())
+                        {
+                            id = rdr.GetInt64(0);
+                        }
+                }
+                conn.Close();
+            }
+
+            if (id == -4)
+                return NewActionId(action);
+            return id;
+        }
+
+        private static long NewActionId(ActionInfo action)
+        {
+            long id = 0;
+            using (SqliteConnection conn = ConnectToDatabase())
+            {
+                conn.Open();
+
+                SqliteTransaction transaction = conn.BeginTransaction();
+
+                string sql = $"INSERT INTO L_ActionList (Name, Action) VALUES (\"{action.Name}\", \"{action.Action}\")";
+                using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                {
+                    cmd2.ExecuteNonQuery();
+                }
+
+                sql = "select last_insert_rowid()";
+                using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                {
+                    id = (long)cmd2.ExecuteScalar();
+                }
+
+                transaction.Commit();
+                conn.Close();
+            }
+
+            return id;
+        }
+
+        public static double GetActionWeight(long actionId, long compareId)
+        {
+            double weight = 0;
+
+            using (SqliteConnection conn = ConnectToDatabase())
+            {
+                conn.Open();
+                string sql = $"SELECT Weight FROM L_Weights WHERE " +
+                    $"ActionId = \"{actionId}\" AND CompareId = \"{compareId}\"";
+                using (SqliteCommand cmd = new SqliteCommand(sql, conn))
+                {
+                    using (SqliteDataReader rdr = cmd.ExecuteReader())
+                        while (rdr.Read())
+                        {
+                            weight = rdr.GetDouble(0);
+                        }
+                }
+                conn.Close();
+            }
+
+            return weight;
+        }
+
         #endregion
     }
 }

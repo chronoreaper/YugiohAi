@@ -139,6 +139,7 @@ namespace WindBot
                 SQLComm.PastWinsLimit = Config.GetInt("PastWinsLimit", SQLComm.PastWinsLimit);
                 SQLComm.Name = Config.GetString("Name", SQLComm.Name);
                 SQLComm.Id = Config.GetInt("Id", SQLComm.Id);
+                SQLComm.IsManual = Config.GetBool("IsManual", SQLComm.IsManual);
 
                 //@"URI=file:\windbot_master\windbot_master\bin\Debug\cards.cdb";
                 string dir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);

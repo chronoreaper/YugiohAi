@@ -19,10 +19,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.neural_network import MLPClassifier
+from sklearn.neural_network import MLPClassifier, MLPRegressor
 
 from sys import platform
 from pathlib import Path
+
+TrainData = False
+ShowData = True
 
 class Action:
   def __init__(self, id, name, action) -> None:
@@ -34,7 +37,7 @@ class Action:
     return str(self.name + " " + self.action)
 
 class ActionState:
-  def __init__(self, id, actionId, historyId, performed) -> None:
+  def __init__(self, id, actionId, historyId, performed: bool) -> None:
     self.id = id
     self.actionId = actionId
     self.historyId = historyId
@@ -57,207 +60,305 @@ class FieldState:
     self.historyId = historyId
 
 class PlayRecord:
-  def __init__(self, id, gameId, turnId, actionId) -> None:
+  def __init__(self, id, gameId, turnId, actionId, c1h, c1f, c2h, c2f, p1h, p1f, p2h, p2f) -> None:
     self.id = id
     self.gameId = gameId
     self.turnId = turnId
     self.actionId = actionId
+    self.curP1Hand = c1h
+    self.curP1Field = c1f
+    self.curP2Hand = c2h
+    self.curP2Field = c2f
+    self.postP1Hand = p1h
+    self.postP1Field = p1f
+    self.postP2Hand = p2h
+    self.postP2Field = p2f
+
+def deleteData():
+  global TrainData, ShowData
+  if (TrainData):
+    folder = './data'
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
+
+def read_data():
+  global TrainData, ShowData
+  print("Reading data")
+  action_list: typing.Dict[int, Action] = {}
+  action_state: typing.Dict[int, typing.List[ActionState]] = {}
+  compare_to: typing.Dict[int, CompareTo] = {}
+  field_state: typing.Dict[int, typing.List[FieldState]] = {}
+  play_record: typing.Dict[int, PlayRecord] = {}
+
+  conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
+  c = conn.cursor()
+
+  #c.execute('SELECT rowid, Name, Action FROM L_ActionList where Output = ?', (node_id,))
+
+  c.execute('SELECT rowid, Name, Action FROM L_ActionList')
+  records = c.fetchall()
+  for record in records:
+    action_list[record[0]] = Action(record[0], record[1], record[2])
+
+  c.execute('SELECT rowid, ActionId, HistoryId, Performed FROM L_ActionState')
+  records = c.fetchall()
+  for record in records:
+    id = record[2]
+    if (id not in action_state):
+      action_state[id] = []
+    action_state[id].append(ActionState(record[0], record[1], record[2], record[3]))
+
+  c.execute('SELECT rowid, Location, Compare, Value FROM L_CompareTo')
+  records = c.fetchall()
+  for record in records:
+    compare_to[record[0]] = CompareTo(record[0], record[1], record[2], record[3])
+
+  c.execute('SELECT rowid, CompareId, HistoryId FROM L_FieldState')
+  records = c.fetchall()
+  for record in records:
+    id = record[2]
+    if (id not in field_state):
+      field_state[id] = []
+    field_state[id].append(FieldState(record[0], record[1], record[2]))
+
+  c.execute('SELECT rowid, GameId, TurnId, ActionId, CurP1Hand, CurP1Field, CurP2Hand, CurP2Field, PostP1Hand, PostP1Field, PostP2Hand, PostP2Field FROM L_PlayRecord')
+  records = c.fetchall()
+  for record in records:
+    play_record[record[0]] = PlayRecord(record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7], record[8], record[9], record[10], record[11])
+
+  # Game History
+  if __name__ == "__main__" and ShowData:
+    stats_input = []
+    stats_output = []
+
+    clf = None
+
+    if os.path.exists("./data/stats"):
+      file = open("./data/stats", 'rb')
+      clf = pickle.load(file)
+      file.close()
 
 
-action_list: typing.Dict[int, Action] = {}
-action_state: typing.Dict[int, ActionState] = {}
-compare_to: typing.Dict[int, CompareTo] = {}
-field_state: typing.Dict[int, FieldState] = {}
-play_record: typing.Dict[int, PlayRecord] = {}
-
-conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
-c = conn.cursor()
-
-#c.execute('SELECT rowid, Name, Action FROM L_ActionList where Output = ?', (node_id,))
-
-c.execute('SELECT rowid, Name, Action FROM L_ActionList')
-records = c.fetchall()
-for record in records:
-  action_list[record[0]] = Action(record[0], record[1], record[2])
-
-c.execute('SELECT rowid, ActionId, HistoryId, Performed FROM L_ActionState')
-records = c.fetchall()
-for record in records:
-  action_state[record[0]] = ActionState(record[0], record[1], record[2], record[3])
-
-c.execute('SELECT rowid, Location, Compare, Value FROM L_CompareTo')
-records = c.fetchall()
-for record in records:
-  compare_to[record[0]] = CompareTo(record[0], record[1], record[2], record[3])
-
-c.execute('SELECT rowid, CompareId, HistoryId FROM L_FieldState')
-records = c.fetchall()
-for record in records:
-  field_state[record[0]] = FieldState(record[0], record[1], record[2])
-
-c.execute('SELECT rowid, GameId, TurnId, ActionId FROM L_PlayRecord')
-records = c.fetchall()
-for record in records:
-  play_record[record[0]] = PlayRecord(record[0], record[1], record[2], record[3])
-
-
-# Game History
-def game_history():
-  if (len(play_record) < 500):
-    for id in play_record:
+    keys = list(play_record.keys())
+    random.shuffle(keys)
+    for id in keys:
       record = play_record[id]
       print("Game:" + str(record.gameId) + " Turn:" + str(record.turnId) + " Action:" + str(record.actionId))
       print("")
+      print("--------Stats--------")
+      print("curP1Hand:" + str(record.curP1Hand))
+      print("curP1Field:" + str(record.curP1Field))
+      print("curP2Hand:" + str(record.curP2Hand))
+      print("curP2Field:" + str(record.curP2Field))
+      print("postP1Hand:" + str(record.postP1Hand))
+      print("postP1Field:" + str(record.postP1Field))
+      print("postP2Hand:" + str(record.postP2Hand))
+      print("postP2Field:" + str(record.postP2Field))
+
+      field = [
+        int(record.curP1Hand),
+        int(record.curP1Field),
+        int(record.curP2Hand),
+        int(record.curP2Field),
+        int(record.postP1Hand),
+        int(record.postP1Field),
+        int(record.postP2Hand),
+        int(record.postP2Field)
+      ]
+
       print("--------Field State--------")
-      for j in field_state:
-        state = field_state[j]
-        if (state.historyId == record.id):
-          compare = compare_to[state.compareId]
-          print("  " + str(compare))
+
+      stateField = field_state[id]
+      for j in stateField: # To Update
+        compare = compare_to[j.compareId]
+        print("  " + str(compare))
 
       print("--------Possible Actions--------")
-      for j in action_state:
-        state = action_state[j]
-        if (state.historyId == record.id):
-          action = action_list[state.actionId]
-          print("  " + str(state.performed) + "| " + str(action))
-
-#game_history()
-
-# Generate training data
-#         | compare1 | compare2 | .....
-# action1 |   0/1    |    0/1   | .....
-# action1 |   0/1    |    0/1   | .....
-# action2 |   0/1    |    0/1   | .....
-
-# { actionId:{ ActionState: [ compareId ]} }
-training_data: typing.Dict[int, typing.Dict[ActionState, typing.List[int]]] = {}
-
-for id in action_state:
-  action = action_state[id]
-  for j in field_state:
-    state = field_state[j]
-    if (state.historyId == action.historyId):
-      if (action.actionId not in training_data):
-        training_data[action.actionId] = {}
-      if (action not in training_data[action.actionId]):
-        training_data[action.actionId][action] = []
-      training_data[action.actionId][action].append(state.compareId)
-        
-
-# Create data
-with open('data.csv', 'w', newline='') as file:
-  writer = csv.writer(file)
-  compare_len = len(compare_to)
-  print("Compare length " + str(compare_len))
-
-  compare_list = []
-  compare_list.append("ACTION")
-  compare_list.append("ACTIVATED")
-  for i in range(1, compare_len + 1):
-    if (i not in compare_to):
-      print("ERROR " + str(i) + " Not in compare to list")
-    compare_list.append(str(compare_to[i]))
-
-  writer.writerow(compare_list)
-
-  for actionId in training_data:
-    for action in training_data[actionId]:
-      row = []
-      compareId = training_data[actionId][action]
-      row.append(str(action_list[actionId]))  
-      row.append(str(action.performed))
-      for i in range(1, compare_len + 1):
-        if (i in compareId):
-          row.append(1)  
-        else:
-          row.append(0)  
+      stateAction = action_state[id]
+      for j in stateAction:
+        action = action_list[j.actionId]
+        print("  " + str(j.performed) + "| " + str(action))
       
-      writer.writerow(row)
+      if clf:
+        print("Estimated Value:" + str(clf.predict_proba([field])[0]))
+        print("Estimate:" + str(clf.predict([field])[0]))
 
-# Solve data
+      if len(stateAction) <= 1:
+        continue
 
-# Create an answer for each action
+      value = -1
+      leave = False
 
-sql_delete_query = """DELETE from L_Weights"""
-c.execute(sql_delete_query)
-conn.commit()
+      if not TrainData:
+        while value != '0' and value != '1':
+          value = input("good (1) or bad (0)")
+          try:
+            if (len(value) == 0):
+              leave = True
+              break
+            elif (int(value) != 0 and int(value) != 1):
+              value = -1
+          except:
+            value = -1
+            print("Input error, try again")
+      elif (clf and clf.predict([field])[0] == 0) or len(stateAction) <= 1: # If action is deemed bad, remove it?
+          if len(stateAction) == 2: # OTher choice is better
+            for j in stateAction:
+              j.performed = not j.performed
+          else: #idk what to do, remove it?
+            action_state.pop(id)
+            field_state.pop(id)
 
-with open('weights.csv', 'w', newline='') as file:
-  writer = csv.writer(file)
+      if (leave):
+        break
 
-  compare_list = []
-  compare_list.append("ACTION")
-  for i in range(1, compare_len + 1):
-    if (i not in compare_to):
-      print("ERROR " + str(i) + " Not in compare to list")
-    compare_list.append(str(compare_to[i]))
-  writer.writerow(compare_list)
+      stats_input.append(field)
+      stats_output.append(int(value))
+    
+    if not TrainData:
+      #x_train = x_test = stats_input
+      #y_train = y_test = stats_output
+      x_train, x_test, y_train, y_test = train_test_split(stats_input, stats_output, test_size=0.4)
 
-  for actionId in training_data:
-    answer = []
-    data = []
-    for action in training_data[actionId]:
-      answer.append(int(action.performed == 'True'))
+      print("Samples=" + str(len(stats_input)))
 
-      row = []
+      if (clf == None):
+        clf = MLPClassifier(activation='relu', solver='adam', max_iter=1000,
+                    hidden_layer_sizes=(16, 16)).fit(x_test, y_test)
+      else:
+        clf.partial_fit(x_train, y_train)
+      print(clf.score(x_test, y_test))
+
+      if not os.path.exists("./data"):
+        os.mkdir("./data")
+      file = open('./data/stats', 'wb')
+      pickle.dump(clf, file)
+      file.close()
+
+
+  # Generate training data
+  #         | compare1 | compare2 | .....
+  # action1 |   0/1    |    0/1   | .....
+  # action1 |   0/1    |    0/1   | .....
+  # action2 |   0/1    |    0/1   | .....
+  print("Compiling data")
+  # { actionId:{ ActionState: [ compareId ]} }
+  
+  training_data: typing.Dict[int, typing.Dict[ActionState, typing.List[int]]] = {}
+
+  for id in action_state:
+    for action in action_state[id]:
+      if (action.historyId in field_state):
+        states = field_state[action.historyId]
+        for state in states:
+          if (state.historyId == action.historyId):
+            if (action.actionId not in training_data):
+              training_data[action.actionId] = {}
+            if (action not in training_data[action.actionId]):
+              training_data[action.actionId][action] = []
+            training_data[action.actionId][action].append(state.compareId)
+
+  if (TrainData):
+    print("append data to csv")
+    # Create data
+    with open('data.csv', 'w', newline='') as file:
+      writer = csv.writer(file)
       compare_len = len(compare_to)
+      print("Compare length " + str(compare_len))
+
+      compare_list = []
+      compare_list.append("ACTION")
+      compare_list.append("ACTIVATED")
       for i in range(1, compare_len + 1):
-        if (i in training_data[actionId][action]):
-          row.append(1)
-        else:
-          row.append(0)
+        if (i not in compare_to):
+          print("ERROR " + str(i) + " Not in compare to list")
+        compare_list.append(str(compare_to[i]))
 
-      data.append(row)
+      writer.writerow(compare_list)
 
-    x_train = x_test = data
-    y_train = y_test = answer
-    #x_train, x_test, y_train, y_test = train_test_split(data, answer, test_size=0.4)
+      for actionId in training_data:
+        for action in training_data[actionId]:
+          row = []
+          compareId = training_data[actionId][action]
+          row.append(str(action_list[actionId]))  
+          row.append(str(action.performed))
+          for i in range(1, compare_len + 1):
+            if (i in compareId):
+              row.append(1)  
+            else:
+              row.append(0)  
+          
+          writer.writerow(row)
 
-    print(str(actionId) + ": Samples=" + str(len(training_data[actionId])))
+    # Solve data
+    print("solve data")
+    # Create an answer for each action
 
-    # model = LinearRegression().fit(x_train, y_train)
-    
-    # print(model.score(x_train, y_train))
-    # print(model.score(x_test, y_test))
+    with open('weights.csv', 'w', newline='') as file:
+      writer = csv.writer(file)
+
+      compare_list = []
+      compare_list.append("ACTION")
+      for i in range(1, compare_len + 1):
+        if (i not in compare_to):
+          print("ERROR " + str(i) + " Not in compare to list")
+        compare_list.append(str(compare_to[i]))
+      writer.writerow(compare_list)
+
+      for actionId in training_data:
+        answer = []
+        data = []
+        for action in training_data[actionId]:
+          answer.append(int(action.performed == 'True'))
+
+          row = []
+          compare_len = len(compare_to)
+          for i in range(1, compare_len + 1):
+            if (i in training_data[actionId][action]):
+              row.append(1)
+            else:
+              row.append(0)
+
+          data.append(row)
+
+        x_train = x_test = data
+        y_train = y_test = answer
+        #x_train, x_test, y_train, y_test = train_test_split(data, answer, test_size=0.4)
+
+        print(str(actionId) + ": Samples=" + str(len(training_data[actionId])))
+
+        clf = MLPClassifier(activation='relu', solver='adam', max_iter=1000,
+                    hidden_layer_sizes=(compare_len * 2, compare_len * 2)).fit(x_train, y_train)
+        print(clf.score(x_test, y_test))
 
 
-    # model = GradientBoostingRegressor(random_state=0).fit(x_train, y_train)
-    # print(model.score(x_train, y_train))
-    # print(model.score(x_test, y_test))
-    # #print(model.get_params())
+        if not os.path.exists("./data"):
+          os.mkdir("./data")
+        file = open('./data/action'+str(actionId), 'wb')
+        pickle.dump(clf, file)
+        file.close()
 
+        M = np.array(data)
+        y = np.array(answer)
 
-    # model = RandomForestRegressor(random_state=0).fit(x_train, y_train)
-    # print(model.score(x_train, y_train))
-    # print(model.score(x_test, y_test))
+        p, res, rnk, s = lstsq(M, y)
 
-    clf = MLPClassifier(solver='lbfgs', alpha=1e-5,
-                    hidden_layer_sizes=(15, 12), random_state=0).fit(x_train, y_train)
-    
-    print(clf.score(x_test, y_test))
+        to_insert = [str(action_list[actionId])]
+        to_insert.extend(p.tolist())
+        writer.writerow(to_insert)
+      
+  conn.commit()
+  conn.close()
 
-    clf = MLPClassifier(activation='relu', solver='adam', max_iter=500,
-                hidden_layer_sizes=(compare_len * 2, compare_len * 2)).fit(x_train, y_train)
-    print(clf.score(x_test, y_test))
+  return training_data
 
-    if not os.path.exists("./data"):
-      os.mkdir("./data")
-    file = open('./data/action'+str(actionId), 'wb')
-    pickle.dump(clf, file)
-    file.close()
-
-    M = np.array(data)
-    y = np.array(answer)
-
-    p, res, rnk, s = lstsq(M, y)
-
-    to_insert = [str(action_list[actionId])]
-    to_insert.extend(p.tolist())
-    writer.writerow(to_insert)
-
-    for compareId in range(len(p)):
-      c.execute('INSERT INTO L_Weights values (?,?,?)', (actionId, compareId, p[compareId]))
-    
-conn.commit()
-conn.close()
+if __name__ == "__main__":
+  deleteData()
+  training_data = read_data()

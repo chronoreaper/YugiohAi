@@ -11,6 +11,7 @@ namespace WindBot
     public class PlayHistory
     {
         public List<History> Records = new List<History>();
+        public List<History> CurrentTurn = new List<History>();
 
         public class History
         {
@@ -19,6 +20,15 @@ namespace WindBot
             public List<ActionInfo> ActionInfo = new List<ActionInfo>();
             public List<CompareTo> Compares = new List<CompareTo>();
 
+            public int CurP1Hand = 0;
+            public int CurP1Field = 0;
+            public int CurP2Hand = 0;
+            public int CurP2Field = 0;
+
+            public int PostP1Hand = -1;
+            public int PostP1Field = -1;
+            public int PostP2Hand = -1;
+            public int PostP2Field = -1;
         }
 
         public class GameInfo
@@ -96,19 +106,34 @@ namespace WindBot
             return new History() { Info = info, ActionInfo = actions, Compares = compare};
         }
 
-        public void AddHistory(List<History> history)
-        {
-            Records.AddRange(history);
-        }
 
-        public void AddHistory(History history)
+        public void AddHistory(History history, Duel duel)
         {
+            history.CurP1Field = duel.Fields[0].GetFieldCount();
+            history.CurP1Hand = duel.Fields[0].GetHandCount();
+            history.CurP2Field = duel.Fields[1].GetFieldCount();
+            history.CurP2Hand = duel.Fields[1].GetHandCount();
+
             Records.Add(history);
+            CurrentTurn.Add(history);
         }
 
-        public void SaveHistory()
+        public void SaveHistory(int result)
         {
-            SQLComm.SavePlayHistory(Records);
+            SQLComm.SavePlayHistory(Records, result);
+        }
+
+        public void EndOfTurn(Duel duel)
+        {
+            foreach(var info in CurrentTurn)
+            {
+                info.PostP1Field = duel.Fields[0].GetFieldCount();
+                info.PostP1Hand = duel.Fields[0].GetHandCount();
+                info.PostP2Field = duel.Fields[1].GetFieldCount();
+                info.PostP2Hand = duel.Fields[1].GetHandCount();
+            }
+            
+            CurrentTurn.Clear();
         }
     }
 }

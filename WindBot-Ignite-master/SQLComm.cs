@@ -622,11 +622,13 @@ namespace WindBot
 
         #region Recording
 
-        public static void SavePlayHistory(List<History> records)
+        public static void SavePlayHistory(List<History> records, int result)
         {
             if (!IsTraining)
                 return;
 
+            if (result != 0)
+                return;
 
             using (SqliteConnection conn = ConnectToDatabase())
             {
@@ -662,7 +664,10 @@ namespace WindBot
                 foreach (var record in records)
                 {
 
-                    sql = $"INSERT INTO L_PlayRecord (GameId, TurnId, ActionId) VALUES (\"{gameId}\", \"{record.Info.Turn}\", \"{record.Info.ActionNumber}\")";
+                    sql = $"INSERT INTO L_PlayRecord (GameId, TurnId, ActionId, CurP1Hand, CurP1Field, CurP2Hand, CurP2Field, PostP1Hand, PostP1Field, PostP2Hand, PostP2Field) " +
+                        $"VALUES (\"{gameId}\", \"{record.Info.Turn}\", \"{record.Info.ActionNumber}\", " +
+                        $"\"{record.CurP1Hand}\", \"{record.CurP1Field}\", \"{record.CurP2Hand}\", \"{record.CurP2Field}\"," +
+                        $"\"{record.PostP1Hand}\", \"{record.PostP1Field}\", \"{record.PostP2Hand}\", \"{record.PostP2Field}\")";
                     using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                     {
                         cmd2.ExecuteNonQuery();

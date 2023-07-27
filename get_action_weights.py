@@ -24,41 +24,52 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.neural_network import MLPClassifier
 
-datacount = len(glob.glob("./data/*"))
-print("Counted " + str(datacount) + " data.")
 action_data = []
+compare_count = 0
 
-for i in range(1, datacount + 1):
-  file = open("./data/action"+str(i), 'rb')
-  action_data.append(pickle.load(file))
-  file.close()
+def load_data():
+  global action_data, compare_count
+  datacount = len(glob.glob("./data/*"))
+  # print("Counted " + str(datacount) + " data.")
+  action_data = []
 
-print("Loaded " + str(len(action_data)) + " data.")
+  for i in range(1, datacount + 1):
+    file = open("./data/action"+str(i), 'rb')
+    action_data.append(pickle.load(file))
+    file.close()
 
-conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
-c = conn.cursor()
-c.execute('SELECT max(rowid) FROM L_CompareTo')
-compare_count = c.fetchone()[0]
-conn.close()
+  # print("Loaded " + str(len(action_data)) + " data.")
 
-print("Compare Count:" + str(compare_count))
+  conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
+  c = conn.cursor()
+  c.execute('SELECT max(rowid) FROM L_CompareTo')
+  compare_count = c.fetchone()[0]
+  conn.close()
+
+  # print("Compare Count:" + str(compare_count))
 
 def get_predictions(data: typing.List[int], actions: typing.List[int]):
-    compare = []
-    for i in range(1, compare_count + 1):
-      if (i not in data) :
-        compare.append(0)
-      else:
-        compare.append(1)
+  global action_data, compare_count
+  compare = []
+  for i in range(1, compare_count + 1):
+    if (i not in data) :
+      compare.append(0)
+    else:
+      compare.append(1)
 
-    result = {}
+  # print("compare")
+  # print(len(compare))
+  result = {}
 
-    for action in actions:
-      if int(action) - 1 < len(action_data):
-        result[action] = str(action_data[int(action) - 1].predict([compare])[0])
-        print("Action" + str(action) + ":" + result[action])
+  for action in actions:
+    if int(action) - 1 < len(action_data):
+      result[action] = str(action_data[int(action) - 1].predict_proba([compare])[0][1])
+      # print("Action" + str(action) + ":" + result[action])
+      print("Actions "  + str(action) + ":" +str(action_data[int(action) - 1].predict_proba([compare])[0][0]))
+    else:
+      result[action] = str(-1)
 
-    return result
+  return result
 
 def run_command_line():
   while True:
@@ -75,8 +86,8 @@ class handler(BaseHTTPRequestHandler):
         get_body = self.rfile.read(content_len).decode()
         raw_data = json.loads(get_body)
 
-        print(raw_data["data"])
-        print(raw_data["actions"])
+        # print(raw_data["data"])
+        # print(raw_data["actions"])
 
         data = raw_data["data"].split(' ')
         actions = raw_data["actions"].split(' ')
@@ -86,15 +97,15 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Content-type','text/html')
         self.end_headers()
 
-        print(predictions)
+        # print(predictions)
         message = json.dumps(predictions)
         self.wfile.write(bytes(message, "utf8"))
 
 def run_server():
-
-
   with HTTPServer(('', 8000), handler) as server:
       server.serve_forever()
 
-#run_command_line()
-run_server()
+if __name__ == "__main__":
+  load_data()
+  #run_command_line()
+  run_server()

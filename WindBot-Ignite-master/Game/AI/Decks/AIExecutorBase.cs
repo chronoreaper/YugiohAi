@@ -112,13 +112,17 @@ namespace WindBot.Game.AI.Decks
                 actions.Add(History.GenerateActionInfo("", ExecutorType.GoToEndPhase));
 
             BestAction = GetBestAction(actions, compare);
-            BestAction.Performed = true;
+            if (BestAction != null)
+                BestAction.Performed = true;
 
-            History.AddHistory(History.GenerateHistory(gameInfo, compare, actions));
+            History.AddHistory(History.GenerateHistory(gameInfo, compare, actions), Duel);
         }
 
         private PlayHistory.ActionInfo GetBestAction(List<PlayHistory.ActionInfo> actions, List<PlayHistory.CompareTo> comparisons)
         {
+            if (actions.Count == 0)
+                return null;
+
             List<long> input = new List<long>();
             List<long> data = new List<long>();
 
@@ -134,7 +138,7 @@ namespace WindBot.Game.AI.Decks
 
             //Get Best Action
 
-            if (!SQLComm.IsTraining)
+            if (!SQLComm.IsManual)
             {
                 Console.WriteLine("Actions for Turn " + Duel.Turn + " Action # " + ActionNumber);
                 int choice = 0;
@@ -148,9 +152,9 @@ namespace WindBot.Game.AI.Decks
                     double weight = weights[i];
 
                     //set go to next phase as lowest prio
-                    if(action.ToString().Contains("GoTo"))
+                    if((action.Action == ExecutorType.GoToBattlePhase || action.Action == ExecutorType.GoToEndPhase) && !SQLComm.IsTraining)
                     {
-                        weight = 0.5;
+                        weight = 0.1;
                     }
 
                     Console.WriteLine(" " + i + ":" + action.ToString() + " Weight:" + weight);
@@ -291,6 +295,7 @@ namespace WindBot.Game.AI.Decks
         {
             base.OnNewTurn();
             ActionNumber = 0;
+            History.EndOfTurn(Duel);
         }
 
         public override IList<ClientCard> OnSelectCard(IList<ClientCard> _cards, int min, int max, long hint, bool cancelable)
@@ -470,7 +475,7 @@ namespace WindBot.Game.AI.Decks
                     best.Performed = true;
                 }
 
-                History.AddHistory(History.GenerateHistory(info, compare, actions));
+                History.AddHistory(History.GenerateHistory(info, compare, actions), Duel);
 
                 return action.Performed;
             }
@@ -484,7 +489,8 @@ namespace WindBot.Game.AI.Decks
             //NEAT.games++;
             //NEAT.wins += result == 0 ? 1 : 0;
             //NEAT.SaveNetwork(result == 0 ? 1 : 0);
-            History.SaveHistory();
+            History.EndOfTurn(Duel);
+            History.SaveHistory(result);
         }
 
         private string SelectStringBuilder(ClientCard Card, int Quant = 1)

@@ -24,7 +24,7 @@ from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sys import platform
 from pathlib import Path
 
-TrainData = False
+TrainData = True
 ShowData = True
 
 class Action:
@@ -140,8 +140,8 @@ def read_data():
 
     clf = None
 
-    if os.path.exists("./data/stats"):
-      file = open("./data/stats", 'rb')
+    if os.path.exists("./stats"):
+      file = open("./stats", 'rb')
       clf = pickle.load(file)
       file.close()
 
@@ -150,17 +150,18 @@ def read_data():
     random.shuffle(keys)
     for id in keys:
       record = play_record[id]
-      print("Game:" + str(record.gameId) + " Turn:" + str(record.turnId) + " Action:" + str(record.actionId))
-      print("")
-      print("--------Stats--------")
-      print("curP1Hand:" + str(record.curP1Hand))
-      print("curP1Field:" + str(record.curP1Field))
-      print("curP2Hand:" + str(record.curP2Hand))
-      print("curP2Field:" + str(record.curP2Field))
-      print("postP1Hand:" + str(record.postP1Hand))
-      print("postP1Field:" + str(record.postP1Field))
-      print("postP2Hand:" + str(record.postP2Hand))
-      print("postP2Field:" + str(record.postP2Field))
+      if not TrainData:
+        print("Game:" + str(record.gameId) + " Turn:" + str(record.turnId) + " Action:" + str(record.actionId))
+        print("")
+        print("--------Stats--------")
+        print("curP1Hand:" + str(record.curP1Hand))
+        print("curP1Field:" + str(record.curP1Field))
+        print("curP2Hand:" + str(record.curP2Hand))
+        print("curP2Field:" + str(record.curP2Field))
+        print("postP1Hand:" + str(record.postP1Hand))
+        print("postP1Field:" + str(record.postP1Field))
+        print("postP2Hand:" + str(record.postP2Hand))
+        print("postP2Field:" + str(record.postP2Field))
 
       field = [
         int(record.curP1Hand),
@@ -172,23 +173,27 @@ def read_data():
         int(record.postP2Hand),
         int(record.postP2Field)
       ]
-
-      print("--------Field State--------")
+      
+      if not TrainData:
+        print("--------Field State--------")
 
       stateField = field_state[id]
-      for j in stateField: # To Update
-        compare = compare_to[j.compareId]
-        print("  " + str(compare))
+      if not TrainData:
+        for j in stateField: # To Update
+          compare = compare_to[j.compareId]
+          print("  " + str(compare))
 
-      print("--------Possible Actions--------")
+        print("--------Possible Actions--------")
+
       stateAction = action_state[id]
-      for j in stateAction:
-        action = action_list[j.actionId]
-        print("  " + str(j.performed) + "| " + str(action))
-      
-      if clf:
-        print("Estimated Value:" + str(clf.predict_proba([field])[0]))
-        print("Estimate:" + str(clf.predict([field])[0]))
+      if not TrainData:
+        for j in stateAction:
+          action = action_list[j.actionId]
+          print("  " + str(j.performed) + "| " + str(action))
+        
+        if clf:
+          print("Estimated Value:" + str(clf.predict_proba([field])[0]))
+          print("Estimate:" + str(clf.predict([field])[0]))
 
       if len(stateAction) <= 1:
         continue
@@ -209,6 +214,7 @@ def read_data():
             value = -1
             print("Input error, try again")
       elif (clf and clf.predict([field])[0] == 0) or len(stateAction) <= 1: # If action is deemed bad, remove it?
+          #print("removing/changing bad choice " + str(id))
           if len(stateAction) == 2: # OTher choice is better
             for j in stateAction:
               j.performed = not j.performed
@@ -236,9 +242,7 @@ def read_data():
         clf.partial_fit(x_train, y_train)
       print(clf.score(x_test, y_test))
 
-      if not os.path.exists("./data"):
-        os.mkdir("./data")
-      file = open('./data/stats', 'wb')
+      file = open('./stats', 'wb')
       pickle.dump(clf, file)
       file.close()
 

@@ -26,7 +26,7 @@ AIMaster = 'Master'
 deck1 = 'AI_Random1.ydk'
 deck2 = 'AI_Random2.ydk'
 
-totalGames = 100
+totalGames = 20
 species = 10
 generations = 10
 
@@ -71,7 +71,7 @@ def deleteData():
 
 def resetDB():
 
-  deleteData()
+  #deleteData()
   dbfile = './cardData.cdb'
   con = sqlite3.connect(dbfile)
   cur = con.cursor()

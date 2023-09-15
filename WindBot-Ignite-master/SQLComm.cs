@@ -627,8 +627,15 @@ namespace WindBot
             if (!IsTraining)
                 return;
 
-            if (result != 0)
-                return;
+            //if (result != 0)
+            //    return;
+            float reward = 0;
+            if (result == 0)
+                reward = 1;
+            else if (result == 1)
+                reward = 0;
+            else
+                reward = 0.5f;
 
             using (SqliteConnection conn = ConnectToDatabase())
             {
@@ -664,10 +671,10 @@ namespace WindBot
                 foreach (var record in records)
                 {
 
-                    sql = $"INSERT INTO L_PlayRecord (GameId, TurnId, ActionId, CurP1Hand, CurP1Field, CurP2Hand, CurP2Field, PostP1Hand, PostP1Field, PostP2Hand, PostP2Field) " +
+                    sql = $"INSERT INTO L_PlayRecord (GameId, TurnId, ActionId, CurP1Hand, CurP1Field, CurP2Hand, CurP2Field, PostP1Hand, PostP1Field, PostP2Hand, PostP2Field, Result) " +
                         $"VALUES (\"{gameId}\", \"{record.Info.Turn}\", \"{record.Info.ActionNumber}\", " +
                         $"\"{record.CurP1Hand}\", \"{record.CurP1Field}\", \"{record.CurP2Hand}\", \"{record.CurP2Field}\"," +
-                        $"\"{record.PostP1Hand}\", \"{record.PostP1Field}\", \"{record.PostP2Hand}\", \"{record.PostP2Field}\")";
+                        $"\"{record.PostP1Hand}\", \"{record.PostP1Field}\", \"{record.PostP2Hand}\", \"{record.PostP2Field}\", \"{reward}\")";
                     using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                     {
                         cmd2.ExecuteNonQuery();

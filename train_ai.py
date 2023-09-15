@@ -26,7 +26,7 @@ AIMaster = 'Master'
 deck1 = 'AI_Random1.ydk'
 deck2 = 'AI_Random2.ydk'
 
-totalGames = 20
+totalGames = 100
 species = 10
 generations = 10
 
@@ -71,26 +71,7 @@ def deleteData():
 
 def resetDB():
 
-  #deleteData()
-  dbfile = './cardData.cdb'
-  con = sqlite3.connect(dbfile)
-  cur = con.cursor()
-  sql_delete_query = """DELETE from L_ActionList"""
-  cur.execute(sql_delete_query)
-  sql_delete_query = """DELETE from L_CompareTo"""
-  cur.execute(sql_delete_query)
-  sql_delete_query = """DELETE from L_PlayRecord"""
-  cur.execute(sql_delete_query)
-  sql_delete_query = """DELETE from L_FieldState"""
-  cur.execute(sql_delete_query)
-  sql_delete_query = """DELETE from L_ActionState"""
-  cur.execute(sql_delete_query)
-  sql_delete_query = """DELETE from L_Weights"""
-  cur.execute(sql_delete_query)
-  con.commit()
-  con.close()
-
-def delete_old_games():
+  deleteData()
   dbfile = './cardData.cdb'
   con = sqlite3.connect(dbfile)
   cur = con.cursor()
@@ -167,7 +148,8 @@ def runAi(Deck = "Random1",
                         "WinsThreshold="+str(WinsThreshold), 
                         "PastWinsLimit="+str(PastWinsLimit),
                         "Id="+str(Id)
-                        ])
+                        ],
+                        stdout=subprocess.DEVNULL)
     
   os.chdir(currentdir)
   
@@ -250,7 +232,7 @@ def main_game_runner(isTraining, totalGames, Id1, Id2):
     file_path = str(Path(__file__).resolve().parent.parent) + "/ProjectIgnisLinux/ygopro"
  
   
-  g = subprocess.Popen([file_path])
+  g = subprocess.Popen([file_path], stdout=subprocess.DEVNULL)
 
 
   while(g.poll() == None and not isrespondingPID(g.pid)):
@@ -321,7 +303,6 @@ def main():
   setup()
 
   for g in range(generations):
-    #delete_old_games()
     read_game_data.read_data()
     get_action_weights.load_data()
     
@@ -334,6 +315,7 @@ def main():
     
     proc.terminate()  # sends a SIGTERM
     print("done cycle")
+  read_game_data.read_data()
 
 if __name__ == "__main__":
   main()

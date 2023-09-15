@@ -24,7 +24,7 @@ from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sys import platform
 from pathlib import Path
 
-TrainData = True
+TrainData = False
 ShowData = True
 
 class Action:
@@ -60,7 +60,7 @@ class FieldState:
     self.historyId = historyId
 
 class PlayRecord:
-  def __init__(self, id, gameId, turnId, actionId, c1h, c1f, c2h, c2f, p1h, p1f, p2h, p2f) -> None:
+  def __init__(self, id, gameId, turnId, actionId, c1h, c1f, c2h, c2f, p1h, p1f, p2h, p2f, result) -> None:
     self.id = id
     self.gameId = gameId
     self.turnId = turnId
@@ -73,6 +73,7 @@ class PlayRecord:
     self.postP1Field = p1f
     self.postP2Hand = p2h
     self.postP2Field = p2f
+    self.result = result
 
 def deleteData():
   global TrainData, ShowData
@@ -128,10 +129,10 @@ def read_data():
       field_state[id] = []
     field_state[id].append(FieldState(record[0], record[1], record[2]))
 
-  c.execute('SELECT rowid, GameId, TurnId, ActionId, CurP1Hand, CurP1Field, CurP2Hand, CurP2Field, PostP1Hand, PostP1Field, PostP2Hand, PostP2Field FROM L_PlayRecord')
+  c.execute('SELECT rowid, GameId, TurnId, ActionId, CurP1Hand, CurP1Field, CurP2Hand, CurP2Field, PostP1Hand, PostP1Field, PostP2Hand, PostP2Field, Reward FROM L_PlayRecord')
   records = c.fetchall()
   for record in records:
-    play_record[record[0]] = PlayRecord(record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7], record[8], record[9], record[10], record[11])
+    play_record[record[0]] = PlayRecord(record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7], record[8], record[9], record[10], record[11], record[12])
 
   # Game History
   if __name__ == "__main__" and ShowData:
@@ -270,93 +271,72 @@ def read_data():
             training_data[action.actionId][action].append(state.compareId)
 
   if (TrainData):
-    print("append data to csv")
-    # Create data
-    with open('data.csv', 'w', newline='') as file:
-      writer = csv.writer(file)
-      compare_len = len(compare_to)
-      print("Compare length " + str(compare_len))
-
-      compare_list = []
-      compare_list.append("ACTION")
-      compare_list.append("ACTIVATED")
-      for i in range(1, compare_len + 1):
-        if (i not in compare_to):
-          print("ERROR " + str(i) + " Not in compare to list")
-        compare_list.append(str(compare_to[i]))
-
-      writer.writerow(compare_list)
-
-      for actionId in training_data:
-        for action in training_data[actionId]:
-          row = []
-          compareId = training_data[actionId][action]
-          row.append(str(action_list[actionId]))  
-          row.append(str(action.performed))
-          for i in range(1, compare_len + 1):
-            if (i in compareId):
-              row.append(1)  
-            else:
-              row.append(0)  
-          
-          writer.writerow(row)
-
     # Solve data
     print("solve data")
     # Create an answer for each action
 
-    with open('weights.csv', 'w', newline='') as file:
-      writer = csv.writer(file)
+    for actionId in training_data:
+      answer = []
+      data = []
 
-      compare_list = []
-      compare_list.append("ACTION")
-      for i in range(1, compare_len + 1):
-        if (i not in compare_to):
-          print("ERROR " + str(i) + " Not in compare to list")
-        compare_list.append(str(compare_to[i]))
-      writer.writerow(compare_list)
+      result = []
+      rewards = []
+      for action in training_data[actionId]:
+        answer.append(int(action.performed == 'True'))
 
-      for actionId in training_data:
-        answer = []
-        data = []
-        for action in training_data[actionId]:
-          answer.append(int(action.performed == 'True'))
+        reward = [0, 0] # [not performed, performed]
+        if action.performed == 'True':
+          reward = [0, 1]
+        else:
+          reward = [1, 0]
 
-          row = []
-          compare_len = len(compare_to)
-          for i in range(1, compare_len + 1):
-            if (i in training_data[actionId][action]):
-              row.append(1)
-            else:
-              row.append(0)
+        row = []
+        compare_len = len(compare_to)
+        for i in range(1, compare_len + 1):
+          if (i in training_data[actionId][action]):
+            row.append(1)
+          else:
+            row.append(0)
 
-          data.append(row)
+        data.append(row)
+        
+        reward.extend(row)
+        rewards.append(reward)
+        result.append(play_record[action.historyId].result)
+      
 
+
+      x_train, x_test, y_train, y_test = []
+      if(len(data) < 10):
         x_train = x_test = data
         y_train = y_test = answer
-        #x_train, x_test, y_train, y_test = train_test_split(data, answer, test_size=0.4)
+      else:
+        x_train, x_test, y_train, y_test = train_test_split(data, answer, test_size=0.4)
 
-        print(str(actionId) + ": Samples=" + str(len(training_data[actionId])))
+      print(str(actionId) + ": Samples=" + str(len(training_data[actionId])))
 
+      clf:MLPClassifier= None
+      if os.path.exists('./data/action'+str(actionId)) and len(x_train) > 0:
+        file = open("./data/action"+str(actionId), 'rb')
+        clf = pickle.load(file)
+        if len(x_train[0]) == clf.n_features_in_ and clf.classes_.all() in y_train:     
+          x_train = x_train
+          y_train = y_train
+          clf.partial_fit(x_train, y_train)
+        else:
+          clf = None
+      if clf == None:
         clf = MLPClassifier(activation='relu', solver='adam', max_iter=1000,
-                    hidden_layer_sizes=(compare_len * 2, compare_len * 2)).fit(x_train, y_train)
-        print(clf.score(x_test, y_test))
+                  hidden_layer_sizes=(compare_len * 2, compare_len * 2)).fit(x_train, y_train)
+        print("New Network")
+      # print(clf.score(x_test, y_test))
 
 
-        if not os.path.exists("./data"):
-          os.mkdir("./data")
-        file = open('./data/action'+str(actionId), 'wb')
-        pickle.dump(clf, file)
-        file.close()
-
-        M = np.array(data)
-        y = np.array(answer)
-
-        p, res, rnk, s = lstsq(M, y)
-
-        to_insert = [str(action_list[actionId])]
-        to_insert.extend(p.tolist())
-        writer.writerow(to_insert)
+      if not os.path.exists("./data"):
+        os.mkdir("./data")
+      file = open('./data/action'+str(actionId), 'wb')
+      pickle.dump(clf, file)
+      file.close()
       
   conn.commit()
   conn.close()

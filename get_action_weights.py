@@ -12,6 +12,7 @@ import time
 import random
 import typing
 import csv
+from typing import Any
 import numpy as np
 import pickle
 import glob
@@ -24,19 +25,22 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.neural_network import MLPClassifier
 
-action_data = []
+action_data = {}
 compare_count = 0
 
 def load_data():
   global action_data, compare_count
   datacount = len(glob.glob("./data/*"))
-  # print("Counted " + str(datacount) + " data.")
-  action_data = []
+  print("Counted " + str(datacount) + " data.")
+  action_data = {}
 
   for i in range(1, datacount + 1):
-    file = open("./data/action"+str(i), 'rb')
-    action_data.append(pickle.load(file))
-    file.close()
+    if (os.path.exists("./data/action"+str(i))):
+      file = open("./data/action"+str(i), 'rb')
+      action_data[i] = pickle.load(file)
+      file.close()
+    else:
+      print("Path does not exist for data " + str(i))
 
   # print("Loaded " + str(len(action_data)) + " data.")
 
@@ -57,16 +61,18 @@ def get_predictions(data: typing.List[int], actions: typing.List[int]):
     else:
       compare.append(1)
 
-  # print("compare")
-  # print(len(compare))
+  print("compare")
+  #print(len(compare))
+  #print(action_data.keys())
   result = {}
 
   for action in actions:
-    if int(action) - 1 < len(action_data):
-      result[action] = str(action_data[int(action) - 1].predict_proba([compare])[0][1])
+    if int(action) in action_data:
+      result[action] = str(action_data[int(action)].predict_proba([compare])[0][1])
       # print("Action" + str(action) + ":" + result[action])
-      print("Actions "  + str(action) + ":" +str(action_data[int(action) - 1].predict_proba([compare])[0][0]))
+      print("Actions "  + str(action) + ":" +str(action_data[int(action)].predict_proba([compare])[0][0]))
     else:
+      print(str(action) + " was not in action data")
       result[action] = str(-1)
 
   return result
@@ -100,6 +106,10 @@ class handler(BaseHTTPRequestHandler):
         # print(predictions)
         message = json.dumps(predictions)
         self.wfile.write(bytes(message, "utf8"))
+
+    def log_message(self, format: str, *args: Any) -> None:
+      return
+      return super().log_message(format, *args)
 
 def run_server():
   with HTTPServer(('', 8000), handler) as server:

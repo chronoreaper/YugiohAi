@@ -633,9 +633,9 @@ namespace WindBot
             if (result == 0)
                 reward = 1;
             else if (result == 1)
-                reward = 0;
+                reward = -1;
             else
-                reward = 0.5f;
+                reward = 0f;
 
             using (SqliteConnection conn = ConnectToDatabase())
             {

@@ -26,7 +26,7 @@ AIMaster = 'Master'
 deck1 = 'AI_Random1.ydk'
 deck2 = 'AI_Random2.ydk'
 
-totalGames = 100
+totalGames = 10
 species = 10
 generations = 10
 

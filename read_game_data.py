@@ -24,7 +24,7 @@ from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sys import platform
 from pathlib import Path
 
-TrainData = False
+TrainData = True
 ShowData = True
 
 class Action:
@@ -129,7 +129,7 @@ def read_data():
       field_state[id] = []
     field_state[id].append(FieldState(record[0], record[1], record[2]))
 
-  c.execute('SELECT rowid, GameId, TurnId, ActionId, CurP1Hand, CurP1Field, CurP2Hand, CurP2Field, PostP1Hand, PostP1Field, PostP2Hand, PostP2Field, Reward FROM L_PlayRecord')
+  c.execute('SELECT rowid, GameId, TurnId, ActionId, CurP1Hand, CurP1Field, CurP2Hand, CurP2Field, PostP1Hand, PostP1Field, PostP2Hand, PostP2Field, Result FROM L_PlayRecord')
   records = c.fetchall()
   for record in records:
     play_record[record[0]] = PlayRecord(record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7], record[8], record[9], record[10], record[11], record[12])
@@ -150,7 +150,15 @@ def read_data():
     keys = list(play_record.keys())
     random.shuffle(keys)
     for id in keys:
+    
       record = play_record[id]
+
+      clfr = None
+      if os.path.exists('./data/reward'+str(record.actionId)):
+        file = open("./data/reward"+str(record.actionId), 'rb')
+        clfr = pickle.load(file)
+    
+
       if not TrainData:
         print("Game:" + str(record.gameId) + " Turn:" + str(record.turnId) + " Action:" + str(record.actionId))
         print("")
@@ -195,6 +203,9 @@ def read_data():
         if clf:
           print("Estimated Value:" + str(clf.predict_proba([field])[0]))
           print("Estimate:" + str(clf.predict([field])[0]))
+        
+        if clfr:
+          print("Estimate:" + str(clfr.predict([field])[0]))
 
       if len(stateAction) <= 1:
         continue
@@ -303,23 +314,50 @@ def read_data():
         reward.extend(row)
         rewards.append(reward)
         result.append(play_record[action.historyId].result)
-      
+    
 
-
-      x_train, x_test, y_train, y_test = []
+      # x_train, x_test, y_train, y_test = []
       if(len(data) < 10):
         x_train = x_test = data
         y_train = y_test = answer
+        rx_train = rx_test = rewards
+        ry_train = ry_test = result
       else:
         x_train, x_test, y_train, y_test = train_test_split(data, answer, test_size=0.4)
+        rx_train, rx_test, ry_train, ry_test = train_test_split(rewards, result, test_size=0.4)
 
       print(str(actionId) + ": Samples=" + str(len(training_data[actionId])))
+
+      # Reward classifier
+
+      clfr:MLPRegressor= None
+      if os.path.exists('./data/reward'+str(actionId)) and len(rx_train) > 0:
+        file = open("./data/reward"+str(actionId), 'rb')
+        clfr = pickle.load(file)
+        if len(rx_train[0]) == clfr.n_features_in_ and clfr.classes_.all() in ry_train and clfr.classes_.__len__() >= ry_train.__len__():     
+          rx_train = rx_train
+          ry_train = ry_train
+          clfr.partial_fit(rx_train, ry_train)
+        else:
+          clfr = None
+      if clfr == None:
+        clfr = MLPRegressor(activation='relu', solver='adam', max_iter=1000,
+                  hidden_layer_sizes=(compare_len * 2, compare_len * 2)).fit(rx_train, ry_train)
+      # print(clf.score(rx_test, ry_test))
+
+      if not os.path.exists("./data"):
+        os.mkdir("./data")
+      file = open('./data/reward'+str(actionId), 'wb')
+      pickle.dump(clfr, file)
+      file.close()
+
+      # Action classifier
 
       clf:MLPClassifier= None
       if os.path.exists('./data/action'+str(actionId)) and len(x_train) > 0:
         file = open("./data/action"+str(actionId), 'rb')
         clf = pickle.load(file)
-        if len(x_train[0]) == clf.n_features_in_ and clf.classes_.all() in y_train:     
+        if len(x_train[0]) == clf.n_features_in_ and clf.classes_.all() in y_train and clf.classes_.__len__() >= y_train.__len__():     
           x_train = x_train
           y_train = y_train
           clf.partial_fit(x_train, y_train)
@@ -330,7 +368,6 @@ def read_data():
                   hidden_layer_sizes=(compare_len * 2, compare_len * 2)).fit(x_train, y_train)
         print("New Network")
       # print(clf.score(x_test, y_test))
-
 
       if not os.path.exists("./data"):
         os.mkdir("./data")

@@ -14,9 +14,15 @@ import typing
 from sys import platform
 from pathlib import Path
 
+import tensorflow as tf
+from keras.models import Sequential
+from keras.layers import Dense, Flatten
+from keras.models import load_model
+
 import multiprocessing
-import read_game_data
-import get_action_weights
+import read_data_tensorflow as read_game_data
+import get_action_weights_tensorflow as get_action_weights
+
 
 #The Deck name and location	
 AI1Deck = 'Random1'
@@ -26,8 +32,7 @@ AIMaster = 'Master'
 deck1 = 'AI_Random1.ydk'
 deck2 = 'AI_Random2.ydk'
 
-totalGames = 10
-species = 10
+totalGames = 100
 generations = 10
 
 rolloutCount = 1
@@ -298,14 +303,14 @@ def main_game_runner(isTraining, totalGames, Id1, Id2):
   print("Average Game Time:"+str(datetime.timedelta(seconds=int((end - start)/(totalGames)))))
 
 def main():
-  global reset, totalGames, species, generations
+  global reset, totalGames, generations
   parseArg()
   setup()
 
   for g in range(generations):
     read_game_data.read_data()
     get_action_weights.load_data()
-    
+    #resetDB()
     proc = multiprocessing.Process(target=get_action_weights.run_server, args=())
     proc.start()
 

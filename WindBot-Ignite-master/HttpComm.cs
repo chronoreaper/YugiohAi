@@ -13,10 +13,11 @@ namespace WindBot
     {
         private static readonly HttpClient client = new HttpClient();
 
-        public static async Task<Dictionary<long, double>> GetActionWeightsAsync(List<long> actionIds, List<long> compareIds)
+        public static async Task<double[]> GetBestActionAsync(List<long> actionIds, List<long> compareIds, int turnNumber, int actionNumber)
         {
             string actions = "";
             string data = "";
+            string other = "";
 
             foreach (var i in actionIds)
             {
@@ -30,10 +31,14 @@ namespace WindBot
             }
             data = data.Trim();
 
+            other = turnNumber.ToString() + " " + actionNumber.ToString();
+
             var values = new Dictionary<string, string>
               {
                   { "data", data },
-                  { "actions", actions }
+                  { "actions", actions },
+                  { "other", other }
+                  
               };
             var json = JsonConvert.SerializeObject(values);
 
@@ -43,15 +48,9 @@ namespace WindBot
 
             var responseString = await response.Content.ReadAsStringAsync();
 
-            var results = JsonConvert.DeserializeObject<Dictionary<string, string>>(responseString);
+            var result = JsonConvert.DeserializeObject<double[]>(responseString);
 
-            var weights = new Dictionary<long, double>();
-            foreach(var i in results.Keys)
-            {
-                weights.Add(long.Parse(i), double.Parse(results[i]));
-            }
-
-            return weights;
+            return result;
         }
     }
 }

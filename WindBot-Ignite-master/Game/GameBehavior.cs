@@ -246,7 +246,7 @@ namespace WindBot.Game
             {
                 string newFileName = "result.csv";
                 string gameDetail = SQLComm.Name + "," + SQLComm.IsTraining +"," + SQLComm.ShouldUpdate + "," + SQLComm.GamesPlayed + "," + (double)SQLComm.Wins / SQLComm.GamesPlayed + Environment.NewLine;
-                File.AppendAllText(newFileName, gameDetail);
+                //File.AppendAllText(newFileName, gameDetail);
             }
             catch (IOException)
             {
@@ -270,7 +270,7 @@ namespace WindBot.Game
                 response = 0;
                 SQLComm.Cleanup();
             }
-            else if (SQLComm.PreviousWins.Count >= SQLComm.PastWinsLimit && SQLComm.IsTraining)
+           /*else if (SQLComm.PreviousWins.Count >= SQLComm.PastWinsLimit && SQLComm.IsTraining)
             {
                 if (winRate > SQLComm.WinsThreshold && SQLComm.ShouldUpdate)
                 {
@@ -290,7 +290,7 @@ namespace WindBot.Game
                     SQLComm.PastXWins = 0;
                     SQLComm.PreviousWins.Clear();
                 }
-            }
+            }*/
 
 
 
@@ -487,8 +487,8 @@ namespace WindBot.Game
         private void OnWin(BinaryReader packet)
         {
             int result = GetLocalPlayer(packet.ReadByte());
-            if (_ai.Duel.Turn > 25)
-                result = 2;
+            //if (_ai.Duel.Turn > 25)
+            //    result = 2;
 
             string otherName = _room.Position == 0 ? _room.Names[1] : _room.Names[0];
             string textResult = (result == 2 ? "Draw" : result == 0 ? "Win" : "Lose");
@@ -678,8 +678,8 @@ namespace WindBot.Game
             _duel.Turn++;
             _duel.Player = GetLocalPlayer(packet.ReadByte());
             _ai.OnNewTurn();
-            if (_duel.Turn > 25)
-                Connection.Send(CtosMessage.Surrender);
+            //if (_duel.Turn > 25)
+            //    Connection.Send(CtosMessage.Surrender);
         }
 
         private void OnNewPhase(BinaryReader packet)

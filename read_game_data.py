@@ -24,7 +24,7 @@ from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sys import platform
 from pathlib import Path
 
-TrainData = True
+TrainData = not (len(sys.argv)>1 and ("--s" in sys.argv or "-s" in sys.argv))
 ShowData = True
 
 class Action:
@@ -134,15 +134,24 @@ def read_data():
   for record in records:
     play_record[record[0]] = PlayRecord(record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7], record[8], record[9], record[10], record[11], record[12])
 
+
+  input_length = len(action_list) + len(compare_to) + 2
+  output_length = len(action_list)
+  print("length")
+  print(input_length)
+  print(output_length)
+  if input_length + output_length == 0:
+    return
+
+  print("to check length:" + str(len(compare_to)))
+  print("action length:" + str(len(action_list)))
+
   # Game History
   if __name__ == "__main__" and ShowData:
-    stats_input = []
-    stats_output = []
-
     clf = None
 
-    if os.path.exists("./stats"):
-      file = open("./stats", 'rb')
+    if os.path.exists("./data/action"):
+      file = open("./data/action", 'rb')
       clf = pickle.load(file)
       file.close()
 
@@ -153,13 +162,22 @@ def read_data():
     
       record = play_record[id]
 
-      clfr = None
-      if os.path.exists('./data/reward'+str(record.actionId)):
-        file = open("./data/reward"+str(record.actionId), 'rb')
-        clfr = pickle.load(file)
-    
-
       if not TrainData:
+        print("result:" + str(record.result))
+        input_list = [0] * input_length
+        output_list = -1
+
+        for state in field_state[id]:
+          input_list[state.compareId + len(action_list) - 1] = 1
+
+        input_list[len(action_list) + len(compare_to)] = record.actionId
+        # input_list[len(action_list) + len(compare_to) + 1] = record.turnId
+
+        for state in action_state[id]:
+          input_list[state.actionId - 1] = 1
+          if (state.performed == 'True'):
+            output_list = state.actionId
+
         print("Game:" + str(record.gameId) + " Turn:" + str(record.turnId) + " Action:" + str(record.actionId))
         print("")
         print("--------Stats--------")
@@ -172,48 +190,52 @@ def read_data():
         print("postP2Hand:" + str(record.postP2Hand))
         print("postP2Field:" + str(record.postP2Field))
 
-      field = [
-        int(record.curP1Hand),
-        int(record.curP1Field),
-        int(record.curP2Hand),
-        int(record.curP2Field),
-        int(record.postP1Hand),
-        int(record.postP1Field),
-        int(record.postP2Hand),
-        int(record.postP2Field)
-      ]
+        # field = [
+        #   int(record.curP1Hand),
+        #   int(record.curP1Field),
+        #   int(record.curP2Hand),
+        #   int(record.curP2Field),
+        #   int(record.postP1Hand),
+        #   int(record.postP1Field),
+        #   int(record.postP2Hand),
+        #   int(record.postP2Field)
+        # ]
       
-      if not TrainData:
         print("--------Field State--------")
 
-      stateField = field_state[id]
-      if not TrainData:
+        stateField = field_state[id]
         for j in stateField: # To Update
           compare = compare_to[j.compareId]
           print("  " + str(compare))
 
         print("--------Possible Actions--------")
 
-      stateAction = action_state[id]
-      if not TrainData:
+        stateAction = action_state[id]
         for j in stateAction:
           action = action_list[j.actionId]
-          print("  " + str(j.performed) + "| " + str(action))
+          print("  (" + str(j.actionId) + ")" + str(j.performed) + "| " + str(action))
         
         if clf:
-          print("Estimated Value:" + str(clf.predict_proba([field])[0]))
-          print("Estimate:" + str(clf.predict([field])[0]))
-        
-        if clfr:
-          print("Estimate:" + str(clfr.predict([field])[0]))
+          # print("Estimated Value:" + str((clf.predict_proba([input_list]))))
+          print("result:" + str(clf.predict([input_list])))
+          
+          result = clf.predict([input_list])
+          print("Estimate:" + str(np.argmax(result)))
+          ind = np.argpartition(result, -4)[0][-4:]
+          index = ind[np.argsort(result[0][ind])]
+          print("Top k:")
+          for i in index:
+            print(str(i) + ":" + str(result[0][i]))
 
-      if len(stateAction) <= 1:
-        continue
+          print("Expected answer:" + str(output_list))
+          pass
 
-      value = -1
-      leave = False
+        if len(stateAction) <= 1:
+          continue
 
-      if not TrainData:
+        value = -1
+        leave = False
+
         while value != '0' and value != '1':
           value = input("good (1) or bad (0)")
           try:
@@ -225,161 +247,81 @@ def read_data():
           except:
             value = -1
             print("Input error, try again")
-      elif (clf and clf.predict([field])[0] == 0) or len(stateAction) <= 1: # If action is deemed bad, remove it?
-          #print("removing/changing bad choice " + str(id))
-          if len(stateAction) == 2: # OTher choice is better
-            for j in stateAction:
-              j.performed = not j.performed
-          else: #idk what to do, remove it?
-            action_state.pop(id)
-            field_state.pop(id)
 
-      if (leave):
-        break
-
-      stats_input.append(field)
-      stats_output.append(int(value))
-    
-    if not TrainData:
-      #x_train = x_test = stats_input
-      #y_train = y_test = stats_output
-      x_train, x_test, y_train, y_test = train_test_split(stats_input, stats_output, test_size=0.4)
-
-      print("Samples=" + str(len(stats_input)))
-
-      if (clf == None):
-        clf = MLPClassifier(activation='relu', solver='adam', max_iter=1000,
-                    hidden_layer_sizes=(16, 16)).fit(x_test, y_test)
-      else:
-        clf.partial_fit(x_train, y_train)
-      print(clf.score(x_test, y_test))
-
-      file = open('./stats', 'wb')
-      pickle.dump(clf, file)
-      file.close()
-
+        if (leave):
+          break
 
   # Generate training data
-  #         | compare1 | compare2 | .....
-  # action1 |   0/1    |    0/1   | .....
-  # action1 |   0/1    |    0/1   | .....
-  # action2 |   0/1    |    0/1   | .....
-  print("Compiling data")
-  # { actionId:{ ActionState: [ compareId ]} }
-  
-  training_data: typing.Dict[int, typing.Dict[ActionState, typing.List[int]]] = {}
+  data = []
+  answer = []
+  for history_id in play_record:
 
-  for id in action_state:
-    for action in action_state[id]:
-      if (action.historyId in field_state):
-        states = field_state[action.historyId]
-        for state in states:
-          if (state.historyId == action.historyId):
-            if (action.actionId not in training_data):
-              training_data[action.actionId] = {}
-            if (action not in training_data[action.actionId]):
-              training_data[action.actionId][action] = []
-            training_data[action.actionId][action].append(state.compareId)
+    if (play_record[history_id].result != 1):
+      continue
+
+    input_list = [0] * input_length
+    output_list = [0] * (output_length + 1)
+    next_phase = False
+    
+    for state in field_state[id]:
+      input_list[state.compareId + len(action_list) - 1] = 1
+    
+    posssible_actions = action_state[history_id]
+    for state in posssible_actions:
+      input_list[state.actionId - 1] = 1
+      if (state.performed == 'True'):
+        output_list[ state.actionId] = 1#= state.actionId #
+
+        if (action_list[state.actionId].name == ""):
+          next_phase = True
+    
+    input_list[len(action_list) + len(compare_to)] = play_record[history_id].actionId
+    #input_list[len(action_list) + len(compare_to) + 1] = play_record[history_id].turnId
+
+    if next_phase and False:
+      continue
+
+    data.append(input_list)
+    answer.append(output_list)
 
   if (TrainData):
     # Solve data
     print("solve data")
     # Create an answer for each action
+    if(len(data) < 10):
+      x_train = x_test = data
+      y_train = y_test = answer
+    else:
+      x_train, x_test, y_train, y_test = train_test_split(data, answer, test_size=0.5)
 
-    for actionId in training_data:
-      answer = []
-      data = []
-
-      result = []
-      rewards = []
-      for action in training_data[actionId]:
-        answer.append(int(action.performed == 'True'))
-
-        reward = [0, 0] # [not performed, performed]
-        if action.performed == 'True':
-          reward = [0, 1]
-        else:
-          reward = [1, 0]
-
-        row = []
-        compare_len = len(compare_to)
-        for i in range(1, compare_len + 1):
-          if (i in training_data[actionId][action]):
-            row.append(1)
-          else:
-            row.append(0)
-
-        data.append(row)
-        
-        reward.extend(row)
-        rewards.append(reward)
-        result.append(play_record[action.historyId].result)
+    print("Samples=" + str(len(data)))
+    if len(data) == 0:
+      return
+    # Action classifier
     
-
-      # x_train, x_test, y_train, y_test = []
-      if(len(data) < 10):
-        x_train = x_test = data
-        y_train = y_test = answer
-        rx_train = rx_test = rewards
-        ry_train = ry_test = result
+    clf:MLPClassifier= None
+    if os.path.exists('./data/action') and len(x_train) > 0:
+      file = open("./data/action", 'rb')
+      clf = pickle.load(file)
+      if len(x_train[0]) == clf.n_features_in_ and clf.classes_.all() in y_train and clf.classes_.__len__() >= y_train.__len__():     
+        clf.partial_fit(x_train, y_train)
       else:
-        x_train, x_test, y_train, y_test = train_test_split(data, answer, test_size=0.4)
-        rx_train, rx_test, ry_train, ry_test = train_test_split(rewards, result, test_size=0.4)
+        clf = None
+    if clf == None:
+      clf = MLPClassifier(activation='relu', solver='adam', max_iter=1000, hidden_layer_sizes=(input_length + output_length, input_length + output_length)).fit(x_train, y_train)
+      print("New Network")
+    
+    print(clf.score(x_test, y_test))
 
-      print(str(actionId) + ": Samples=" + str(len(training_data[actionId])))
-
-      # Reward classifier
-
-      clfr:MLPRegressor= None
-      if os.path.exists('./data/reward'+str(actionId)) and len(rx_train) > 0:
-        file = open("./data/reward"+str(actionId), 'rb')
-        clfr = pickle.load(file)
-        if len(rx_train[0]) == clfr.n_features_in_ and clfr.classes_.all() in ry_train and clfr.classes_.__len__() >= ry_train.__len__():     
-          rx_train = rx_train
-          ry_train = ry_train
-          clfr.partial_fit(rx_train, ry_train)
-        else:
-          clfr = None
-      if clfr == None:
-        clfr = MLPRegressor(activation='relu', solver='adam', max_iter=1000,
-                  hidden_layer_sizes=(compare_len * 2, compare_len * 2)).fit(rx_train, ry_train)
-      # print(clf.score(rx_test, ry_test))
-
-      if not os.path.exists("./data"):
-        os.mkdir("./data")
-      file = open('./data/reward'+str(actionId), 'wb')
-      pickle.dump(clfr, file)
-      file.close()
-
-      # Action classifier
-
-      clf:MLPClassifier= None
-      if os.path.exists('./data/action'+str(actionId)) and len(x_train) > 0:
-        file = open("./data/action"+str(actionId), 'rb')
-        clf = pickle.load(file)
-        if len(x_train[0]) == clf.n_features_in_ and clf.classes_.all() in y_train and clf.classes_.__len__() >= y_train.__len__():     
-          x_train = x_train
-          y_train = y_train
-          clf.partial_fit(x_train, y_train)
-        else:
-          clf = None
-      if clf == None:
-        clf = MLPClassifier(activation='relu', solver='adam', max_iter=1000,
-                  hidden_layer_sizes=(compare_len * 2, compare_len * 2)).fit(x_train, y_train)
-        print("New Network")
-      # print(clf.score(x_test, y_test))
-
-      if not os.path.exists("./data"):
-        os.mkdir("./data")
-      file = open('./data/action'+str(actionId), 'wb')
-      pickle.dump(clf, file)
-      file.close()
+    if not os.path.exists("./data"):
+      os.mkdir("./data")
+    file = open('./data/action', 'wb')
+    pickle.dump(clf, file)
+    file.close()
       
   conn.commit()
   conn.close()
 
-  return training_data
-
 if __name__ == "__main__":
   deleteData()
-  training_data = read_data()
+  read_data()

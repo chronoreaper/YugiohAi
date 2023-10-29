@@ -134,52 +134,49 @@ namespace WindBot.Game.AI.Decks
             {
                 data.Add(i.Id);
             }
-            var weights = HttpComm.GetActionWeightsAsync(input, data).Result;
+            List<double> best_predict = new List<double>(HttpComm.GetBestActionAsync(input, data, Duel.Turn, ActionNumber).Result);
 
             //Get Best Action
 
             if (!SQLComm.IsManual)
             {
                 Console.WriteLine("Actions for Turn " + Duel.Turn + " Action # " + ActionNumber);
-                int choice = 0;
-                List<PlayHistory.ActionInfo> best = new List<PlayHistory.ActionInfo>();
-                double maxWeight = double.MinValue;
 
-
-                foreach(var i in weights.Keys)
+                foreach(var action in actions)
                 {
-                    var action = actions.Find(x => x.ActionId == i);
-                    double weight = weights[i];
 
                     //set go to next phase as lowest prio
                     if((action.Action == ExecutorType.GoToBattlePhase || action.Action == ExecutorType.GoToEndPhase) && !SQLComm.IsTraining)
                     {
-                        weight = 0.1;
+                        //weight = 0.0;
                     }
 
-                    Console.WriteLine(" " + i + ":" + action.ToString() + " Weight:" + weight);
-
-                    if (weight > maxWeight)
-                    {
-                        best.Clear();
-                        maxWeight = weight;
-                    }
-                    if (weight == maxWeight)
-                    {
-                        best.Add(action);
-                    }
+                    //Console.WriteLine(" " + action.ActionId + ":" + action.ToString());
+                    if (best_predict.Count > 0 && best_predict.Count >= (int)action.ActionId)
+                        Console.WriteLine(" " + action.ActionId + ":" + action.ToString() + " Weight:" + best_predict[(int)action.ActionId].ToString("#.#####"));
                 }
 
-                Console.WriteLine("Top actions");
-                foreach (var b in best)
+                var chosen = actions[Rand.Next(actions.Count)];
+
+                var result = best_predict.Select((v, i) => new { v, i }).OrderByDescending(x => x.v).ThenByDescending(x => x.i).ToList();
+
+                bool selected = false;
+                while (!selected && result.Count > 0)
                 {
-                    Console.WriteLine(b.ToString());
+                    var best = result[0];
+                    if (actions.Find(x => x.ActionId == best.i) != null)
+                    {
+                        chosen = actions.Find(x => x.ActionId == best.i);
+                        selected = true;
+                    }
+                    else
+                    {
+                        result.RemoveAt(0);
+                    }
                 }
 
-                var chosesn = best[Rand.Next(best.Count)];
-
-                Console.WriteLine("Chose " + ":" + chosesn.ToString());
-                return chosesn;
+                Console.WriteLine("Chose " + ":" + chosen.ToString());
+                return chosen;
             }
 
 
@@ -191,11 +188,9 @@ namespace WindBot.Game.AI.Decks
                     Console.WriteLine("     " + i.ToString());
                 }
                 Console.WriteLine("Select an action for Turn " + Duel.Turn + " Action # " + ActionNumber);
-                foreach (var i in weights.Keys)
+                foreach (var action in actions)
                 {
-                    var action = actions.Find(x => x.ActionId == i);
-                    double weight = weights[i];
-                    Console.WriteLine(" " + weight + ":" + action.ToString());
+                    Console.WriteLine(" " + ":" + action.ToString());
                 }
 
                 string str = "";

@@ -624,7 +624,7 @@ namespace WindBot
 
         public static void SavePlayHistory(List<History> records, int result)
         {
-            if (!IsTraining)
+            if (!IsTraining && !IsManual)
                 return;
 
             //if (result != 0)
@@ -636,6 +636,9 @@ namespace WindBot
                 reward = -1;
             else
                 reward = 0f;
+
+            if (IsManual)
+                reward = 1;
 
             using (SqliteConnection conn = ConnectToDatabase())
             {
@@ -840,6 +843,6 @@ namespace WindBot
             return weight;
         }
 
-        #endregion
+#endregion
     }
 }

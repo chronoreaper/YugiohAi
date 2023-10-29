@@ -25,76 +25,61 @@ from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.neural_network import MLPClassifier
 
-action_data = {}
-reward_data = {}
+action_data = None
 compare_count = 0
+action_count = 0
 
 def load_data():
-  global action_data, compare_count, reward_data
-  datacount = len(glob.glob("./data/action*"))
-  print("Counted " + str(datacount) + " data.")
-  action_data = {}
-  reward_data = {}
+  global action_data, compare_count, action_count
 
-  for i in range(1, datacount + 1):
-    if (os.path.exists("./data/action"+str(i))):
-      file = open("./data/action"+str(i), 'rb')
-      action_data[i] = pickle.load(file)
-      file.close()
-    else:
-      print("Path does not exist for data " + str(i))
-
-  for i in range(1, datacount + 1):
-    if (os.path.exists("./data/reward"+str(i))):
-      file = open("./data/reward"+str(i), 'rb')
-      reward_data[i] = pickle.load(file)
-      file.close()
-    else:
-      print("Path does not exist for data " + str(i))
-
-  # print("Loaded " + str(len(action_data)) + " data.")
+  if (os.path.exists("./data/action")):
+    file = open("./data/action", 'rb')
+    action_data = pickle.load(file)
+    file.close()
 
   conn = sqlite3.connect(os.getcwd() +'/cardData.cdb')
   c = conn.cursor()
   c.execute('SELECT max(rowid) FROM L_CompareTo')
   compare_count = c.fetchone()[0]
+  c.execute('SELECT max(rowid) FROM L_ActionList')
+  action_count = c.fetchone()[0]
   conn.close()
 
   # print("Compare Count:" + str(compare_count))
 
-def get_predictions(data: typing.List[int], actions: typing.List[int]):
-  global action_data, compare_count, reward_data
-  compare = []
-  for i in range(1, compare_count + 1):
-    if (i not in data) :
-      compare.append(0)
-    else:
-      compare.append(1)
+def get_predictions(data: typing.List[int], actions: typing.List[int], other: typing.List[int]):
+  global action_data, compare_count
+  if (action_data == None):
+    return -1
+  
+  input_length = action_count + compare_count + 2
+
+  input_list = [0] * input_length
+
+  for id in data:
+    index = int(id) - 1 + action_count - 1
+    if (index < len(input_list) and index >= 0):
+      input_list[index] = 1
+  
+  for i in range(len(other)):
+    index = i + action_count + compare_count
+    if (index < len(input_list) and index >= 0):
+      input_list[index] = int(other[i])
+  input_list[action_count + compare_count] = 0 # set turn id to be 0
+
+  for id in actions:
+    index = int(id) - 1
+    if (index < len(input_list) and index >= 0):
+      input_list[index] = 1
 
   #print("compare")
-  #print(len(compare))
+  #print(input_list)
   #print(action_data.keys())
-  result = {}
-  for action in actions:
-    if int(action) in action_data:
-      result[action] = str(action_data[int(action)].predict_proba([compare])[0][1])
-      # print("Action" + str(action) + ":" + result[action])
-      #print("Actions "  + str(action) + ":" +str(action_data[int(action)].predict_proba([compare])[0][0]))
-      if int(action) in reward_data:
-        # Reward print
-        reward1 = [1,0]
-        reward2 = [0,1]
-        reward1.extend(compare)
-        reward2.extend(compare)
-        print("Actions "  + str(action))
-        print("Reward no:" + str(reward_data[int(action)].predict([reward1])[0]))
-        print("Reward yes:" + str(reward_data[int(action)].predict([reward2])[0]))
+  predictions = action_data.predict_proba([input_list])[0]
+  print("Estimate:" + str(np.argmax(predictions)))
+  #print("Estimate:" + str(action_data.predict([input_list])[0]))
 
-    else:
-      #print(str(action) + " was not in action data")
-      result[action] = str(-1)
-
-  return result
+  return predictions.tolist()
 
 def run_command_line():
   while True:
@@ -116,7 +101,8 @@ class handler(BaseHTTPRequestHandler):
 
         data = raw_data["data"].split(' ')
         actions = raw_data["actions"].split(' ')
-        predictions = get_predictions(data, actions)
+        other = raw_data["other"].split(' ')
+        predictions = get_predictions(data, actions, other)
 
         self.send_response(200)
         self.send_header('Content-type','text/html')

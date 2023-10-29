@@ -50,7 +50,7 @@ def load_data():
 def get_predictions(data: typing.List[int], actions: typing.List[int], other: typing.List[int]):
   global action_data, compare_count
   if (action_data == None):
-    return -1
+    return []
   
   input_length = action_count + compare_count + 2
 

@@ -1,0 +1,87 @@
+{
+	"repos": [
+		{
+			"url": "https://github.com/ProjectIgnis/DeltaPuppetOfStrings",
+			"repo_name": "Project Ignis updates",
+			"repo_path": "./repositories/delta-puppet",
+			"has_core": true,
+			"core_path": "bin",
+			"data_path": "",
+			"script_path": "script",
+			"should_update": true,
+			"should_read": true
+		},
+		{
+			"url": "https://github.com/ProjectIgnis/LFLists",
+			"repo_name": "Forbidden & Limited Card Lists",
+			"repo_path": "./repositories/lflists",
+			"lflist_path": ".",
+			"should_update": true,
+			"should_read": true
+		},
+		{
+			"url": "https://github.com/ProjectIgnis/Puzzles",
+			"repo_name": "Project Ignis puzzles",
+			"repo_path": "./puzzles/Canon collection",
+			"should_update": true,
+			"should_read": true
+		}
+	],
+	"urls": [
+		{
+			"url": "default",
+			"type": "pic"
+		},
+		{
+			"url": "default",
+			"type": "field"
+		},
+		{
+			"url": "default",
+			"type": "cover"
+		}
+	],
+	"servers": [
+		{
+			"name": "EU Central (Casual)",
+			"address": "eu.projectignis.org",
+			"duelport": 7912,
+			"roomaddress": "eu.projectignis.org",
+			"roomlistprotocol": "http",
+			"roomlistport": 7923
+		},
+		{
+			"name": "EU Central (Competitive)",
+			"address": "eu.projectignis.org",
+			"duelport": 7911,
+			"roomaddress": "eu.projectignis.org",
+			"roomlistprotocol": "http",
+			"roomlistport": 7922
+		},
+		{
+			"name": "US West (Casual)",
+			"address": "us.projectignis.org",
+			"duelport": 7911,
+			"roomaddress": "us.projectignis.org",
+			"roomlistprotocol": "http",
+			"roomlistport": 7922
+		},
+		{
+			"name": "US West (Competitive)",
+			"address": "us.projectignis.org",
+			"duelport": 7912,
+			"roomaddress": "us.projectignis.org",
+			"roomlistprotocol": "http",
+			"roomlistport": 7923
+		},
+		{
+			"name": "Asia Central (Casual/Competitive)",
+			"address": "ignis-duel.ygopro.cn",
+			"duelport": 44444,
+			"roomaddress": "ignis-room.ygopro.cn",
+			"roomlistprotocol": "https",
+			"roomlistport": 443
+		}
+	],
+	"posixPathExtension": "/usr/local/bin:/Library/Frameworks/Mono.framework/Versions/Current/Commands"
+}

@@ -1,0 +1,170 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 1000px;
+                 height: 1000px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+             #config {
+                 float: left;
+                 width: 400px;
+                 height: 600px;
+             }
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+            <div id="config"></div>
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "id": 7, "label": "Default", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 28, "label": "Mekk-Knight Avram;MonsterSet;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 15, "label": "Noble Knight Artorigus;Select;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 43, "label": "Exiled Force;Select;End", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 19, "label": "Luster Dragon;Summon;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 14, "label": "The Tricky;EnemyMonster", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 34, "label": "Block Attack;Activate;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 32, "label": "Man-Eater Bug;Select;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 36, "label": "Stop Defense;Activate;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 23, "label": "Wind-Up Soldier;EnemyMonster", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 11, "label": "Noble Knight Artorigus;MonsterSet;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 26, "label": "Noble Knight Artorigus;EnemyMonster", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 22, "label": "Man-Eater Bug;Summon;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 27, "label": "Luster Dragon;EnemyMonster", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 3, "label": "Snowman Eater;Summon;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 30, "label": "Man-Eater Bug;EnemyMonster", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 37, "label": "The Tricky;MonsterSet;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 0, "label": "Snowman Eater;MonsterSet;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 17, "label": "The Tricky;Select;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 29, "label": "Mekk-Knight Avram;Summon;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 33, "label": "Cyber Dragon;EnemyMonster", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 1, "label": "Exiled Force;MonsterSet;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 9, "label": "Exiled Force;Select;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 2, "label": "Wind-Up Soldier;MonsterSet;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 4, "label": "Exiled Force;Summon;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 5, "label": "Wind-Up Soldier;Summon;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 6, "label": "The Tricky;SpSummon;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 8, "label": "Snowman Eater;Select;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 10, "label": "Wind-Up Soldier;Select;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 12, "label": "Noble Knight Artorigus;Summon;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 13, "label": "Snowman Eater;EnemyMonster", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 16, "label": "Exiled Force;Activate;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 18, "label": "Luster Dragon;MonsterSet;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 20, "label": "Wind-Up Soldier;Activate;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 21, "label": "Man-Eater Bug;MonsterSet;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 24, "label": "Cyber Dragon;MonsterSet;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 25, "label": "Cyber Dragon;Summon;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 31, "label": "Luster Dragon;Select;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 35, "label": "Cyber Dragon;Select;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 38, "label": "The Tricky;Summon;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 39, "label": "Luster Dragon;Select;End", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 40, "label": "Man-Eater Bug;Select;End", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 41, "label": "Noble Knight Artorigus;Select;End", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 42, "label": "Mekk-Knight Avram;Select;End", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 44, "label": "Facedown;EnemyMonster", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 45, "label": "Snowman Eater;Select;End", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 46, "label": "Wind-Up Soldier;Select;End", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 47, "label": "The Tricky;Select;End", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 48, "label": "Cyber Dragon;Select;End", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 49, "label": "Cyber Dragon;SpSummon;Main1", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 50, "label": "Stop Defense;Select;End", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 51, "label": "Mekk-Knight Avram;EnemyMonster", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 52, "label": "Block Attack;Select;End", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 53, "label": "Man-Eater Bug;Select;BattleStart", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 54, "label": "Noble Knight Artorigus;Select;BattleStart", "shape": "dot", "size": 10}, {"color": "#97c2fc", "id": 55, "label": "Snowman Eater;Select;BattleStart", "shape": "dot", "size": 10}]);
+                  edges = new vis.DataSet([{"arrows": "to", "from": 7, "group": 2, "label": "2", "to": 28, "width": 6.924443315816369}, {"arrows": "to", "from": 7, "group": 2, "label": "2", "to": 15, "width": 5.525426257437407}, {"arrows": "to", "from": 7, "group": 2, "label": "2", "to": 43, "width": 1.502384025363146}, {"arrows": "to", "from": 7, "group": 2, "label": "2", "to": 19, "width": 0.24694113408816998}, {"arrows": "to", "from": 14, "group": 2, "label": "2", "to": 28, "width": 1.3141169573897182}, {"arrows": "to", "from": 14, "group": 2, "label": "2", "to": 34, "width": 2.0360916241265836}, {"arrows": "to", "from": 14, "group": 2, "label": "2", "to": 15, "width": 4.734942474602023}, {"arrows": "to", "from": 14, "group": 2, "label": "2", "to": 32, "width": 0.05228896123486537}, {"arrows": "to", "from": 14, "group": 2, "label": "2", "to": 36, "width": 2.16147999551438}, {"arrows": "to", "from": 23, "group": 2, "label": "2", "to": 11, "width": 6.417886378005901}, {"arrows": "to", "from": 26, "group": 2, "label": "2", "to": 22, "width": 7.794890345364985}, {"arrows": "to", "from": 27, "group": 2, "label": "2", "to": 3, "width": 1.665230043815038}, {"arrows": "to", "from": 30, "group": 2, "label": "2", "to": 37, "width": 4.808584785094502}, {"arrows": "to", "from": 30, "group": 2, "label": "2", "to": 0, "width": 6.195051127662405}, {"arrows": "to", "from": 30, "group": 2, "label": "2", "to": 17, "width": 4.570434958849951}, {"arrows": "to", "from": 30, "group": 2, "label": "2", "to": 29, "width": 0.8303933258392138}, {"arrows": "to", "from": 30, "group": 2, "label": "2", "to": 32, "width": 6.179666381772115}, {"arrows": "to", "from": 33, "group": 2, "label": "2", "to": 1, "width": 2.0712731729993337}, {"arrows": "to", "from": 33, "group": 2, "label": "2", "to": 9, "width": 7.43988994029057}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": true,
+        "filter": [
+            "physics"
+        ]
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+                  // if this network requires displaying the configure window,
+                  // put it in its div
+                  options.configure["container"] = document.getElementById("config");
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

@@ -1,19 +1,19 @@
-menu_handler.cpp
+(menu_handler.cpp)
 
-case BUTTON_LAN_MODE
+[LINE] case BUTTON_LAN_MODE
 
-copy BUTTON_HOST_CONFIRM + this line
+copy the lines in BUTTON_HOST_CONFIRM + this line below
 DuelClient::SendPacketToServer(CTOS_HS_TOOBSERVER);
 
-duelclient.cpp
+(duelclient.cpp)
 
-state == PLAYERCHANGE_OBSERVE
+[LINE] state == PLAYERCHANGE_OBSERVE
 
 if (is_host && CheckReady())
 DuelClient::SendPacketToServer(CTOS_HS_START);
 
-gframe.cpp
+(gframe.cpp)
 
-CheckArguments()
+[LINE] CheckArguments()
 
 ClickButton(ygo::mainGame->btnLanMode);

@@ -649,35 +649,26 @@ namespace WindBot
                 string sql;
                 long id;
 
-                int gameId = 0;
+                long gameId = 0;
 
-                sql = "SELECT max(GameId) from L_PlayRecord";
-                try
+                sql = $"INSERT INTO L_GameResult (Name, Result) VALUES (\"{Name}\", \"{reward}\")";
+                using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                 {
-
-                    using (SqliteCommand cmd = new SqliteCommand(sql, conn))
-                    {
-                        using (SqliteDataReader rdr = cmd.ExecuteReader())
-                            while (rdr.Read())
-                            {
-                                gameId = rdr.GetInt32(0);
-                            }
-                    }
-                    gameId++;
-                }
-                catch (System.InvalidCastException)
-                {
-
+                    cmd2.ExecuteNonQuery();
                 }
 
-     
+                sql = "select last_insert_rowid()";
+                using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                {
+                    gameId = (long)cmd2.ExecuteScalar();
+                }
+
                 foreach (var record in records)
                 {
-
-                    sql = $"INSERT INTO L_PlayRecord (GameId, TurnId, ActionId, CurP1Hand, CurP1Field, CurP2Hand, CurP2Field, PostP1Hand, PostP1Field, PostP2Hand, PostP2Field, Result) " +
+                    sql = $"INSERT INTO L_PlayRecord (GameId, TurnId, ActionId, CurP1Hand, CurP1Field, CurP2Hand, CurP2Field, PostP1Hand, PostP1Field, PostP2Hand, PostP2Field) " +
                         $"VALUES (\"{gameId}\", \"{record.Info.Turn}\", \"{record.Info.ActionNumber}\", " +
                         $"\"{record.CurP1Hand}\", \"{record.CurP1Field}\", \"{record.CurP2Hand}\", \"{record.CurP2Field}\"," +
-                        $"\"{record.PostP1Hand}\", \"{record.PostP1Field}\", \"{record.PostP2Hand}\", \"{record.PostP2Field}\", \"{reward}\")";
+                        $"\"{record.PostP1Hand}\", \"{record.PostP1Field}\", \"{record.PostP2Hand}\", \"{record.PostP2Field}\")";
                     using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                     {
                         cmd2.ExecuteNonQuery();

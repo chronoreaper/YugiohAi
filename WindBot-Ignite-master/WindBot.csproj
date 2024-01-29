@@ -63,6 +63,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CSVReader.cs" />
     <Compile Include="HttpComm.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="Game\AI\Deck.cs" />

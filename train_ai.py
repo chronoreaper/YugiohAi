@@ -13,15 +13,18 @@ import random
 import typing
 from sys import platform
 from pathlib import Path
+import psutil
 
-import tensorflow as tf
-from keras.models import Sequential
-from keras.layers import Dense, Flatten
-from keras.models import load_model
+# import tensorflow as tf
+# from keras.models import Sequential
+# from keras.layers import Dense, Flatten
+# from keras.models import load_model
 
 import multiprocessing
-import read_data_tensorflow as read_game_data
-import get_action_weights_tensorflow as get_action_weights
+import read_game_data as read_game_data
+import get_action_weights as get_action_weights
+
+import torch
 
 
 #The Deck name and location	
@@ -32,8 +35,10 @@ AIMaster = 'Master'
 deck1 = 'AI_Random1.ydk'
 deck2 = 'AI_Random2.ydk'
 
-totalGames = 100
-generations = 10
+totalGames = 10
+generations = 3
+cycles = 3
+parallelGames = 3
 
 rolloutCount = 1
 isFirst = True
@@ -92,6 +97,29 @@ def resetDB():
   cur.execute(sql_delete_query)
   sql_delete_query = """DELETE from L_Weights"""
   cur.execute(sql_delete_query)
+  sql_delete_query = """DELETE from L_GameResult"""
+  cur.execute(sql_delete_query)
+  con.commit()
+  con.close()
+
+def softResetDB():
+  dbfile = './cardData.cdb'
+  con = sqlite3.connect(dbfile)
+  cur = con.cursor()
+  sql_delete_query = """DELETE from L_ActionList"""
+  cur.execute(sql_delete_query)
+  sql_delete_query = """DELETE from L_CompareTo"""
+  cur.execute(sql_delete_query)
+  sql_delete_query = """DELETE from L_PlayRecord"""
+  cur.execute(sql_delete_query)
+  sql_delete_query = """DELETE from L_FieldState"""
+  cur.execute(sql_delete_query)
+  sql_delete_query = """DELETE from L_ActionState"""
+  cur.execute(sql_delete_query)
+  sql_delete_query = """DELETE from L_Weights"""
+  cur.execute(sql_delete_query)
+  sql_delete_query = """DELETE from L_GameResult"""
+  cur.execute(sql_delete_query)
   con.commit()
   con.close()
 
@@ -105,7 +133,7 @@ def resetYgoPro():
   files = glob.glob(os.getcwd() +"/ProjectIgnis/replay/*")
   for f in files:
       os.remove(f)
-  
+
 def parseArg():
   global reset, isTraining, repeatFor, matches, totalGames, isFirst
 
@@ -132,7 +160,8 @@ def runAi(Deck = "Random1",
           ShouldUpdate = True,
           WinsThreshold = 50,
           PastWinsLimit = 20,
-          Id = 0
+          Id = 0,
+          Port = 7911
           ):
   currentdir = os.getcwd()
   os.chdir(os.getcwd()+'/WindBot-Ignite-master/bin/Debug')
@@ -152,7 +181,8 @@ def runAi(Deck = "Random1",
                         "IsFirst="+str(IsFirst), 
                         "WinsThreshold="+str(WinsThreshold), 
                         "PastWinsLimit="+str(PastWinsLimit),
-                        "Id="+str(Id)
+                        "Id="+str(Id),
+                        "Port="+str(Port)
                         ],
                         stdout=subprocess.DEVNULL)
     
@@ -215,65 +245,70 @@ def setup():
   if reset:
     if isTraining:
       resetDB()
-    #shuffle_deck(deck1)
-    src_dir=os.getcwd() + '/WindBot-Ignite-master/bin/Debug/Decks/' + deck1
-    dst_dir=os.getcwd() + '/WindBot-Ignite-master/bin/Debug/Decks/' + deck2
-    shutil.copy(src_dir,dst_dir)
+    shuffle_deck(deck1)
+    shuffle_deck(deck2)
+    # src_dir=os.getcwd() + '/WindBot-Ignite-master/bin/Debug/Decks/' + deck1
+    # dst_dir=os.getcwd() + '/WindBot-Ignite-master/bin/Debug/Decks/' + deck2
+    # shutil.copy(src_dir,dst_dir)
 
   resetYgoPro()
 
-  if not isTraining or True:
+  if not isTraining:
     AI2Deck = AIMaster
 
-def main_game_runner(isTraining, totalGames, Id1, Id2):
+def main_game_runner(isTraining, totalGames, Id1, Id2, Deck1, Deck2, port):
   start = time.time()
 
   #subprocess.Popen - does not wait to finish
   #subprocess.run - waits to finish
 
   file_path = os.getcwd() + "/edopro_bin/ygopro.exe"
-
   if platform == "linux" or platform == "linux2":
     file_path = str(Path(__file__).resolve().parent.parent) + "/ProjectIgnisLinux/ygopro"
  
-  
-  g = subprocess.Popen([file_path], stdout=subprocess.DEVNULL)
+  g = subprocess.Popen([file_path, "-p", str(port)], stdout=subprocess.DEVNULL)
 
 
   while(g.poll() == None and not isrespondingPID(g.pid)):
     time.sleep(1)
 
-  time.sleep(5)
+  time.sleep(8)
   
-  print("	runningAi1 " + str(Id1))
+  print("	runningAi1 " + str(Id1) + ":" + Deck1)
 
-  p1 = runAi( Deck = AI1Deck, 
-              Name = AI1Deck,
+  p1 = runAi( Deck = Deck1, 
+              Name = Id1,
               Hand = 2,
-              TotalGames = totalGames,
-              RolloutCount = rolloutCount,
-              IsFirst = isFirst,
-              IsTraining = isTraining,
-              ShouldUpdate= isTraining,
-              WinsThreshold = winThresh,
-              PastWinsLimit = pastWinLim,
-              Id = Id1
-            )
-  time.sleep(1)
-  print("	runningAi2 "+ str(Id2))
-  p2 = runAi(Deck = AI2Deck, 
-              Name = AI2Deck,
-              Hand = 3,
               TotalGames = totalGames,
               RolloutCount = rolloutCount,
               IsFirst = (not isFirst),
               IsTraining = isTraining,
+              ShouldUpdate= isTraining,
+              WinsThreshold = winThresh,
+              PastWinsLimit = pastWinLim,
+              Id = Id1,
+              Port = port
+            )
+  time.sleep(1)
+  print("	runningAi2 "+ str(Id2) + ":" + Deck2)
+  p2 = runAi(Deck = Deck2, 
+              Name = Id2,
+              Hand = 3,
+              TotalGames = totalGames,
+              RolloutCount = rolloutCount,
+              IsFirst = (isFirst),
+              IsTraining = isTraining,
               ShouldUpdate= False,
               WinsThreshold = winThresh,
               PastWinsLimit = pastWinLim,
-              Id = Id2
+              Id = Id2,
+              Port = port
             )
   
+  #psutil.Process(g.pid).nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+  #psutil.Process(p1.pid).nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+  #psutil.Process(p2.pid).nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+
   if (p1.poll() == None or p2.poll() == None):
     time.sleep(1)
   
@@ -288,9 +323,8 @@ def main_game_runner(isTraining, totalGames, Id1, Id2):
   #make sure the game does not run longer than needed
   #ends the ygopro program as soon as the ais are done. Ais play faster than what you see.
   
-  while (p1.poll() == None and p2.poll() == None):
+  while (p1.poll() == None or p2.poll() == None):
     continue
-     
      
   if platform == "linux" or platform == "linux2":
     os.system("kill -9 " + str(g.pid))
@@ -303,24 +337,58 @@ def main_game_runner(isTraining, totalGames, Id1, Id2):
   print("Average Game Time:"+str(datetime.timedelta(seconds=int((end - start)/(totalGames)))))
 
 def main():
-  global reset, totalGames, generations
+  global reset, totalGames, generations, cycles
   parseArg()
   setup()
 
-  for g in range(generations):
-    read_game_data.read_data()
-    get_action_weights.load_data()
-    #resetDB()
-    proc = multiprocessing.Process(target=get_action_weights.run_server, args=())
-    proc.start()
+  # if not reset:
+  #   read_game_data.createBetterDataset()
+  #   softResetDB()
 
-    for i in range(1):
-      print("generation " + str(g) + " running game " + str(i))
-      main_game_runner(True, totalGames, i * 2, i * 2 + 1)
-    
-    proc.terminate()  # sends a SIGTERM
-    print("done cycle")
+  for g in range(generations):
+    for c in range(cycles):
+      read_game_data.read_data()
+      get_action_weights.fetchDatabaseData()
+      get_action_weights.load_data()
+      #resetDB()
+      proc = multiprocessing.Process(target=get_action_weights.run_server, args=())
+      proc.start()
+
+      jobs = []
+      pairs = []
+      bots = list(range(parallelGames * 2))
+      if (isTraining and AI2Deck != AIMaster):
+        while bots:
+          r1 = bots.pop(random.randrange(0, len(bots)))
+          r2 = bots.pop(random.randrange(0, len(bots)))
+          pairs.append((r1, r2))
+      else:
+        while bots:
+          r1 = bots.pop(0)
+          r2 = bots.pop(0)
+          pairs.append((r1, r2))
+
+      for i in range(len(pairs)):
+        print("generation " + str(g) + " cycle: " + str(c) +" running game " + str(i) + ":" + str(pairs[i][0]) + "vs" + str(pairs[i][1]))
+        port = 7910 + i
+        p = multiprocessing.Process(target=main_game_runner, args=(True, totalGames, str(pairs[i][0]), str(pairs[i][1]), AI1Deck, AI2Deck, port))
+        #psutil.Process(p.pid).nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+        jobs.append(p)
+        p.start()
+      
+      for job in jobs:
+        job.join()
+      
+      proc.terminate()  # sends a SIGTERM
+      print("done cycle")
+    if g < generations - 1:
+      limit = parallelGames * cycles
+
+      read_game_data.read_data()
+      read_game_data.createBetterDataset()
+      #softResetDB()
   read_game_data.read_data()
 
 if __name__ == "__main__":
+  torch.multiprocessing.set_start_method('spawn')
   main()

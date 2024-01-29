@@ -134,7 +134,18 @@ namespace WindBot.Game.AI.Decks
             {
                 data.Add(i.Id);
             }
-            List<double> best_predict = new List<double>(HttpComm.GetBestActionAsync(input, data, Duel.Turn, ActionNumber).Result);
+            List<double> best_predict = new List<double>(HttpComm.GetBestActionAsync(input, data, SQLComm.Name).Result);
+
+            var max_id = (int)actions.Max(x => x.ActionId);
+            if (best_predict.Count == 0)
+                best_predict = new List<double>(new double[max_id + 1]);
+
+            if (SQLComm.IsTraining)
+            {
+                List<double> base_values = CSVReader.GetBaseActionValues(best_predict.Count, actions, comparisons);
+                for (var i = 0; i < best_predict.Count; i++)
+                    best_predict[i] += base_values[i];
+            }
 
             //Get Best Action
 
@@ -146,9 +157,9 @@ namespace WindBot.Game.AI.Decks
                 {
 
                     //set go to next phase as lowest prio
-                    if((action.Action == ExecutorType.GoToBattlePhase || action.Action == ExecutorType.GoToEndPhase) && !SQLComm.IsTraining)
+                    if((action.Action == ExecutorType.GoToBattlePhase || action.Action == ExecutorType.GoToEndPhase))
                     {
-                        //weight = 0.0;
+                        best_predict[(int)action.ActionId] = Math.Min(0.5, best_predict[(int)action.ActionId]);
                     }
 
                     //Console.WriteLine(" " + action.ActionId + ":" + action.ToString());
@@ -158,12 +169,20 @@ namespace WindBot.Game.AI.Decks
 
                 var chosen = actions[Rand.Next(actions.Count)];
 
-                var result = best_predict.Select((v, i) => new { v, i }).OrderByDescending(x => x.v).ThenByDescending(x => x.i).ToList();
+                var result = best_predict.Select((v, i) => new { v, i }).OrderByDescending(x => x.v).ThenByDescending(x => x.i).Where(x => actions.Find(y => y.ActionId == x.i) != null).ToList();
+
+                if (result.Count > 0)
+                {
+                    // Take the top percentile
+                    var max_guess = result.Max(x => x.v);
+                    result = result.Where(x => x.v >= max_guess - 0.1).ToList();
+                }
 
                 bool selected = false;
                 while (!selected && result.Count > 0)
                 {
-                    var best = result[0];
+                    var index = Rand.Next(result.Count);
+                    var best = result[index];
                     if (actions.Find(x => x.ActionId == best.i) != null)
                     {
                         chosen = actions.Find(x => x.ActionId == best.i);
@@ -171,8 +190,13 @@ namespace WindBot.Game.AI.Decks
                     }
                     else
                     {
-                        result.RemoveAt(0);
+                        result.RemoveAt(index);
                     }
+                    /*if ((chosen.Action == ExecutorType.GoToEndPhase || chosen.Action == ExecutorType.GoToBattlePhase) && actions.Count >= 3)
+                    {
+                        selected = false;
+                        result.RemoveAt(index);
+                    }*/
                 }
 
                 Console.WriteLine("Chose " + ":" + chosen.ToString());
@@ -231,6 +255,9 @@ namespace WindBot.Game.AI.Decks
         private List<PlayHistory.CompareTo> GetComparisons()
         {
             List<PlayHistory.CompareTo> c = new List<PlayHistory.CompareTo>();
+
+            //c.Add(History.GenerateComparasion("", "Turn", Duel.Turn.ToString()));
+            c.Add(History.GenerateComparasion("", "ActionNumber", ActionNumber.ToString()));
 
             c.Add(History.GenerateComparasion("", "PlayerFieldCount", Duel.Fields[0].GetMonsterCount().ToString()));
             c.Add(History.GenerateComparasion("", "EnemyFieldCount", Duel.Fields[1].GetMonsterCount().ToString()));
@@ -486,6 +513,7 @@ namespace WindBot.Game.AI.Decks
             //NEAT.SaveNetwork(result == 0 ? 1 : 0);
             History.EndOfTurn(Duel);
             History.SaveHistory(result);
+            History.Records.Clear();
         }
 
         private string SelectStringBuilder(ClientCard Card, int Quant = 1)

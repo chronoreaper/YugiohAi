@@ -149,6 +149,8 @@ namespace WindBot
                 SQLComm.sqlPath = absolutePath;
             }
 
+            CSVReader.Init();
+
             string b64CreateGame = Config.GetString("CreateGame");
             if (b64CreateGame != null)
             {

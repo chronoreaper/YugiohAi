@@ -13,11 +13,10 @@ namespace WindBot
     {
         private static readonly HttpClient client = new HttpClient();
 
-        public static async Task<double[]> GetBestActionAsync(List<long> actionIds, List<long> compareIds, int turnNumber, int actionNumber)
+        public static async Task<double[]> GetBestActionAsync(List<long> actionIds, List<long> compareIds, string name)
         {
             string actions = "";
             string data = "";
-            string other = "";
 
             foreach (var i in actionIds)
             {
@@ -31,13 +30,11 @@ namespace WindBot
             }
             data = data.Trim();
 
-            other = turnNumber.ToString() + " " + actionNumber.ToString();
-
             var values = new Dictionary<string, string>
               {
                   { "data", data },
                   { "actions", actions },
-                  { "other", other }
+                  { "name", name }
                   
               };
             var json = JsonConvert.SerializeObject(values);

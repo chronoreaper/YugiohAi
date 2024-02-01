@@ -2,12 +2,15 @@
 
 [LINE] case BUTTON_LAN_MODE
 
-copy the lines in BUTTON_HOST_CONFIRM + this line below
-DuelClient::SendPacketToServer(CTOS_HS_TOOBSERVER);
+copy the lines in BUTTON_HOST_CONFIRM
 
 (duelclient.cpp)
 
-[LINE] state == PLAYERCHANGE_OBSERVE
+[LINE] SendPacketToServer(CTOS_CREATE_GAME, cscg);
+
+SendPacketToServer(CTOS_HS_TOOBSERVER);
+
+[LINE] state == PLAYERCHANGE_READY, at the very end of the if statement add
 
 if (is_host && CheckReady())
 DuelClient::SendPacketToServer(CTOS_HS_START);
@@ -17,3 +20,13 @@ DuelClient::SendPacketToServer(CTOS_HS_START);
 [LINE] CheckArguments()
 
 ClickButton(ygo::mainGame->btnLanMode);
+
+Also add port options
+
+(netserver.cpp)
+
+where the port is set to 7911, change it to the variable port
+
+To print debug 
+epro::print("debug");
+

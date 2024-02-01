@@ -75,7 +75,7 @@ namespace WindBot
 
             if (dbPaths == null)
             {
-                if (databasePath == null)
+                /*if (databasePath == null)
                     databasePath = "cards.cdb";
                 //If databasePath is an absolute path like "‪C:/ProjectIgnis/expansions/cards.cdb",
                 //then Path.GetFullPath("../‪C:/ProjectIgnis/expansions/cards.cdb" would give an error,
@@ -84,8 +84,11 @@ namespace WindBot
                 else dbPaths = new string[]{
                 Path.GetFullPath(databasePath),
                 Path.GetFullPath("../" + databasePath),
-                Path.GetFullPath("../expansions/" + databasePath)
-            };
+                Path.GetFullPath("../expansions/" + databasePath)*/
+                dbPaths = new string[]{
+                    Path.GetFullPath("cards.cdb"),
+                    Path.GetFullPath("cards.delta.cdb"),
+                };
             }
 
             bool loadedone = false;

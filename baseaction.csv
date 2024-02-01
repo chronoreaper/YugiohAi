@@ -1,19 +1,45 @@
-Name,Action,Location,Compare,Value
-Mekk-Knight Avram;Main1,Summon,,,
-Cyber Dragon;Main1,SpSummon,,,
-Sabersaurus;Main1,Summon,,,
-Man-Eater Bug;Main1,MonsterSet,,,
-Alexandrite Dragon;Main1,Summon,,,
-Block Attack;Main1,Activate,EnemyField,Alexandrite Dragon;FaceUpAttack,
-Block Attack;Main1,Activate,EnemyField,Cyber Dragon;FaceUpAttack,
-Block Attack;Main1,Activate,EnemyField,Mekk-Knight Avram;FaceUpAttack,
-Block Attack;Main1,Activate,EnemyField,The Tricky;FaceUpAttack,
-Stop Defense;Main1,Activate,EnemyField,;FaceDownDefence,
-Pot of Greed;Main1,Activate,,,
-Snowman Eater;Main1,MonsterSet,,,
-Noble Knight Artorigus;Main1,Summon,,,
-Exiled Force;Main1,Activate,,,
-Wind-Up Soldier;Main1,Summon,,,
-Luster Dragon;Main1,Summon,,,
-Wind-Up Soldier;Main1,Activate,,,
-Exiled Force;Main1,Summon,,,
+Name|Action|Location|Compare|Value
+Yes;93490856;2|Activate|||
+Yazi, Evil of the Yang Zing;43202238;Grave;Main1|Activate|||
+Yazi, Evil of the Yang Zing;43202238;Extra;Main1|SpSummon|||
+Yazi, Evil of the Yang Zing;43202238;MonsterZone;Main1|Activate|||
+Yazi, Evil of the Yang Zing;MonsterZone;1;0502|Select|||
+Vessel for the Dragon Cycle;65124425;Hand;Main1|Activate|||
+Tenyi Spirit - Vishuda;23431858;Hand;Main1|Activate|||
+Tenyi Spirit - Vishuda;23431858;Grave;Main1|Activate|||
+Tenyi Spirit - Ashuna;87052196;Hand;Main1|Activate|||
+Tenyi Spirit - Ashuna;87052196;Grave;Main1|Activate|||
+Tenyi Spirit - Adhara;98159737;Hand;Main1|Activate|||
+Tenyi Spirit - Adhara;98159737;Hand;Main1|Summon|||
+Tenyi Spirit - Adhara;98159737;Grave;Main1|Activate|||
+Swordsoul of Taia;56495147;MonsterZone;Main1|Activate|||
+Swordsoul of Taia;56495147;Hand;Main1|Summon|||
+Swordsoul of Taia;56495147;Grave;Main1|Activate|||
+Swordsoul of Mo Ye;20001443;MonsterZone;Main1|Activate|||
+Swordsoul of Mo Ye;20001443;Hand;Main1|Summon|||
+Swordsoul of Mo Ye;20001443;Grave;Main1ShouldChain|Activate|||
+Swordsoul of Mo Ye;20001443;Grave;Main1|Activate|||
+Swordsoul Supreme Sovereign - Chengying;96633955;Extra;Main1|SpSummon|||
+Swordsoul Strategist Longyuan;93490856;Hand;Main1|Activate|||
+Swordsoul Strategist Longyuan;93490856;Grave;Main1ShouldChain|Activate|||
+Swordsoul Strategist Longyuan;93490856;Grave;Main1|Activate|||
+Swordsoul Sacred Summit;93850690;Hand;Main1|Activate|||
+Swordsoul Grandmaster - Chixiao;69248256;MonsterZone;Main1ShouldChain|Activate|||
+Swordsoul Grandmaster - Chixiao;69248256;Extra;Main1|SpSummon|||
+Swordsoul Emergence;56465981;Hand;Main1|Activate|||
+Swordsoul Blackout;14821890;SpellZone;Main1ShouldChain|Activate|||
+Swordsoul Blackout;14821890;Hand;Main1|SpellSet|||
+Pot of Desires;35261759;Hand;Main1|Activate|||
+Monk of the Tenyi;32519092;Extra;Main1|SpSummon|||
+Infinite Impermanence;10045474;SpellZone;Main1ShouldChain|Activate|||
+Infinite Impermanence;10045474;Hand;Main1ShouldChain|Activate|||
+Incredible Ecclesia, the Virtuous;55273560;MonsterZone;Main1ShouldChain|Activate|||
+Incredible Ecclesia, the Virtuous;55273560;MonsterZone;Main1|Activate|||
+Incredible Ecclesia, the Virtuous;55273560;Hand;Main1|SpSummon|||
+Incredible Ecclesia, the Virtuous;55273560;Hand;Main1|Summon|||
+Forbidden Chalice;25789292;Hand;Main1|SpellSet|||
+Draco Berserker of the Tenyi;5041348;Extra;Main1|SpSummon|||
+Chaofeng, Phantom of the Yang Zing;19048328;Extra;Main1|SpSummon|||
+Baxia, Brightness of the Yang Zing;83755611;Extra;Main1|SpSummon|||
+Baronne de Fleur;84815190;Extra;Main1|SpSummon|||
+Adamancipator Risen - Dragite;9464441;Extra;Main1|SpSummon|||

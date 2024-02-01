@@ -35,7 +35,7 @@ AIMaster = 'Master'
 deck1 = 'AI_Random1.ydk'
 deck2 = 'AI_Random2.ydk'
 
-totalGames = 10
+totalGames = 5
 generations = 3
 cycles = 3
 parallelGames = 3
@@ -262,7 +262,7 @@ def main_game_runner(isTraining, totalGames, Id1, Id2, Deck1, Deck2, port):
   #subprocess.Popen - does not wait to finish
   #subprocess.run - waits to finish
 
-  file_path = os.getcwd() + "/edopro_bin/ygopro.exe"
+  file_path = os.getcwd() + "/edopro_bin/ygoprodll.exe"
   if platform == "linux" or platform == "linux2":
     file_path = str(Path(__file__).resolve().parent.parent) + "/ProjectIgnisLinux/ygopro"
  
@@ -329,7 +329,7 @@ def main_game_runner(isTraining, totalGames, Id1, Id2, Deck1, Deck2, port):
   if platform == "linux" or platform == "linux2":
     os.system("kill -9 " + str(g.pid))
   else:
-    os.system("	TASKKILL /F /IM ygopro.exe")
+    os.system("	TASKKILL /F /IM ygoprodll.exe")
   
   end = time.time()
 

@@ -8,6 +8,7 @@ using YGOSharp.Network.Enums;
 using YGOSharp.Network.Utils;
 using YGOSharp.OCGWrapper;
 using YGOSharp.OCGWrapper.Enums;
+using System.Text.RegularExpressions;
 
 namespace WindBot.Game
 {
@@ -374,9 +375,9 @@ namespace WindBot.Game
 
         private void OnReplay(BinaryReader packet)
         {
-            /*byte[] replay =*/ packet.ReadToEnd();
+            byte[] replay = packet.ReadToEnd();
 
-            /*
+            
             const string directory = "Replays";
             if (!Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
@@ -387,7 +388,6 @@ namespace WindBot.Game
 
             if (Regex.IsMatch(file, @"^[\w\-. ]+$"))
                 File.WriteAllBytes(fullname, replay);
-            */
 
             //Connection.Close();
         }

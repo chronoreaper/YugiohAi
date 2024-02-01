@@ -1,4 +1,4 @@
-﻿namespace WindBot.Game.AI
+namespace WindBot.Game.AI
 {
     public enum ExecutorType
     {
@@ -11,6 +11,7 @@
         SummonOrSet,
         GoToBattlePhase,
         GoToMainPhase2,
-        GoToEndPhase
+        GoToEndPhase,
+        Select
     }
 }

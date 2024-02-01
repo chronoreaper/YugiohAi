@@ -233,6 +233,10 @@ namespace WindBot.Game.AI
             Battle = battle;
         }
 
+        public virtual void SetChain(IList<ClientCard> cards, IList<long> descs, bool forced)
+        {
+        }
+
         /// <summary>
         /// Set global variables Type, Card, ActivateDescription for Executor
         /// </summary>

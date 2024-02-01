@@ -236,6 +236,17 @@ namespace WindBot.Game.AI
             return (long)(option & 0xfffff) | (id << 20);
         }
 
+        public long GetCardIdFromDesc(long desc)
+        {
+            return desc >> 20;
+        }
+
+        public int GetOptionFromDesc(long desc)
+        {
+            long mask = (1 << 20) - 1;
+            return (int)(desc & mask);
+        }
+
         public bool IsTurn1OrMain2()
         {
             return Duel.Turn == 1 || Duel.Phase == DuelPhase.Main2;

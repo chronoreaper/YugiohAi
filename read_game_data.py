@@ -71,7 +71,7 @@ class CustomLoss(nn.Module):
 class Network(nn.Module):
   def __init__(self, input_dim, output_dim, bias):
     super(Network, self).__init__()
-    hidden_layers = output_dim #(input_dim + output_dim)# * 2
+    hidden_layers = (input_dim + output_dim) * 2
 
     self.layer1 = nn.Linear(input_dim, hidden_layers)
     self.layer2 = nn.Linear(hidden_layers, hidden_layers)
@@ -788,6 +788,9 @@ def getBias(name):
             output_list = 0
             next_phase = False
             
+            if (history.id not in action_state):
+              continue
+
             posssible_actions = action_state[history.id]
             # All possible actions as input
             for state in posssible_actions:
@@ -817,7 +820,8 @@ def getBias(name):
         continue
       weight_bias[i] = float(bias[i][0])/float(losses)
   
-  print(weight_bias)
+  #print("weight bias")
+  #print(weight_bias)
   return torch.from_numpy(np.array(weight_bias)).to(device).float()
 
 def compileData():
@@ -858,7 +862,13 @@ def compileData():
           for state in field_state[history.id]:
             input_list[state.compareId - 1] = 1
           
-          posssible_actions = action_state[history.id]
+          posssible_actions = []
+          
+          if history.id in action_state:
+            action_state[history.id]
+          else:
+            a = 1
+            pass
           # All possible actions as input
           for state in posssible_actions:
             #input_list[state.actionId - 1 + len(compare_to)] = 1

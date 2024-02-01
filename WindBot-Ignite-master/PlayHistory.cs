@@ -44,6 +44,7 @@ namespace WindBot
             public ExecutorType Action = ExecutorType.Activate;
             public long ActionId = 0;
             public bool Performed = false;
+            public ClientCard Card = null;
 
             public double GetWeight(List<CompareTo> state)
             {
@@ -93,9 +94,9 @@ namespace WindBot
             return c;
         }
 
-        public ActionInfo GenerateActionInfo(string name, ExecutorType action)
+        public ActionInfo GenerateActionInfo(string name, ExecutorType action, ClientCard card)
         {
-            ActionInfo actionInfo = new ActionInfo() { Name = name, Action = action };
+            ActionInfo actionInfo = new ActionInfo() { Name = name, Action = action, Card = card };
             actionInfo.ActionId = SQLComm.GetActionId(actionInfo);
 
             return actionInfo;

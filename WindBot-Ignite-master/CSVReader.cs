@@ -26,14 +26,20 @@ namespace WindBot
                 while (!reader.EndOfStream)
                 {
                     var line = reader.ReadLine();
-                    var values = line.Split(',');
+                    var values = line.Split('|');
 
                     string name = values[0];
                     string actiontype = values[1];
                     string location = values[2];
                     string compare = values[3];
                     string value = values[4];
-                    ExecutorType action = (ExecutorType)Enum.Parse(typeof(ExecutorType), actiontype, true);
+
+                    ExecutorType action;
+                    if (!Enum.TryParse(actiontype, out action))
+                    {
+                        Logger.WriteErrorLine($"Could not parse action {actiontype}");
+                        continue;
+                    }
 
                     ActionInfo actionInfo = new ActionInfo() { Name = name, Action = action };
                     var c = new CompareTo() { Location = location, Compare = compare, Value = value };

@@ -28,9 +28,9 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.SpellSet, ShouldPerform);
 
 
-            AddExecutor(ExecutorType.GoToBattlePhase, ShouldPerform);
-            AddExecutor(ExecutorType.GoToMainPhase2, ShouldPerform);
-            AddExecutor(ExecutorType.GoToEndPhase, ShouldPerform);
+            //AddExecutor(ExecutorType.GoToBattlePhase, ShouldPerform);
+            //AddExecutor(ExecutorType.GoToMainPhase2, ShouldPerform);
+            //AddExecutor(ExecutorType.GoToEndPhase, ShouldPerform);
             AddExecutor(ExecutorType.Repos, DefaultMonsterRepos);
 
             History = new PlayHistory();
@@ -70,7 +70,7 @@ namespace WindBot.Game.AI.Decks
 
             if (Duel.Phase == DuelPhase.Main2)
             {
-                return;
+                //return;
             }
 
             ActionNumber++;
@@ -79,7 +79,7 @@ namespace WindBot.Game.AI.Decks
 
             foreach (ClientCard card in main.MonsterSetableCards)
             {
-                actions.Add(History.GenerateActionInfo(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.MonsterSet));
+                actions.Add(History.GenerateActionInfo(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.MonsterSet, card));
                 //card.ActionIndex[(int)ExecutorType.MonsterSet];
             }
             //loop through cards that can change position
@@ -90,26 +90,59 @@ namespace WindBot.Game.AI.Decks
             //Loop through normal summonable monsters
             foreach (ClientCard card in main.SummonableCards)
             {
-                actions.Add(History.GenerateActionInfo(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.Summon));
+                actions.Add(History.GenerateActionInfo(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.Summon, card));
             }
             //loop through special summonable monsters
             foreach (ClientCard card in main.SpecialSummonableCards)
             {
-                actions.Add(History.GenerateActionInfo(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.SpSummon));
+                actions.Add(History.GenerateActionInfo(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.SpSummon, card));
             }
             //loop through activatable cards
             for (int i = 0; i < main.ActivableCards.Count; ++i)
             {
                 ClientCard card = main.ActivableCards[i];
-                actions.Add(History.GenerateActionInfo(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.Activate));
+                actions.Add(History.GenerateActionInfo(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.Activate, card));
                 //choice.SetBest(ExecutorType.Activate, card, card.ActionActivateIndex[main.ActivableDescs[i]]);
+            }
+            //loop through setable cards
+            for (int i = 0; i < main.SpellSetableCards.Count; ++i)
+            {
+                ClientCard card = main.SpellSetableCards[i];
+                actions.Add(History.GenerateActionInfo(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.SpellSet, card));
             }
 
 
             if (main.CanBattlePhase)
-                actions.Add(History.GenerateActionInfo("", ExecutorType.GoToBattlePhase));
+                actions.Add(History.GenerateActionInfo("", ExecutorType.GoToBattlePhase, null));
             else if (main.CanEndPhase)
-                actions.Add(History.GenerateActionInfo("", ExecutorType.GoToEndPhase));
+                actions.Add(History.GenerateActionInfo("", ExecutorType.GoToEndPhase, null));
+
+            BestAction = GetBestAction(actions, compare);
+            if (BestAction != null)
+                BestAction.Performed = true;
+
+            History.AddHistory(History.GenerateHistory(gameInfo, compare, actions), Duel);
+        }
+
+        public override void SetChain(IList<ClientCard> cards, IList<long> descs, bool forced)
+        {
+            base.SetChain(cards, descs, forced);
+            List<PlayHistory.ActionInfo> actions = new List<PlayHistory.ActionInfo>();
+
+
+            ActionNumber++;
+            var gameInfo = History.GenerateGameInfo(SQLComm.Id, Duel.Turn, ActionNumber);
+            var compare = GetComparisons();
+
+            for (int i = 0; i < cards.Count; i++)
+            {
+                actions.Add(History.GenerateActionInfo(BuildActionString(cards[i], Duel.Phase.ToString()) + "ShouldChain", ExecutorType.Activate, cards[i]));
+            }
+
+            if (!forced)
+            {
+                actions.Add((History.GenerateActionInfo(Duel.Phase.ToString() + "DontChain", ExecutorType.Activate, null)));
+            }
 
             BestAction = GetBestAction(actions, compare);
             if (BestAction != null)
@@ -163,7 +196,7 @@ namespace WindBot.Game.AI.Decks
                     }
 
                     //Console.WriteLine(" " + action.ActionId + ":" + action.ToString());
-                    if (best_predict.Count > 0 && best_predict.Count >= (int)action.ActionId)
+                    if (best_predict.Count > 0 && best_predict.Count > (int)action.ActionId)
                         Console.WriteLine(" " + action.ActionId + ":" + action.ToString() + " Weight:" + best_predict[(int)action.ActionId].ToString("#.#####"));
                 }
 
@@ -207,14 +240,18 @@ namespace WindBot.Game.AI.Decks
             if (SQLComm.IsManual)
             {
                 Console.WriteLine("Current State:---------");
-                foreach(var i in comparisons)
+                comparisons.Reverse();
+                foreach (var i in comparisons)
                 {
                     Console.WriteLine("     " + i.ToString());
                 }
                 Console.WriteLine("Select an action for Turn " + Duel.Turn + " Action # " + ActionNumber);
                 foreach (var action in actions)
                 {
-                    Console.WriteLine(" " + ":" + action.ToString());
+                    double weight = 0;
+                    if (best_predict.Count > (int)action.ActionId)
+                        weight = best_predict[(int)action.ActionId];
+                    Console.WriteLine(weight + ":" + action.ToString());
                 }
 
                 string str = "";
@@ -262,6 +299,7 @@ namespace WindBot.Game.AI.Decks
             c.Add(History.GenerateComparasion("", "PlayerFieldCount", Duel.Fields[0].GetMonsterCount().ToString()));
             c.Add(History.GenerateComparasion("", "EnemyFieldCount", Duel.Fields[1].GetMonsterCount().ToString()));
 
+            //Hand
             for(int i = 0; i < 1; i++)
                 foreach(var card in Duel.Fields[i].Hand)
                 {
@@ -271,6 +309,7 @@ namespace WindBot.Game.AI.Decks
                         ""));
                 }
 
+            // Monster Zone
             for (int i = 0; i <= 1; i++)
                 foreach (var card in Duel.Fields[i].MonsterZone)
                 {
@@ -283,6 +322,72 @@ namespace WindBot.Game.AI.Decks
                     }
                 }
 
+            // Spell Trap Zone
+            for (int i = 0; i <= 1; i++)
+                foreach (var card in Duel.Fields[i].SpellZone)
+                {
+                    if (card != null)
+                    {
+                        c.Add(History.GenerateComparasion(
+                            (i == 0 ? "Player" : "Enemy") + "SpellTrap",
+                            (card?.Name ?? "") + ";" + (CardPosition)card?.Position,
+                            ""));
+                    }
+                }
+
+            // GraveYard
+            for (int i = 0; i <= 1; i++)
+                foreach (var card in Duel.Fields[i].Graveyard)
+                {
+                    if (card != null)
+                    {
+                        c.Add(History.GenerateComparasion(
+                            (i == 0 ? "Player" : "Enemy") + "GY",
+                            (card?.Name ?? ""),
+                            ""));
+                    }
+                }
+
+            // Banished
+            for (int i = 0; i <= 1; i++)
+                foreach (var card in Duel.Fields[i].Banished)
+                {
+                    if (card != null)
+                    {
+                        c.Add(History.GenerateComparasion(
+                            (i == 0 ? "Player" : "Enemy") + "Banish",
+                            (card?.Name ?? ""),
+                            ""));
+                    }
+                }
+
+            // Previous Turn Actions
+            {
+                foreach (var history in History.CurrentTurn)
+                {
+                    var action = history.ActionInfo.Find(x => x.Performed);
+                    if (action == null)
+                    {
+                        continue;
+                    }
+                    c.Add(History.GenerateComparasion(
+                        "PreviousAction",
+                        (action.ToString()),
+                        ""));
+                }
+            }
+
+
+            // Last Card On Chain
+            {
+                int i = Duel.LastChainPlayer;
+                var card = Util.GetLastChainCard();
+                c.Add(History.GenerateComparasion(
+                            (i == 0 ? "Player" : "Enemy") + "LastChain",
+                            (card?.Name ?? ""),
+                            ""));
+            }
+
             return c;
         }
 
@@ -290,21 +395,35 @@ namespace WindBot.Game.AI.Decks
         {
             base.SetBattle(battle);
 
+            ActionNumber++;
+            var gameInfo = History.GenerateGameInfo(SQLComm.Id, Duel.Turn, ActionNumber);
+            var compare = GetComparisons();
+            List<PlayHistory.ActionInfo> actions = new List<PlayHistory.ActionInfo>();
+
             if (battle.CanMainPhaseTwo) // check if should enter main phase 2 directly
             {
-                //choice.SetBest(ExecutorType.GoToMainPhase2, null);
+                //actions.Add(History.GenerateActionInfo("", ExecutorType.GoToMainPhase2, null));
             }
             if (battle.CanEndPhase) // check if should enter end phase directly
             {
-                //choice.SetBest(ExecutorType.GoToEndPhase, null);
+                //actions.Add(History.GenerateActionInfo("", ExecutorType.GoToEndPhase, null));
             }
 
-            for (int i = 0; i < battle.ActivableCards.Count; ++i)
+            if (battle.ActivableCards.Count > 0)
             {
-                ClientCard card = battle.ActivableCards[i];
-                //choice.SetBest(ExecutorType.Activate, card, battle.ActivableDescs[i]);
+                for (int i = 0; i < battle.ActivableCards.Count; ++i)
+                {
+                    ClientCard card = battle.ActivableCards[i];
+                    actions.Add(History.GenerateActionInfo(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.Activate, card));
+                    //choice.SetBest(ExecutorType.Activate, card, battle.ActivableDescs[i]);
+                }
             }
 
+            BestAction = GetBestAction(actions, compare);
+            if (BestAction != null)
+                BestAction.Performed = true;
+
+            History.AddHistory(History.GenerateHistory(gameInfo, compare, actions), Duel);
         }
 
         public override bool OnSelectHand()
@@ -320,6 +439,35 @@ namespace WindBot.Game.AI.Decks
             History.EndOfTurn(Duel);
         }
 
+        public override void OnNewPhase()
+        {
+            base.OnNewPhase();
+            BestAction = null;
+            ActionNumber = 0;
+        }
+
+        public override bool OnSelectYesNo(long desc)
+        {
+            ActionNumber++;
+            var gameInfo = History.GenerateGameInfo(SQLComm.Id, Duel.Turn, ActionNumber);
+            var compare = GetComparisons();
+            List<PlayHistory.ActionInfo> actions = new List<PlayHistory.ActionInfo>();
+
+            var option = Util.GetOptionFromDesc(desc);
+            var cardId = Util.GetCardIdFromDesc(desc);
+
+            actions.Add(History.GenerateActionInfo($"Yes;{cardId};{option}", ExecutorType.Activate, null));
+            actions.Add(History.GenerateActionInfo($"No;{cardId};{option}", ExecutorType.Activate, null));
+
+            var result = GetBestAction(actions, compare);
+            if (result != null)
+                result.Performed = true;
+
+            History.AddHistory(History.GenerateHistory(gameInfo, compare, actions), Duel);
+
+            return result.Name.Contains("Yes");
+        }
+
         public override IList<ClientCard> OnSelectCard(IList<ClientCard> _cards, int min, int max, long hint, bool cancelable)
         {
             //if (Duel.Phase == DuelPhase.BattleStart)
@@ -329,9 +477,12 @@ namespace WindBot.Game.AI.Decks
 
             IList<ClientCard> selected = new List<ClientCard>();
             IList<ClientCard> cards = new List<ClientCard>(_cards);
-
-
             // AI Selection
+
+            ActionNumber++;
+            List<PlayHistory.ActionInfo> actions = new List<PlayHistory.ActionInfo>();
+            var gameInfo = History.GenerateGameInfo(SQLComm.Id, Duel.Turn, ActionNumber);
+            var compare = GetComparisons();
 
             int numToSelect = min;
 
@@ -345,27 +496,19 @@ namespace WindBot.Game.AI.Decks
             {
                 string action = $"Select" + hint.ToString();
                 string card = SelectStringBuilder(clientCard);
-                    //Tree.AddPossibleAction(card, action, Duel.Fields, Duel.Turn);
+                actions.Add(History.GenerateActionInfo(card + hint.ToString(), ExecutorType.Select, clientCard));
+                //Tree.AddPossibleAction(card, action, Duel.Fields, Duel.Turn);
             }
 
-            if (min == 1 && false)
+            var choice = GetBestAction(actions, compare);
+            if (choice != null)
             {
-                string toSelect = "";
-                string name = toSelect.Split(';')[0];
-                CardLocation location = (CardLocation) Enum.Parse(typeof(CardLocation), toSelect.Split(';')[1]);
-                int position = int.Parse(toSelect.Split(';')[2]);
-                int controller = int.Parse(toSelect.Split(';')[3]);
-
-                ClientCard select = cards.Where(card =>
-                    (card.Name == name || name == "Set Monster") &&
-                    card.Location == location &&
-                    card.Position == position &&
-                    card.Controller == controller
-                    ).ToList()[0];
-                selected.Add(select);
-                cards.Remove(select);
+                choice.Performed = true;
+                selected.Add(choice.Card);
+                cards.Remove(choice.Card);
             }
 
+            History.AddHistory(History.GenerateHistory(gameInfo, compare, actions), Duel);
 
             // Fill in the remaining with defaults
 
@@ -449,14 +592,30 @@ namespace WindBot.Game.AI.Decks
 
         public override int OnSelectOption(IList<long> options)
         {
-            return base.OnSelectOption(options);
-            foreach(long o in options)
+            ActionNumber++;
+            var info = History.GenerateGameInfo(SQLComm.Id, Duel.Turn, ActionNumber);
+            var compare = GetComparisons();
+            string cardName = BuildActionString(Card, Duel.Phase.ToString());
+            List<PlayHistory.ActionInfo> actions = new List<PlayHistory.ActionInfo>();
+
+            foreach (long o in options)
             {
-                //Tree.AddPossibleAction(o.ToString(), "SelectOption", Duel.Fields, Duel.Turn);
+                var option = Util.GetOptionFromDesc(o);
+                var cardId = Util.GetCardIdFromDesc(o);
+                actions.Add(History.GenerateActionInfo($"{cardId};{option}", ExecutorType.Select, Card));
             }
 
-            //long best = long.Parse(Tree.GetNextAction().CardId);
-            //return options.IndexOf(best);
+            var best = GetBestAction(actions, compare);
+            if (best == null)
+            {
+                base.OnSelectOption(options);
+            }
+
+            best.Performed = true;
+            History.AddHistory(History.GenerateHistory(info, compare, actions), Duel);
+
+
+            return options.IndexOf(long.Parse(best.Name.Split(';')[0]));
         }
 
         public bool ShouldPerform()
@@ -478,13 +637,15 @@ namespace WindBot.Game.AI.Decks
             }
             else
             {
+                ActionNumber++;
                 var info = History.GenerateGameInfo(SQLComm.Id, Duel.Turn, ActionNumber);
                 var compare = GetComparisons();
-                PlayHistory.ActionInfo action = History.GenerateActionInfo(BuildActionString(Card, Duel.Phase.ToString()), Type);
+                string cardName = BuildActionString(Card, Duel.Phase.ToString());
+                PlayHistory.ActionInfo action = History.GenerateActionInfo(BuildActionString(Card, Duel.Phase.ToString()), Type, Card);
                 List<PlayHistory.ActionInfo> actions = new List<PlayHistory.ActionInfo>
                 {
                     action,
-                    History.GenerateActionInfo("[No]", ExecutorType.Activate)
+                    History.GenerateActionInfo(cardName + "[No]", Type, Card)
                 };
 
                 var best = GetBestAction(actions, compare);
@@ -492,7 +653,7 @@ namespace WindBot.Game.AI.Decks
                 {
                     return false;
                 }
-                if (best.Name != "[No]")
+                //if (!best.Name.Contains("[No]"))
                 {
                     best.Performed = true;
                 }
@@ -537,6 +698,8 @@ namespace WindBot.Game.AI.Decks
             if (action == ExecutorType.Repos.ToString() && card != null)
                 actionString += $";{card.Position}";
             actionString += ";" + phase;
+            actionString += ";" + card.Location.ToString();
+            actionString += ";" + Duel.Player;
             return actionString;
         }
 
@@ -545,6 +708,8 @@ namespace WindBot.Game.AI.Decks
             if (phase == "Main2")
                 phase = "Main1";
             string actionString = card.Name ?? "Uknown";
+            actionString += ";" + card.Id;
+            actionString += ";" + card.Location;
             actionString += ";" + phase;
             return actionString;
         }

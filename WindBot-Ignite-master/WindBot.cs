@@ -112,7 +112,7 @@ namespace WindBot
                     {
 #endif
                         client.Tick();
-                        Thread.Sleep(30);
+                        //Thread.Sleep(30);
 #if !DEBUG
                     }
                     catch (Exception ex)

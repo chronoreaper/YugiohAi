@@ -254,7 +254,7 @@ namespace WindBot.Game
                 //Logger.WriteErrorLine($"Could not write result {SQLComm.Name}");
             }
 
-            if (SQLComm.RolloutCount <= 0)
+            if (SQLComm.RolloutCount <= 1)
             {
                 SQLComm.ShouldBackPropagate = true;
             }

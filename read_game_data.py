@@ -87,6 +87,7 @@ class Network(nn.Module):
   def forward(self, x):
     #x = self.single(x)
     x = self.layer1(x)
+    x = self.dropout1(x)
     x = self.act2(x)
     x = self.dropout1(x)
     #x = self.act2(x)
@@ -347,16 +348,16 @@ def createBetterDataset():
     for game_id in game_result[name]:
 
       # Only select the top values
-      if game_result[name][game_id].placement != 1:
-        continue
+      # if game_result[name][game_id].placement != 1:
+      #   continue
 
       if game_id in play_record.keys():
         for history in play_record[game_id]:
           reward = 1
           punishment = -0.10
 
-          if (game_result[name][game_id].result != 1):
-            continue
+          # if (game_result[name][game_id].result != 1):
+          #   continue
 
           input_list = [0] * input_length
           output_list = [0] * (output_length)
@@ -506,6 +507,9 @@ def showGameHistory():
 
     for state in field_state[record.id]:
       input_list[state.compareId - 1] = 1
+    
+    if record.id not in action_state:
+      continue
 
     for state in action_state[record.id]:
       #input_list[state.actionId - 1 + len(compare_to)] = 1
@@ -716,7 +720,7 @@ def printresults(results, name):
 def trainTorch(x_train, y_train, x_test, y_test, name):
   bias = getBias(name)
   traindata = Data(np.array(x_train), np.array(y_train))
-  batch_size = min(10, len(y_train))
+  batch_size = len(y_train)#min(10, len(y_train))
   trainloader = DataLoader(traindata, batch_size=batch_size, shuffle=True, collate_fn=lambda x: tuple(x_.to(device) for x_ in default_collate(x)))
   clf = Network(input_length, output_length, bias)
   clf.to(device)
@@ -743,9 +747,9 @@ def trainTorch(x_train, y_train, x_test, y_test, name):
       optimizer.step()
       running_loss += loss.item()
     
-    if epoch % 100 == 99:
+    #if epoch % 100 == 99:
       # display statistics
-      print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / (i + 1):.5f}')
+    print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / (i + 1):.5f}')
   
   clf.eval()
   with torch.no_grad():
@@ -835,8 +839,8 @@ def compileData():
     for game_id in game_result[name]:
 
       # Only select the top values
-      if game_result[name][game_id].placement != 1:
-        continue
+      # if game_result[name][game_id].placement != 1:
+      #   continue
 
       if game_id in play_record.keys():
         for history in play_record[game_id]:
@@ -845,8 +849,8 @@ def compileData():
           punishment = -0.1
           result = game_result[name][game_id].result
 
-          if (result != 1):
-            continue
+          # if (result != 1):
+          #   continue
           # if (result == -1):
           #   reward = -1
           #   critic_reward = -1
@@ -862,13 +866,10 @@ def compileData():
           for state in field_state[history.id]:
             input_list[state.compareId - 1] = 1
           
-          posssible_actions = []
+          if history.id not in action_state:
+            continue
           
-          if history.id in action_state:
-            action_state[history.id]
-          else:
-            a = 1
-            pass
+          posssible_actions = action_state[history.id]
           # All possible actions as input
           for state in posssible_actions:
             #input_list[state.actionId - 1 + len(compare_to)] = 1
@@ -892,7 +893,7 @@ def compileData():
           answer.append(output_list)
           critic_answer.append(critic_reward)
 
-    trainData(data, answer, name)
+    trainData(data, answer, str(int(name) + 1))
 
 def trainData(data, answer, name):
   if len(data) > 0:

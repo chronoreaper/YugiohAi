@@ -91,5 +91,28 @@ namespace WindBot
 
             return bonusWeight;
         }
+
+        public static bool InBaseActions(string name, string action, List<CompareTo> comparisons)
+        {
+            var sequence = BaseActions.Keys.Where(x => x.Name == name && x.Action.ToString() == action);
+            if (sequence.Any())
+            {
+                foreach (var c in BaseActions[sequence.First()])
+                {
+                    var compare_sequence = comparisons.Where(x =>
+                            (c.Compare == "" || x.Compare == c.Compare) &&
+                            (c.Value == "" || x.Value == c.Value) &&
+                            (c.Location == "" || x.Location == c.Location)
+                        );
+
+                    // Is in base action
+                    if (compare_sequence.Any())
+                        return true;
+
+                }
+            }
+
+            return false;
+        }
     }
 }

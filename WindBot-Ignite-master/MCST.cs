@@ -5,6 +5,7 @@ using System.Text;
 using WindBot.Game;
 using WindBot.Game.AI;
 using WindBot.Game.AI.Decks.Util;
+using static WindBot.PlayHistory;
 
 namespace WindBot
 {
@@ -25,6 +26,7 @@ namespace WindBot
             public MLUtil.GameState StateAfterOtherTurn = null;
             public bool SaveParent = true;
             public bool SaveChild = true;
+            public ClientCard Card = null;
 
             public Node(Node parent, string cardId, string action, ClientField[] field)
                 : this(parent, cardId, action)
@@ -41,6 +43,12 @@ namespace WindBot
             public Node(Node parent, string cardId, string action)
                 :this(parent, null, cardId, action)
             {
+            }
+
+            public Node(Node parent, string cardId, string action, ClientCard card)
+                : this(parent, null, cardId, action)
+            {
+                Card = card;
             }
 
             public Node(Node parent, Node child, string cardId, string action)
@@ -124,95 +132,42 @@ namespace WindBot
             }
         }
 
-        Dictionary<int, Node> TurnNodes;
-        Node current;
-        Node lastNode = null;
+        public List<Node> Path;
+        public int PathIndex { get; private set; } = 1;
+
+        Node _current;
+        Node _lastNode = null;
         public List<Node> possibleActions;
         int TotalGames = 0;
-        int actionNumber = 0;
-        Node nextActionNode = null;
 
         public MCST()
         {
+            Path = new List<Node>();
             OnNewGame();
         }
 
         public void OnNewGame()
         {
-            TurnNodes = new Dictionary<int, Node>();
             possibleActions = new List<Node>();
             TotalGames = SQLComm.GetTotalGames();
-            current = new Node(null, "", "");
-            current.NodeId = 0;
-            lastNode = current;
-        }
-
-        public void OnNewAction(ClientField[] fields)
-        {
-
-        }
-
-        public void OnNewTurn(ClientField[] fields, int turn)
-        {      
-            actionNumber = 0;
-            Node cur = current;
-            Node pre = null;
-
-            if (TurnNodes.ContainsKey(turn - 2))
-            {
-                pre = TurnNodes[turn - 2];
-            }
-
-            if (TurnNodes.ContainsKey(turn - 1))
-            {
-                cur = TurnNodes[turn - 1];
-            }
-
-            Node future = new Node(cur, $"turn:{turn}", "");
-            current.Children.Add(future);
-            current = future;
-            TurnNodes.Add(turn, future);
-            // Update Game states
-
-            //Logger.WriteLine("Prev Turn actions");
-            Queue<Node> q = new Queue<Node>();
-            if (pre != null)
-                q.Enqueue(pre);
-
-            while (q.Count > 0)
-            {
-                Node n = q.Dequeue();
-                n.StateAfterOtherTurn = new MLUtil.GameState(fields);
-                //Logger.WriteLine(n.ToString());
-
-                foreach(Node child in n.Children)
-                {
-                    q.Enqueue(child);
-                }
-            }
-
-            //Logger.WriteLine("Cur Turn actions");
-            if (cur != null)
-                q.Enqueue(cur);
-
-            while (q.Count > 0)
-            {
-                Node n = q.Dequeue();
-                n.StateAfterTurn = new MLUtil.GameState(fields);
-                //Logger.WriteLine(n.ToString());
-
-                foreach (Node child in n.Children)
-                {
-                    q.Enqueue(child);
-                }
-            }
+            _current = new Node(null, "", "");
+            _lastNode = _current;
+            if (Path.Count == 0)
+                Path.Add(_current);
+            PathIndex = 1;
         }
 
         public void OnGameEnd(int result, Duel duel)
         {
+            bool reset = SQLComm.ShouldBackPropagate;
             //double reward = result == 0 ? (int)(SQLComm.RolloutCount/2) : (double)duel.Turn / 100;
-            double reward = result == 0 ? 2 : 0;
-            Backpropagate(reward);
+            double reward = result == 0 ? 1 : 0;
+            SQLComm.Backpropagate(Path, _lastNode, reward);
+
+            if (reset)
+            {
+                Path.Clear();
+            }
         }
 
 
@@ -220,43 +175,40 @@ namespace WindBot
          * For Multiple Actions
          */
 
-        public void AddPossibleAction(string cardId, string action, ClientField[] field, int turn)
+        public void AddPossibleAction(string cardId, string action, ClientCard card = null)
         {
-            if (nextActionNode == null)
-            {
-                nextActionNode = new Node(null, $"Turn{turn}Action{actionNumber}", "", field);
-            }
-
-            Node node = new Node(current, nextActionNode, cardId, action, field);
+            Node node = new Node(_current, cardId, action, card);
             possibleActions.Add(node);
         }
 
-        public bool ShouldActivate(string cardId, string action, ClientField[] field)
+        public bool ShouldActivate(string cardId, string action, List<CompareTo> comparisons)
         {
-            Node toActivate = new Node(current, cardId, action, field);
+            Node toActivate = new Node(_current, cardId, action);
             possibleActions.Add(toActivate);
-            possibleActions.Add(new Node(current, cardId, "Dont"+action, field));
-            Node best = GetNextAction();
+            possibleActions.Add(new Node(_current, cardId, "Dont"+action));
+            Node best = GetNextAction(comparisons);
             return best == toActivate;
         }
 
         /**
          * Called after setting all possible actions
          */
-        public Node GetNextAction()
+        public Node GetNextAction(List<CompareTo> comparisons, bool pop = false)
         {
-            Node best = current;
+            Node best = _current;
             double weight = -1;
-            double c = 1;
+            double c = 0.1;
 
             if (!SQLComm.IsRollout)
             {
                 foreach (Node n in possibleActions)
                 {
-                    double visited = Math.Max(0.0001, n.Visited);
+                    double visited = Math.Max(0.01, n.Visited);
                     double estimate = SQLComm.GetNodeEstimate(n);
-                    double w = n.Rewards + c * Math.Sqrt((Math.Log(TotalGames + 1) + 1) / visited);
-                    w += estimate;
+                     double w = n.Rewards/visited + c * Math.Sqrt((Math.Log(n.Parent.Visited + 1) + 1) / visited);
+                    //w += estimate;
+                    if (CSVReader.InBaseActions(n.CardId, n.Action, comparisons))
+                        w += 1;
 
                     if (w >= weight)
                     {
@@ -265,37 +217,89 @@ namespace WindBot
                     }
                 }
 
-                if (best != null && possibleActions.Count > 1 && best != current)
+                if (best != null && best != _current)
                 {
-                    current.Children.Add(best);
-                    current = best.Children[0];
-                    actionNumber++;
-
-                    if (best.Visited <= 0)
+                    _current.Children.Add(best);
+                    _current = best;
+                    Path.Add(best);
+                    if (best.Visited <= 0 && best.NodeId != 0)
                     {
-                        lastNode = best;
-                        SQLComm.IsRollout = SQLComm.IsTraining;
+                        _lastNode = best;
+                        SQLComm.IsRollout = true;
+                        PathIndex = Path.Count;
                     }
                 }
 
             }
+            else if (PathIndex < Path.Count && possibleActions.Count > 0)
+            {
+                foreach (var action in possibleActions)
+                {
+                    if (action.NodeId == Path[PathIndex].NodeId)
+                    {
+                        PathIndex++;
+                        best = action;
+                        break;
+                    }
+                }
+
+                if (best == _current)
+                {
+                    Logger.WriteErrorLine("Could not follow saved path!");
+                    PathIndex = Path.Count;
+                    best = possibleActions[0];
+                }
+
+                _current.Children.Add(best);
+                _current = best;
+            }
             else if (possibleActions.Count > 0)
             {
-                if (SQLComm.IsTraining)
-                    best = possibleActions[Program.Rand.Next(0, possibleActions.Count)];
+
+                List<Node> bestPossible = new List<Node>();
+
+                foreach(var action in possibleActions)
+                {
+                    if (CSVReader.InBaseActions(action.CardId, action.Action, comparisons))
+                        bestPossible.Add(action);
+                }
+
+
+                if (bestPossible.Count > 0)
+                {
+                    if (SQLComm.IsTraining)
+                        best = bestPossible[Program.Rand.Next(0, bestPossible.Count)];
+                    else
+                        best = bestPossible[0];
+                }
                 else
-                    best = possibleActions[0];
+                {
+                    if (SQLComm.IsTraining)
+                        best = possibleActions[Program.Rand.Next(0, possibleActions.Count)];
+                    else
+                        best = possibleActions[0];
+                }
+
+                _current.Children.Add(best);
+                _current = best;
             }
 
-            nextActionNode = null;
-            possibleActions.Clear();
+            if (pop)
+            {
+                possibleActions.Remove(best);
+            }
+            else
+            {
+                possibleActions.Clear();
+            }
+
 
             return best;
         }
 
-        private void Backpropagate(double reward)
+        public void Clear()
         {
-            SQLComm.Backpropagate(TurnNodes, lastNode, reward);
+            possibleActions.Clear();
         }
     }
 }

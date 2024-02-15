@@ -16,6 +16,9 @@ namespace WindBot.Game.AI.Decks
         PlayHistory.ActionInfo BestAction;
         int ActionNumber = 0;
 
+        MCST.Node NextAction;
+        MCST Tree;
+
         public AIExecutorBase(GameAI ai, Duel duel)
             : base(ai, duel)
         {
@@ -34,6 +37,8 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.Repos, DefaultMonsterRepos);
 
             History = new PlayHistory();
+            if (SQLComm.IsMCTS)
+                Tree = new MCST();
         }
 
         private List<long> HintMsgForEnemy = new List<long>
@@ -80,28 +85,36 @@ namespace WindBot.Game.AI.Decks
             foreach (ClientCard card in main.MonsterSetableCards)
             {
                 actions.Add(History.GenerateActionInfo(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.MonsterSet, card));
+                if (SQLComm.IsMCTS)
+                    Tree.AddPossibleAction(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.MonsterSet.ToString());
                 //card.ActionIndex[(int)ExecutorType.MonsterSet];
             }
             //loop through cards that can change position
             foreach (ClientCard card in main.ReposableCards)
             {
-                //Tree.AddPossibleAction(card?.Name, ExecutorType.Repos.ToString(), Duel.Fields, Duel.Turn);
+                //Tree.AddPossibleAction(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.Repos.ToString(), Duel.Fields, Duel.Turn);
             }
             //Loop through normal summonable monsters
             foreach (ClientCard card in main.SummonableCards)
             {
                 actions.Add(History.GenerateActionInfo(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.Summon, card));
+                if (SQLComm.IsMCTS)
+                    Tree.AddPossibleAction(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.Summon.ToString());
             }
             //loop through special summonable monsters
             foreach (ClientCard card in main.SpecialSummonableCards)
             {
                 actions.Add(History.GenerateActionInfo(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.SpSummon, card));
+                if (SQLComm.IsMCTS)
+                    Tree.AddPossibleAction(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.SpSummon.ToString());
             }
             //loop through activatable cards
             for (int i = 0; i < main.ActivableCards.Count; ++i)
             {
                 ClientCard card = main.ActivableCards[i];
                 actions.Add(History.GenerateActionInfo(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.Activate, card));
+                if (SQLComm.IsMCTS)
+                    Tree.AddPossibleAction(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.Activate.ToString());
                 //choice.SetBest(ExecutorType.Activate, card, card.ActionActivateIndex[main.ActivableDescs[i]]);
             }
             //loop through setable cards
@@ -109,13 +122,26 @@ namespace WindBot.Game.AI.Decks
             {
                 ClientCard card = main.SpellSetableCards[i];
                 actions.Add(History.GenerateActionInfo(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.SpellSet, card));
+                if (SQLComm.IsMCTS)
+                    Tree.AddPossibleAction(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.SpellSet.ToString());
             }
 
 
             if (main.CanBattlePhase)
+            {
                 actions.Add(History.GenerateActionInfo("", ExecutorType.GoToBattlePhase, null));
+                if (SQLComm.IsMCTS)
+                    Tree.AddPossibleAction("", ExecutorType.GoToBattlePhase.ToString());
+            }
             else if (main.CanEndPhase)
+            {
                 actions.Add(History.GenerateActionInfo("", ExecutorType.GoToEndPhase, null));
+                if (SQLComm.IsMCTS)
+                    Tree.AddPossibleAction("", ExecutorType.GoToEndPhase.ToString());
+            }
+
+            if (SQLComm.IsMCTS)
+                NextAction = Tree.GetNextAction(compare);
 
             BestAction = GetBestAction(actions, compare);
             if (BestAction != null)
@@ -137,12 +163,19 @@ namespace WindBot.Game.AI.Decks
             for (int i = 0; i < cards.Count; i++)
             {
                 actions.Add(History.GenerateActionInfo(BuildActionString(cards[i], Duel.Phase.ToString()) + "ShouldChain", ExecutorType.Activate, cards[i]));
+                if (SQLComm.IsMCTS)
+                    Tree.AddPossibleAction(BuildActionString(cards[i], Duel.Phase.ToString()) + "ShouldChain", ExecutorType.Activate.ToString());
             }
 
             if (!forced)
             {
                 actions.Add((History.GenerateActionInfo(Duel.Phase.ToString() + "DontChain", ExecutorType.Activate, null)));
+                if (SQLComm.IsMCTS)
+                    Tree.AddPossibleAction(Duel.Phase.ToString() + "DontChain", ExecutorType.Activate.ToString());
             }
+
+            if (SQLComm.IsMCTS)
+                NextAction = Tree.GetNextAction(compare);
 
             BestAction = GetBestAction(actions, compare);
             if (BestAction != null)
@@ -200,7 +233,8 @@ namespace WindBot.Game.AI.Decks
                         Console.WriteLine(" " + action.ActionId + ":" + action.ToString() + " Weight:" + best_predict[(int)action.ActionId].ToString("#.#####"));
                 }
 
-                var chosen = actions[Rand.Next(actions.Count)];
+                //var chosen = actions[Rand.Next(actions.Count)];
+                var chosen = actions[0];
 
                 var result = best_predict.Select((v, i) => new { v, i }).OrderByDescending(x => x.v).ThenByDescending(x => x.i).Where(x => actions.Find(y => y.ActionId == x.i) != null).ToList();
 
@@ -214,7 +248,7 @@ namespace WindBot.Game.AI.Decks
                 bool selected = false;
                 while (!selected && result.Count > 0)
                 {
-                    var index = Rand.Next(result.Count);
+                    var index = 0;// Rand.Next(result.Count);
                     var best = result[index];
                     if (actions.Find(x => x.ActionId == best.i) != null)
                     {
@@ -416,8 +450,13 @@ namespace WindBot.Game.AI.Decks
                     ClientCard card = battle.ActivableCards[i];
                     actions.Add(History.GenerateActionInfo(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.Activate, card));
                     //choice.SetBest(ExecutorType.Activate, card, battle.ActivableDescs[i]);
+                    if (SQLComm.IsMCTS)
+                        Tree.AddPossibleAction(BuildActionString(card, Duel.Phase.ToString()), ExecutorType.Activate.ToString());
                 }
             }
+
+            if (SQLComm.IsMCTS)
+                NextAction = Tree.GetNextAction(compare);
 
             BestAction = GetBestAction(actions, compare);
             if (BestAction != null)
@@ -429,6 +468,7 @@ namespace WindBot.Game.AI.Decks
         public override bool OnSelectHand()
         {
             bool choice = SQLComm.IsFirst;
+            //Logger.WriteLine(SQLComm.Name + " Is First " + choice);
             return choice;
         }
 
@@ -459,13 +499,28 @@ namespace WindBot.Game.AI.Decks
             actions.Add(History.GenerateActionInfo($"Yes;{cardId};{option}", ExecutorType.Activate, null));
             actions.Add(History.GenerateActionInfo($"No;{cardId};{option}", ExecutorType.Activate, null));
 
+            if (SQLComm.IsMCTS)
+            {
+                Tree.AddPossibleAction($"Yes;{cardId};{option}", ExecutorType.Activate.ToString());
+                Tree.AddPossibleAction($"No;{cardId};{option}", ExecutorType.Activate.ToString());
+            }
+
+            var yes = true;
             var result = GetBestAction(actions, compare);
             if (result != null)
                 result.Performed = true;
 
             History.AddHistory(History.GenerateHistory(gameInfo, compare, actions), Duel);
+            yes = result.Name.Contains("Yes");
 
-            return result.Name.Contains("Yes");
+            if (SQLComm.IsMCTS)
+            {
+                NextAction = Tree.GetNextAction(compare);
+                yes = NextAction.CardId.Contains("Yes");
+
+            }
+
+            return yes;
         }
 
         public override IList<ClientCard> OnSelectCard(IList<ClientCard> _cards, int min, int max, long hint, bool cancelable)
@@ -496,16 +551,31 @@ namespace WindBot.Game.AI.Decks
             {
                 string action = $"Select" + hint.ToString();
                 string card = SelectStringBuilder(clientCard);
-                actions.Add(History.GenerateActionInfo(card + hint.ToString(), ExecutorType.Select, clientCard));
+                actions.Add(History.GenerateActionInfo(card + ";" + hint.ToString(), ExecutorType.Select, clientCard));
                 //Tree.AddPossibleAction(card, action, Duel.Fields, Duel.Turn);
+                if (SQLComm.IsMCTS)
+                    Tree.AddPossibleAction(card + ";" + hint.ToString(), ExecutorType.Select.ToString(), clientCard);
+
             }
 
-            var choice = GetBestAction(actions, compare);
-            if (choice != null)
+            if (SQLComm.IsMCTS)
             {
-                choice.Performed = true;
-                selected.Add(choice.Card);
-                cards.Remove(choice.Card);
+                while (selected.Count < min)
+                {
+                    ClientCard card = Tree.GetNextAction(compare, true).Card; //cards[Program.Rand.Next(cards.Count)];
+                    selected.Add(card);
+                    cards.Remove(card);
+                }
+            }
+            else
+            {
+                var choice = GetBestAction(actions, compare);
+                if (choice != null)
+                {
+                    choice.Performed = true;
+                    selected.Add(choice.Card);
+                    cards.Remove(choice.Card);
+                }
             }
 
             History.AddHistory(History.GenerateHistory(gameInfo, compare, actions), Duel);
@@ -576,6 +646,7 @@ namespace WindBot.Game.AI.Decks
                 cards.Remove(card);
             }
 
+
             if (HintMsgForMaxSelect.Contains(hint))
             {
                 // select max cards
@@ -586,6 +657,9 @@ namespace WindBot.Game.AI.Decks
                     cards.Remove(card);
                 }
             }
+
+            if (SQLComm.IsMCTS)
+                Tree.Clear();
 
             return selected;
         }
@@ -603,8 +677,11 @@ namespace WindBot.Game.AI.Decks
                 var option = Util.GetOptionFromDesc(o);
                 var cardId = Util.GetCardIdFromDesc(o);
                 actions.Add(History.GenerateActionInfo($"{cardId};{option}", ExecutorType.Select, Card));
+                if (SQLComm.IsMCTS)
+                    Tree.AddPossibleAction($"{cardId};{option}", ExecutorType.Select.ToString());
             }
 
+            var bestName = "";
             var best = GetBestAction(actions, compare);
             if (best == null)
             {
@@ -613,13 +690,42 @@ namespace WindBot.Game.AI.Decks
 
             best.Performed = true;
             History.AddHistory(History.GenerateHistory(info, compare, actions), Duel);
+            bestName = best.Name;
 
+            if (SQLComm.IsMCTS)
+            {
+                NextAction = Tree.GetNextAction(compare);
+                bestName = NextAction.CardId;
+            }
 
-            return options.IndexOf(long.Parse(best.Name.Split(';')[0]));
+            return options.IndexOf(long.Parse(bestName.Split(';')[0]));
         }
 
         public bool ShouldPerform()
         {
+            if (SQLComm.IsMCTS)
+            {
+                if (NextAction != null)
+                {
+                    string id = NextAction.CardId.Split(';')[0];
+                    string action = NextAction.Action.ToString();
+                    //ActivateDescription
+                    if (Card.Name == id && Type.ToString() == action)
+                    {
+                        NextAction = null;
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    return Tree.ShouldActivate(BuildActionString(Card, Duel.Phase.ToString()), Type.ToString(), GetComparisons());
+                }
+            }
+
             if (BestAction != null)
             {
                 string id = BestAction.Name.Split(';')[0];
@@ -662,17 +768,26 @@ namespace WindBot.Game.AI.Decks
 
                 return action.Performed;
             }
-
-            return false;
         }
 
         public override void OnWin(int result)
         {
-            //NEAT.OnWin(result);
-            //NEAT.games++;
-            //NEAT.wins += result == 0 ? 1 : 0;
-            //NEAT.SaveNetwork(result == 0 ? 1 : 0);
-            History.EndOfTurn(Duel);
+            if (SQLComm.IsMCTS)
+            {
+                SQLComm.ShouldUpdate = false;
+                if (SQLComm.GamesPlayed >= SQLComm.TotalGames - 1 && SQLComm.TotalGames > 0)
+                {
+                    SQLComm.ShouldUpdate = true;
+                    int index = Tree.Path.Count;
+                    if (index < History.Records.Count)
+                        History.Records.RemoveRange(index, History.Records.Count - index);
+                    else
+                        Logger.WriteErrorLine("History entry is less than tree entry?");
+                }
+
+                Tree.OnGameEnd(result, Duel);
+                Tree.OnNewGame();
+            }
             History.SaveHistory(result);
             History.Records.Clear();
         }

@@ -1,19 +1,19 @@
-Name,Action,Location,Compare,Value
-Mekk-Knight Avram;Main1,Summon,,,
-Cyber Dragon;Main1,SpSummon,,,
-Sabersaurus;Main1,Summon,,,
-Man-Eater Bug;Main1,MonsterSet,,,
-Alexandrite Dragon;Main1,Summon,,,
-Block Attack;Main1,Activate,EnemyField,Alexandrite Dragon;FaceUpAttack,
-Block Attack;Main1,Activate,EnemyField,Cyber Dragon;FaceUpAttack,
-Block Attack;Main1,Activate,EnemyField,Mekk-Knight Avram;FaceUpAttack,
-Block Attack;Main1,Activate,EnemyField,The Tricky;FaceUpAttack,
-Stop Defense;Main1,Activate,EnemyField,;FaceDownDefence,
-Pot of Greed;Main1,Activate,,,
-Snowman Eater;Main1,MonsterSet,,,
-Noble Knight Artorigus;Main1,Summon,,,
-Exiled Force;Main1,Activate,,,
-Wind-Up Soldier;Main1,Summon,,,
-Luster Dragon;Main1,Summon,,,
-Wind-Up Soldier;Main1,Activate,,,
-Exiled Force;Main1,Summon,,,
+Name|Action|Location|Compare|Value
+Mekk-Knight Avram;84754430;Hand;Main1|Summon|||
+Cyber Dragon;70095154;Hand;Main1|SpSummon|||
+Sabersaurus;37265642;Hand;Main1|Summon|||
+Man-Eater Bug;546552250;Hand;Main1|MonsterSet|||
+Alexandrite Dragon;43096270;Hand;Main1|Summon|||
+Block Attack;25880422;Hand;Main1|Activate|EnemyField|Alexandrite Dragon;FaceUpAttack|
+Block Attack;25880422;Hand;Main1|Activate|EnemyField|Cyber Dragon;FaceUpAttack|
+Block Attack;25880422;Hand;Main1|Activate|EnemyField|Mekk-Knight Avram;FaceUpAttack|
+Block Attack;25880422;Hand;Main1|Activate|EnemyField|The Tricky;FaceUpAttack|
+Stop Defense;63102017;Hand;Main1|Activate|EnemyField|;FaceDownDefence|
+Pot of Greed;55144522;Hand;Main1|Activate|||
+Snowman Eater;91133740;Hand;Main1|MonsterSet|||
+Noble Knight Artorigus;92125819;Hand;Main1|Summon|||
+Exiled Force;74131780;MonsterZone;Main1|Activate|||
+Wind-Up Soldier;12299841;Hand;Main1|Summon|||
+Luster Dragon;11091375;Hand;Main1|Summon|||
+Wind-Up Soldier;12299841;MonsterZone;Main1|Activate|||
+Exiled Force;74131780;Hand;Main1|Summon|||

@@ -35,10 +35,10 @@ AIMaster = 'Master'
 deck1 = 'AI_Random1.ydk'
 deck2 = 'AI_Random2.ydk'
 
-totalGames = 5
-generations = 3
-cycles = 3
-parallelGames = 3
+totalGames = 25
+generations = 10
+cycles = 1
+parallelGames = 1
 
 rolloutCount = 1
 isFirst = True
@@ -102,6 +102,15 @@ def resetDB():
   con.commit()
   con.close()
 
+def resetMCTS():
+  dbfile = './cardData.cdb'
+  con = sqlite3.connect(dbfile)
+  cur = con.cursor()
+  sql_delete_query = """DELETE from MCST"""
+  cur.execute(sql_delete_query)
+  con.commit()
+  con.close()
+
 def softResetDB():
   dbfile = './cardData.cdb'
   con = sqlite3.connect(dbfile)
@@ -141,8 +150,6 @@ def parseArg():
   isTraining = len(sys.argv)>1 and ("--training" in sys.argv or "-t" in sys.argv)
   isFirst = len(sys.argv)>1 and ("--first" in sys.argv or "-f" in sys.argv)
 
-  print(isTraining)
-
   if "--repeat" in sys.argv:
     repeatFor = int(sys.argv[sys.argv.index("--repeat")+1])
   if "--matches" in sys.argv:
@@ -161,7 +168,8 @@ def runAi(Deck = "Random1",
           WinsThreshold = 50,
           PastWinsLimit = 20,
           Id = 0,
-          Port = 7911
+          Port = 7911,
+          IsMCTS= False
           ):
   currentdir = os.getcwd()
   os.chdir(os.getcwd()+'/WindBot-Ignite-master/bin/Debug')
@@ -182,9 +190,11 @@ def runAi(Deck = "Random1",
                         "WinsThreshold="+str(WinsThreshold), 
                         "PastWinsLimit="+str(PastWinsLimit),
                         "Id="+str(Id),
-                        "Port="+str(Port)
+                        "Port="+str(Port),
+                        "IsMCTS="+str(IsMCTS)
                         ],
-                        stdout=subprocess.DEVNULL)
+                        stdout=subprocess.DEVNULL
+                        )
     
   os.chdir(currentdir)
   
@@ -287,7 +297,8 @@ def main_game_runner(isTraining, totalGames, Id1, Id2, Deck1, Deck2, port):
               WinsThreshold = winThresh,
               PastWinsLimit = pastWinLim,
               Id = Id1,
-              Port = port
+              Port = port,
+              IsMCTS=isTraining
             )
   time.sleep(1)
   print("	runningAi2 "+ str(Id2) + ":" + Deck2)
@@ -302,7 +313,8 @@ def main_game_runner(isTraining, totalGames, Id1, Id2, Deck1, Deck2, port):
               WinsThreshold = winThresh,
               PastWinsLimit = pastWinLim,
               Id = Id2,
-              Port = port
+              Port = port,
+              IsMCTS=False
             )
   
   #psutil.Process(g.pid).nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
@@ -350,6 +362,11 @@ def main():
       read_game_data.read_data()
       get_action_weights.fetchDatabaseData()
       get_action_weights.load_data()
+      resetMCTS()
+
+      shuffle_deck(deck1)
+      shuffle_deck(deck2)
+
       #resetDB()
       proc = multiprocessing.Process(target=get_action_weights.run_server, args=())
       proc.start()
@@ -357,7 +374,7 @@ def main():
       jobs = []
       pairs = []
       bots = list(range(parallelGames * 2))
-      if (isTraining and AI2Deck != AIMaster):
+      if (isTraining and AI2Deck != AIMaster) and False:
         while bots:
           r1 = bots.pop(random.randrange(0, len(bots)))
           r2 = bots.pop(random.randrange(0, len(bots)))
@@ -369,7 +386,7 @@ def main():
           pairs.append((r1, r2))
 
       for i in range(len(pairs)):
-        print("generation " + str(g) + " cycle: " + str(c) +" running game " + str(i) + ":" + str(pairs[i][0]) + "vs" + str(pairs[i][1]))
+        print("generation " + str(g) + " cycle: " + str(c) +" running game " + str(i) + ":" + str(pairs[i][0]) + "vs" + str(pairs[i][1]) + ": Total games " + str(totalGames))
         port = 7910 + i
         p = multiprocessing.Process(target=main_game_runner, args=(True, totalGames, str(pairs[i][0]), str(pairs[i][1]), AI1Deck, AI2Deck, port))
         #psutil.Process(p.pid).nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
@@ -381,7 +398,7 @@ def main():
       
       proc.terminate()  # sends a SIGTERM
       print("done cycle")
-    if g < generations - 1:
+    if g <= generations - 1:
       limit = parallelGames * cycles
 
       read_game_data.read_data()

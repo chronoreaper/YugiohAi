@@ -62,40 +62,86 @@ def load_data():
 
   # print("Compare Count:" + str(compare_count))
 
-def get_predictions(data: typing.List[int], actions: typing.List[int], name: string):
-  global action_data, compare_count
+def get_predictions(data: typing.List[int], actions: typing.List[int], key_name: string):
+  global action_data, compare_count, action_count
   if (action_data == None):
     return []
 
-  key_name = name
   if key_name not in action_data.keys():
      return []
   
-  input_length = 1 + compare_count# + action_count 
-
-  input_list = [0] * input_length
+  final_result = {}
+  
+  input_length = 1 + compare_count #+ 1 + action_count
+  input_list = [0] * (input_length)
 
   for id in data:
     index = int(id)
     if (index < len(input_list) and index >= 0):
-      input_list[index] = 1
+      input_list[index - 1] = 1
 
   # for id in actions:
   #   index = int(id) + 1 + compare_count
   #   if (index < len(input_list) and index >= 0):
-  #     input_list[index] = 1
-    
-  final_result = []
+  #     input_list[index - 1] = 1
+
+  # for id in actions:
+  #     if int(id) > action_count:
+  #       continue
+
+  #     input_list[int(id) - 1 + compare_count] = -1
+
+  # for id in actions:
+  #     if int(id) > action_count:
+  #       continue
+
+  #     input_list[int(id) - 1 + compare_count] = 1
+  #     predict = getTorchPrediction(action_data, [input_list])
+  #     percentage = 0
+  #     for key in predict:
+  #       percentage = predict[key][0]
+  #       if key not in final_result:
+  #         final_result[key] = [0] * (1 + action_count)
+  #       final_result[key][int(id)] = percentage#str(percentage)
+          
+  #     input_list[int(id) - 1 + compare_count] = 0#-1
+
   final_result = getTorchPrediction(action_data, [input_list])
+      
 
   text = key_name + ":"
-  ind = np.argpartition(final_result[key_name], -4)[-4:]
-  index = ind[np.argsort(final_result[key_name][ind])]
-  index = index[::-1]
-  for i in index:
-    text += "[" + str(i) + "]" + ":" + str(final_result[key_name][i]) + ","
+  # ind = np.argpartition(final_result[key_name], -4)[-4:]
+  # index = ind[np.argsort(final_result[key_name][ind])]
+  # index = index[::-1]
 
-  final_result = final_result[key_name].tolist()
+  result = []
+  for i in range(1 + action_count):
+    avg = 0.0
+    avg2 = 0.0
+    cnt = 0
+    for key in final_result:
+      avg += final_result[key][i]
+      if round(final_result[key][i]) > 0 and round(final_result[key][i]) < 100:
+        avg2 += final_result[key][i]
+        cnt += 1
+    if len(final_result) > 0:
+      avg /= len(final_result)
+    
+    cnt = max(1,cnt)
+    avg2 /= cnt
+
+    result.append(str(avg))
+
+  # Use master
+  result = []
+  for i in range(1 + action_count):
+    #result.append(str(final_result["master"][i]))
+    result.append(str(final_result[key_name][i]))
+
+  for i in actions:
+    if int(i) > action_count:
+      continue
+    text += "[" + str(i) + "]" + ":" + str(round(float(result[int(i)])*100)) + ","
   print(text)
   
   # better = getBetterPrediction(final_result, 0)[0]
@@ -104,7 +150,7 @@ def get_predictions(data: typing.List[int], actions: typing.List[int], name: str
   # for b in better:
   #   final_result[b[0]] = b[1]
   
-  return final_result
+  return result
 
 def run_command_line():
   while True:

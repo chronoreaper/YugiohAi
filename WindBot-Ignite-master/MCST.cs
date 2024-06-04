@@ -15,11 +15,13 @@ namespace WindBot
         {
             public List<Node> Children;
             public Node Parent;
+            public double AvgTurn = 0;
             public double Rewards = 0;
             public int Visited = 0;
             public string CardId;
             public string Action;
             public long NodeId = -4;
+            public long Desc = -1; // for activated card description
             public MLUtil.GameState StateCurrent = null;
             public MLUtil.GameState StateAfterPlay = null;
             public MLUtil.GameState StateAfterTurn = null;
@@ -28,35 +30,42 @@ namespace WindBot
             public bool SaveChild = true;
             public ClientCard Card = null;
 
-            public Node(Node parent, string cardId, string action, ClientField[] field)
+            public Node(Node parent, string cardId, ExecutorType action, ClientField[] field)
                 : this(parent, cardId, action)
             {
                 StateCurrent = new MLUtil.GameState(field);
             }
 
-            public Node(Node parent, Node child, string cardId, string action, ClientField[] field)
+            public Node(Node parent, Node child, string cardId, ExecutorType action, ClientField[] field)
                 :this(parent, child, cardId, action)
             {
                 StateCurrent = new MLUtil.GameState(field);
             }
 
-            public Node(Node parent, string cardId, string action)
+            public Node(Node parent, string cardId, ExecutorType action)
                 :this(parent, null, cardId, action)
             {
             }
 
-            public Node(Node parent, string cardId, string action, ClientCard card)
+            public Node(Node parent, string cardId, ExecutorType action, ClientCard card)
                 : this(parent, null, cardId, action)
             {
                 Card = card;
             }
 
-            public Node(Node parent, Node child, string cardId, string action)
+            public Node(Node parent, string cardId, ExecutorType action, long desc)
+                : this(parent, null, cardId, action)
+            {
+                Desc = desc;
+            }
+
+
+            public Node(Node parent, Node child, string cardId, ExecutorType action)
             {
                 Children = new List<Node>();
                 Parent = parent;
                 CardId = cardId;
-                Action = action;
+                Action = action.ToString();
                 StateCurrent = new MLUtil.GameState();
 
                 if (child != null)
@@ -126,6 +135,8 @@ namespace WindBot
                 string s = "";
                 s += NodeId.ToString() + " | ";
                 s += CardId + ": " + Action + " | ";
+                if (Desc >= 0)
+                    s += Desc.ToString() + " | ";
                 s += Heuristic();
 
                 return s;
@@ -139,6 +150,7 @@ namespace WindBot
         Node _lastNode = null;
         public List<Node> possibleActions;
         int TotalGames = 0;
+        int ActionCount = 0;
 
         public MCST()
         {
@@ -150,19 +162,20 @@ namespace WindBot
         {
             possibleActions = new List<Node>();
             TotalGames = SQLComm.GetTotalGames();
-            _current = new Node(null, "", "");
+            _current = new Node(null, "", default(ExecutorType));
             _lastNode = _current;
             if (Path.Count == 0)
                 Path.Add(_current);
             PathIndex = 1;
+            ActionCount = 0;
         }
 
         public void OnGameEnd(int result, Duel duel)
         {
             bool reset = SQLComm.ShouldBackPropagate;
-            //double reward = result == 0 ? (int)(SQLComm.RolloutCount/2) : (double)duel.Turn / 100;
             double reward = result == 0 ? 1 : 0;
-            SQLComm.Backpropagate(Path, _lastNode, reward);
+            //double reward = result == 0 ? 1.0 - Math.Min(duel.Turn * 0.01, 0.1) - Math.Min(ActionCount * 0.001, 0.2): 0;
+            SQLComm.Backpropagate(Path, _lastNode, reward, duel.Turn);
 
             if (reset)
             {
@@ -175,17 +188,23 @@ namespace WindBot
          * For Multiple Actions
          */
 
-        public void AddPossibleAction(string cardId, string action, ClientCard card = null)
+        public void AddPossibleAction(string cardId, ExecutorType action, ClientCard card = null)
         {
             Node node = new Node(_current, cardId, action, card);
             possibleActions.Add(node);
         }
 
-        public bool ShouldActivate(string cardId, string action, List<CompareTo> comparisons)
+        public void AddPossibleAction(string cardId, ExecutorType action, long desc)
+        {
+            Node node = new Node(_current, cardId, action, desc);
+            possibleActions.Add(node);
+        }
+
+        public bool ShouldActivate(string cardId, ExecutorType action, List<CompareTo> comparisons)
         {
             Node toActivate = new Node(_current, cardId, action);
             possibleActions.Add(toActivate);
-            possibleActions.Add(new Node(_current, cardId, "Dont"+action));
+            //possibleActions.Add(new Node(_current, cardId + "[No]", action));
             Node best = GetNextAction(comparisons);
             return best == toActivate;
         }
@@ -197,7 +216,7 @@ namespace WindBot
         {
             Node best = _current;
             double weight = -1;
-            double c = 0.1;
+            double c = 0.01;
 
             if (!SQLComm.IsRollout)
             {
@@ -205,9 +224,12 @@ namespace WindBot
                 {
                     double visited = Math.Max(0.01, n.Visited);
                     double estimate = SQLComm.GetNodeEstimate(n);
-                     double w = n.Rewards/visited + c * Math.Sqrt((Math.Log(n.Parent.Visited + 1) + 1) / visited);
+                    //double w = n.Rewards/visited + c * Math.Sqrt((Math.Log(n.Parent.Visited + 1) + 1) / visited);
+                    double w = n.Rewards / visited + c * Math.Sqrt((Math.Log(n.Parent.Visited + 1) + 1) / visited);
+                    if (n.AvgTurn > 0)
+                        w += 1 / n.AvgTurn;
                     //w += estimate;
-                    if (CSVReader.InBaseActions(n.CardId, n.Action, comparisons))
+                    if (CSVReader.InBaseActions(n.CardId, n.Action, comparisons) && visited < 20)
                         w += 1;
 
                     if (w >= weight)
@@ -293,6 +315,7 @@ namespace WindBot
                 possibleActions.Clear();
             }
 
+            ActionCount ++;
 
             return best;
         }

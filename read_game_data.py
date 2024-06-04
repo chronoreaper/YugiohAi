@@ -13,7 +13,9 @@ import typing
 import csv
 import numpy as np
 import pickle
+import itertools
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 
 import torch
 import numpy as np
@@ -77,8 +79,9 @@ class Network(nn.Module):
     self.layer2 = nn.Linear(hidden_layers, hidden_layers)
     self.output = nn.Linear(hidden_layers, output_dim)
     self.single = nn.Linear(input_dim, output_dim)
-    self.output.bias = nn.Parameter(bias)
-    self.dropout1 = nn.Dropout(0.9)
+    #print(self.layer1.weight)
+    #self.output.bias = nn.Parameter(bias)
+    self.dropout1 = nn.Dropout(0.5)
     self.dropout2 = nn.Dropout(0.2)
     self.act1 = nn.Tanh()
     self.act2 = nn.ReLU()
@@ -87,11 +90,15 @@ class Network(nn.Module):
   def forward(self, x):
     #x = self.single(x)
     x = self.layer1(x)
-    x = self.dropout1(x)
+    #x = self.dropout1(x)
     x = self.act2(x)
-    x = self.dropout1(x)
-    #x = self.act2(x)
-    #x = self.act1(self.layer2(x))
+
+    x = self.layer2(x)
+    x = self.act2(x)
+
+    # x = self.layer2(x)
+    # x = self.act2(x)
+
     x = self.output(x)
     #x = self.act0(x)
     return x
@@ -157,6 +164,7 @@ action_state: typing.Dict[int, typing.List[ActionState]] = {}
 compare_to: typing.Dict[int, CompareTo] = {}
 field_state: typing.Dict[int, typing.List[FieldState]] = {}
 play_record: typing.Dict[int, typing.List[PlayRecord]] = {}
+record_to_game: typing.Dict[int, int] = {}
 game_result: typing.Dict[str, typing.Dict[int, GameResult]] = {}
 
 input_length = 0
@@ -187,7 +195,7 @@ def clearLocalData():
   game_result = {}
 
 def fetchDatabaseData():
-  global action_list, action_state, compare_to, field_state, play_record, game_result
+  global action_list, action_state, compare_to, field_state, play_record, game_result, record_to_game
   global input_length, output_length
 
   print("Reading data")
@@ -229,6 +237,7 @@ def fetchDatabaseData():
     if (id not in play_record):
       play_record[id] = []
     play_record[id].append(PlayRecord(record[0], record[1], record[2], record[3], record[4], record[5], record[6], record[7], record[8], record[9], record[10], record[11]))
+    record_to_game[record[0]] = id
 
   c.execute('SELECT rowid, Name, Result, Placement FROM L_GameResult')
   records = c.fetchall()
@@ -305,6 +314,7 @@ def getTorchData():
     f = os.path.join(directory, filename)
     if os.path.isfile(f):
         clf = Network(input_length, output_length, getBias(filename))
+        #clf = Network(input_length + output_length, 1, getBias(filename))
         clf.load_state_dict(torch.load(f))
         clf.to(device)
         clf.eval()
@@ -318,6 +328,7 @@ def getTorchPrediction(action_data, input_list, multi = False):
     for key in action_data.keys():
         torch_data = torch.from_numpy(np.array(input_list)).to(device).float()
         result = action_data[key](torch_data)
+        #result = torch.softmax(result,1)
         result = torch.sigmoid(result)
         result = result.cpu().data.numpy()
         if multi:
@@ -356,8 +367,8 @@ def createBetterDataset():
           reward = 1
           punishment = -0.10
 
-          # if (game_result[name][game_id].result != 1):
-          #   continue
+          if (game_result[name][game_id].result != 1):
+            continue
 
           input_list = [0] * input_length
           output_list = [0] * (output_length)
@@ -434,13 +445,13 @@ def getBetterPrediction(final_result, mode = 0, multi = False):
       result = results[game_index]
       s = {}
       # Only get top 4
-      ind = np.argpartition(result, -4)[-4:]
-      index = ind[np.argsort(result[ind])]
-      index = index[::-1]
-      for i in index: # Get all percentages from one dataset
-        if i not in s:
-          s[i] = []
-        s[i].append(result[i])
+      # ind = np.argpartition(result, -4)[-4:]
+      # index = ind[np.argsort(result[ind])]
+      # index = index[::-1]
+      # for i in index: # Get all percentages from one dataset
+      #   if i not in s:
+      #     s[i] = []
+      #   s[i].append(result[i])
       if game_index in range(len(scores)):
         for key in s: # Loop through the dictionary
           if key in scores[game_index].keys(): # If the input action key is in the list, append it
@@ -492,32 +503,44 @@ def showGameHistory():
       for game_record in play_record[game_id]:
         records.append((game_record, game_result[name][game_id].result, name))
 
-  random.shuffle(records)
+  #random.shuffle(records)
   
   for r in records:
     record = r[0]
     result = r[1]
     ai_name = r[2]
-    input_list = [0] * input_length
+    input_list = [0] * input_length#(input_length +output_length)
     output_list = -1
 
     # Only show wins
     if result != 1:
       continue
 
-    for state in field_state[record.id]:
-      input_list[state.compareId - 1] = 1
-    
+    # Might not be in action state as there were no actions performed?
     if record.id not in action_state:
       continue
 
+    ## Check start
+    playedAction = 0
+    stateAction = action_state[record.id]
+    for j in stateAction:
+      if j.performed == 'True':
+        playedAction = j.actionId
+
+    ## Check end
+
+    for state in field_state[record.id]:
+      input_list[state.compareId - 1] = 1
+
     for state in action_state[record.id]:
-      #input_list[state.actionId - 1 + len(compare_to)] = 1
+      # if state.performed == 'True':
+      #   input_list[state.actionId - 1 + len(compare_to)] = 1
+      # else:
+      #   input_list[state.actionId - 1 + len(compare_to)] = -1
       if (state.performed == 'True'):
         output_list = state.actionId
 
     print("Game:" + str(record.gameId) + " Turn:" + str(record.turnId) + " Action:" + str(record.actionId))
-    print("Result:" + str(result) + " Source:" + str(ai_name))
     print("--------Stats--------")
     print("curP1Hand:" + str(record.curP1Hand))
     print("curP1Field:" + str(record.curP1Field))
@@ -549,37 +572,63 @@ def showGameHistory():
     print("--------Possible Actions--------")
 
     stateAction = action_state[record.id]
+    possibleActions = []
     for j in stateAction:
       action = action_list[j.actionId]
+      possibleActions.append(j.actionId)
       print("  (" + str(j.actionId) + ")" + str(j.performed) + "| " + str(action))
     
     final_result = []
     final_result = getTorchPrediction(action_data, [input_list])
 
+    avg = 0
+    avg2 = 0
+    cnt = 0
     for key in final_result:
-      result = final_result[key]
+      res = final_result[key]
+
+      # avg += res[0]
+      # if round(res[0]*100) > 0 and round(res[0]*100) < 100:
+      #   avg2 += res[0]
+      #   cnt += 1
+
+
       text = key + ":"
-      nth = 4# len(result)
-      ind = np.argpartition(result, -nth)[-nth:]
-      index = ind[np.argsort(result[ind])]
+      nth = len(res)#4
+      ind = np.argpartition(res, -nth)[-nth:]
+      index = ind[np.argsort(res[ind])]
       index = index[::-1]
       for i in index:
-        text += "[" + str(i) + "]" + ":" + str(result[i]) + ","
+        if i in possibleActions:
+          text += "[" + str(i) + "]" + ":" + str(round(res[i]*100)) + ","
+          avg += res[i]
+          cnt += 1
       print(text)
-      print(sum(result))
-    
-    better = getBetterPrediction(final_result, 0)[0][:4]
-    print("Better Prediction MAX :" + str(better))
-    better = getBetterPrediction(final_result, 1)[0][:4]
-    print("Better Prediction AVG :" + str(better))
+      #print(sum(result))
+
+    # avg/=len(final_result)
+    # cnt = max(1,cnt)
+    # avg2 /= cnt
+    # avg /= max(1,cnt)
+    # print("Avg:" + str(avg))
+    # print("Avg2:" + str(avg2))
+
+    # better = getBetterPrediction(final_result, 0)[0][:4]
+    # print("Better Prediction MAX :" + str(better))
+    # better = getBetterPrediction(final_result, 1)[0][:4]
+    # print("Better Prediction AVG :" + str(better))
   
-    print("Expected answer:" + str(output_list))
-      
+    #print("Expected answer:" + str(result))
+    print("Result:" + str(result) + " Source:" + str(ai_name)) 
+
     if len(stateAction) <= 1:
       continue
 
     value = -1
     leave = False
+
+    # if True:
+    #   getSimilarActionPerformed(record.id)
 
     while value != '0' and value != '1':
       value = input("good (1) or bad (0)")
@@ -595,6 +644,163 @@ def showGameHistory():
     print("")
     if (leave):
       break
+
+def getSimilarFieldStates(recordId):
+  global input_length, output_length
+  global action_list, action_state, compare_to, field_state, play_record, game_result, record_to_game
+
+  cur_field = field_state[recordId]
+  field_state_ids = []
+  for c in cur_field:
+    field_state_ids.append(c.compareId)
+
+  related:typing.Dict[int, typing.List[int]] = {}
+  
+  # Find related
+  for i in field_state.keys():
+    if i != recordId:
+        diff_count = len(field_state_ids)
+        for j in field_state[i]:
+          if j.compareId not in field_state_ids:
+            diff_count += 1
+          else:
+            diff_count -= 1
+
+        if diff_count not in related:
+          related[diff_count] = []
+
+        related[diff_count].append(i)
+
+  _ = 1 
+
+  # Print related
+  for i in range(0,6):
+    print("Related Dist:" + str(i))
+    if i in related:
+        for related_id in related[i]:
+          if related_id not in action_state:
+            continue
+
+          # Find result
+          game_id = record_to_game[related_id]
+          for name in game_result:
+            if game_id in game_result[name]:
+              print("Result:" + str(game_result[name][game_id].result))
+          
+
+          print("--------Field State--------")
+          stateField = field_state[related_id]
+          for j in stateField:
+            compare = compare_to[j.compareId]
+            print("  " + str(compare))
+
+          stateAction = action_state[related_id]
+          possibleActions = []
+          for j in stateAction:
+            action = action_list[j.actionId]
+            possibleActions.append(j.actionId)
+            print("  (" + str(j.actionId) + ")" + str(j.performed) + "| " + str(action))
+
+def getSimilarActionPerformed(recordId):
+  global input_length, output_length
+  global action_list, action_state, compare_to, field_state, play_record, game_result, record_to_game
+
+  # Might not be in action state as there were no actions performed?
+  if recordId not in action_state:
+    return -1
+  
+  # Get the action played
+  cur_actions = action_state[recordId]
+  cur_action_played = 0
+  for j in cur_actions:
+    if j.performed == 'True':
+      cur_action_played = j.actionId
+
+  # Set up current field state
+  cur_field = field_state[recordId]
+  field_state_ids = []
+  for c in cur_field:
+    field_state_ids.append(c.compareId)
+
+  related:typing.Dict[int, typing.List[int]] = {}
+  
+  # Find all similar actions 
+  for i in action_state.keys():
+    diff_count = len(field_state_ids)
+    actionPlayed = 0
+    actionIn = False
+    # ignore self
+    if i == recordId:
+      continue
+    # Check if action is played
+    for j in action_state[i]:
+      if j.actionId == cur_action_played:
+        actionIn = True
+      # if j.performed == 'True':
+      #   actionPlayed = j.actionId
+      #   break
+
+    if actionIn:#actionPlayed == cur_action_played:
+
+      # Find the difference in field state
+      for j in field_state[i]:
+        if j.compareId not in field_state_ids:
+          diff_count += 1
+        else:
+          diff_count -= 1
+
+      if diff_count not in related:
+        related[diff_count] = []
+
+      related[diff_count].append(i)
+
+  _ = 1 
+
+  # Print related
+  weight = 0
+  for i in range(0,6):
+    if not TrainData:
+      print("Related Dist:" + str(i))
+    if i in related:
+      activatedSum = 0
+      notActivateSum = 0
+      for related_id in related[i]:
+        if related_id not in action_state:
+          continue
+        
+        stateAction = action_state[related_id]
+        for j in stateAction:
+          action = action_list[j.actionId]
+          #print("  (" + str(j.actionId) + ")" + str(j.performed) + "| " + str(action))
+          if j.actionId == cur_action_played:
+            if j.performed == 'True':
+              activatedSum += 1
+            else:
+              notActivateSum += 1
+
+        # Find result
+        # game_id = record_to_game[related_id]
+        # for name in game_result:
+        #   if game_id in game_result[name]:
+        #     print("Result:" + str(game_result[name][game_id].result))
+        
+
+        # print("--------Field State--------")
+        # stateField = field_state[related_id]
+        # for j in stateField:
+        #   compare = compare_to[j.compareId]
+        #   print("  " + str(compare))
+
+        # stateAction = action_state[related_id]
+        # for j in stateAction:
+        #   action = action_list[j.actionId]
+        #   print("  (" + str(j.actionId) + ")" + str(j.performed) + "| " + str(action))
+      if not TrainData:
+        print("Activated:" + str(activatedSum) + " Not Activated:" + str(notActivateSum))
+      weight += 5/(5 + i) * (activatedSum - notActivateSum)
+  
+  return weight
+
 
 def showDataPredictionPercentage():
   global input_length, output_length
@@ -720,59 +926,85 @@ def printresults(results, name):
 def trainTorch(x_train, y_train, x_test, y_test, name):
   bias = getBias(name)
   traindata = Data(np.array(x_train), np.array(y_train))
-  batch_size = len(y_train)#min(10, len(y_train))
+  batch_size = min(40, len(y_train))#len(y_train)
   trainloader = DataLoader(traindata, batch_size=batch_size, shuffle=True, collate_fn=lambda x: tuple(x_.to(device) for x_ in default_collate(x)))
   clf = Network(input_length, output_length, bias)
+  #clf = Network(input_length + output_length, 1, bias)
   clf.to(device)
 
-  criterion = nn.CrossEntropyLoss().cuda()
-  optimizer = torch.optim.Adam(clf.parameters(), lr=0.01)
 
-  epochs = 100
+  #criterion = nn.BCELoss().cuda()
+  criterion = nn.BCEWithLogitsLoss().cuda()
+  #criterion = nn.CrossEntropyLoss().cuda()
+  optimizer = torch.optim.Adam(clf.parameters(), lr=0.1)#, weight_decay=1e-5)
+  #optimizer = torch.optim.SGD(clf.parameters(), lr=0.1, w)
+
+  epochs = 20
   for epoch in range(epochs):
+    y_true = []
+    y_pred = []
     running_loss = 0.0
     for i, data in enumerate(trainloader):
       inputs, labels = data
-      # set optimizer to zero grad to remove previous epoch gradients
-      optimizer.zero_grad()
+      inputs, labels = inputs.to(device), labels.to(device).float()
+      
+      clf.train()
       # forward propagation
       outputs = clf(inputs)
+      #outputs = torch.sigmoid(outputs)
+      #outputs = torch.softmax(outputs, 1)
 
-      loss = criterion(outputs, labels.long())
-      #loss = criterion(outputs, labels.float())
+      # Filter out indexes to be only values we want to train
+      mask = (labels.cpu() != -1).to(device)
+      indexes = np.argwhere(labels.cpu() != -1)
+      outputs2 = outputs.masked_select(mask)
+      labels2 = labels.masked_select(mask)
 
+
+      loss = criterion(outputs2, labels2.float())
+      #loss = criterion(outputs, torch.sigmoid(labels.float()))
+      #loss = criterion(outputs, labels.unsqueeze(1).float())
+
+
+      # set optimizer to zero grad to remove previous epoch gradients
+      optimizer.zero_grad()
       # backward propagation
       loss.backward()
       # optimize
       optimizer.step()
+
       running_loss += loss.item()
-    
+
+      #PREDICTIONS 
+      clf.eval()
+      with torch.no_grad():
+        outputs = torch.sigmoid(outputs) * mask
+        pred = outputs.cpu().detach().numpy()
+        labels = labels.cpu().detach().numpy()    
+        # y_pred = pred.tolist()
+        # y_true = labels.tolist()
+        y_pred.extend(pred.tolist())
+        y_true.extend(labels.tolist())
+
     #if epoch % 100 == 99:
       # display statistics
+    
+    y_pred = [np.argmax(i) for i in y_pred]
+    y_true = [np.argmax(i) for i in y_true]
+    print(f"[{epoch + 1}, {i + 1:5d}]Accuracy on training set is " + str(accuracy_score(np.array(y_true),np.array(y_pred))))
     print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / (i + 1):.5f}')
   
+  #PREDICTIONS 
   clf.eval()
+
+  y_pred = torch.sigmoid(clf(torch.from_numpy(np.array(x_test)).to(device).float()))
+  y_pred = y_pred.cpu().detach().numpy()
+  y_pred = [np.argmax(i) for i in y_pred]
+  y_test = [np.argmax(i) for i in y_test]
+
   with torch.no_grad():
-    torch_test_data = torch.from_numpy(np.array(x_test)).to(device).float()
-    torch_answer_data = torch.from_numpy(np.array(y_test)).to(device).float()
-    y_pred = clf(torch_test_data)
-    #loss = criterion(y_pred, torch_answer_data)
-    loss = criterion(y_pred, torch_answer_data.long())
-  print(f"End of {epoch}, accuracy {loss.item()}")
-  # with torch.no_grad():
-  #   torch_test_data = torch.from_numpy(np.array(x_test)).to(device).float()
-  #   torch_answer_data = torch.from_numpy(np.array(y_test)).to(device).long()
-    
-  #   # 1. Forward pass
-  #   test_logits = clf(torch_test_data).squeeze() 
-  #   test_pred = torch.round(torch.sigmoid(test_logits))
-  #   # 2. Caculate loss/accuracy
-  #   # test_loss = criterion(test_logits,
-  #   #                     y_test)
-    
-  #   correct = torch.eq(torch_answer_data, test_pred).sum().item() # torch.eq() calculates where two tensors are equal
-  #   test_acc = (correct / len(test_pred)) * 100 
-  #   print(f"End of {epoch}, accuracy {test_acc}")
+    print(f"Accuracy on test set is " + str(accuracy_score(np.array(y_test),np.array(y_pred))))
+
   PATH = "./data/" + name
   torch.save(clf.state_dict(), PATH)
 
@@ -832,6 +1064,10 @@ def compileData():
   global input_length, output_length
   global action_list, action_state, compare_to, field_state, play_record, game_result
 
+
+  total_data = []
+  total_answer = []
+
   for name in game_result:
     data = []
     answer = []
@@ -844,22 +1080,32 @@ def compileData():
 
       if game_id in play_record.keys():
         for history in play_record[game_id]:
+
+          # If deemed a bad record, remove 
+          # if getSimilarActionPerformed(history.id) < 0:
+          #   continue
+
           reward = 1
           critic_reward = 1
           punishment = -0.1
           result = game_result[name][game_id].result
-
+          
+          if (result == -1):
+            continue # Only select wins
+            result = 0
+          
           # if (result != 1):
           #   continue
           # if (result == -1):
-          #   reward = -1
+          #   reward = 0
           #   critic_reward = -1
           #   punishment = 0
           # else:
           #   continue
 
-          input_list = [0] * input_length
-          output_list = 0 #[0] * (output_length) #
+          input_list = [0] * input_length#(input_length + output_length)
+          #output_list = 0 
+          output_list = [-1] * (output_length)
           next_phase = False
           
           # All field states at the end
@@ -872,16 +1118,24 @@ def compileData():
           posssible_actions = action_state[history.id]
           # All possible actions as input
           for state in posssible_actions:
-            #input_list[state.actionId - 1 + len(compare_to)] = 1
+            # if state.performed == 'True':
+            #   input_list[state.actionId - 1 + len(compare_to)] = 1
+            # else:
+            #   input_list[state.actionId - 1 + len(compare_to)] = -1
             # Mark which action you performed
             if (state.performed == 'True'):
-              #output_list[state.actionId] = reward 
-              output_list = state.actionId #
+              output_list[state.actionId] = result
+            elif result == 1 and output_list[state.actionId] == -1: 
+              output_list[state.actionId] = 0
+            # elif result == 1:
+            #   output_list[state.actionId] = 0
+              #output_list = result#state.actionId
+              #output_list[int(result)] = 1
 
-              if (action_list[state.actionId].name == "" and len(posssible_actions) > 2):
-                next_phase = True
-              if (len(posssible_actions) <= 1):
-                next_phase = True
+            # if (state.performed == 'True' and action_list[state.actionId].name == "" and len(posssible_actions) > 2):
+            #   next_phase = True
+            if (len(posssible_actions) <= 1):
+              next_phase = True
             
             # else:
             #   output_list[state.actionId] = punishment
@@ -893,7 +1147,12 @@ def compileData():
           answer.append(output_list)
           critic_answer.append(critic_reward)
 
-    trainData(data, answer, str(int(name) + 1))
+    total_data.extend(data)
+    total_answer.extend(answer)
+    trainData(data, answer, str(int(name)))
+    #trainData(data, answer, str(int(name) + 1))
+
+  trainData(total_data,total_answer,"master")
 
 def trainData(data, answer, name):
   if len(data) > 0:
@@ -901,16 +1160,19 @@ def trainData(data, answer, name):
     print("solve data")
     print("data"+str(len(data)))
 
-    if(len(data) < 10):
+    if(len(data) < 10) or True:
       x_train = x_test = data
       y_train = y_test = answer
       xc_train = xc_test = data
       #yc_train = yc_test = critic_answer
     else:
-      x_train, x_test, y_train, y_test = train_test_split(data, answer, test_size=0.2)
+      x_train, x_test, y_train, y_test = train_test_split(data, answer, test_size=0.3)
       #xc_train, xc_test, yc_train, yc_test = train_test_split(data, critic_answer, test_size=0.2)
     
     trainTorch(x_train, y_train, x_test, y_test, name)
+
+def drawNeuralNet():
+  pass
 
 def read_data(masterData = False):
   global TrainData, ShowData

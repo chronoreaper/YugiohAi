@@ -29,15 +29,15 @@ import torch
 
 #The Deck name and location	
 AI1Deck = 'Random1'
-AI2Deck = 'Random2'
-AIMaster = 'Master'
+AI2Deck =  'Swordsoul'#'Random2'#
+AIMaster = 'Swordsoul'#'Master'#
 
-deck1 = 'AI_Random1.ydk'
-deck2 = 'AI_Random2.ydk'
+deck1 = 'AI_Swordsoul.ydk'#'AI_Random1.ydk'
+deck2 = 'AI_Swordsoul.ydk'#'AI_Random2.ydk'
 
-totalGames = 25
-generations = 10
-cycles = 1
+totalGames = 1000 # Games before any of the below
+cycles = 1 # Trains decks
+generations = 1 # Shuffles Decks
 parallelGames = 1
 
 rolloutCount = 1
@@ -48,6 +48,7 @@ pastWinLim = 5
 idNumber = 1
 
 reset = False
+swap = False
 
 def isrespondingPID(PID):
   #if platform == "linux" or platform == "linux2":
@@ -144,9 +145,10 @@ def resetYgoPro():
       os.remove(f)
 
 def parseArg():
-  global reset, isTraining, repeatFor, matches, totalGames, isFirst
+  global reset, isTraining, repeatFor, matches, totalGames, isFirst, swap
 
   reset = len(sys.argv)>1 and ("--reset" in sys.argv or "-r" in sys.argv)
+  swap = len(sys.argv)>1 and ("--swap" in sys.argv or "-w" in sys.argv)
   isTraining = len(sys.argv)>1 and ("--training" in sys.argv or "-t" in sys.argv)
   isFirst = len(sys.argv)>1 and ("--first" in sys.argv or "-f" in sys.argv)
 
@@ -249,6 +251,17 @@ def shuffle_deck(deck_name):
 
   f.close()
 
+def swap_decks(deck1, deck2):
+  if deck1 == deck2:
+    return
+  path = os.getcwd() + '/WindBot-Ignite-master/bin/Debug/Decks/'
+  File1 = path + deck1
+  File2 = path + deck2
+
+  os.rename(File2, path + 'temp')
+  os.rename(File1, File2)
+  os.rename(path + 'temp', File1)
+
 def setup():
   global AI2Deck, AI2Deck, isTraining, totalGames
 
@@ -266,7 +279,7 @@ def setup():
   if not isTraining:
     AI2Deck = AIMaster
 
-def main_game_runner(isTraining, totalGames, Id1, Id2, Deck1, Deck2, port):
+def main_game_runner(isTraining, totalGames, Id1, Id2, Deck1, Deck2, port, isFirst):
   start = time.time()
 
   #subprocess.Popen - does not wait to finish
@@ -291,14 +304,14 @@ def main_game_runner(isTraining, totalGames, Id1, Id2, Deck1, Deck2, port):
               Hand = 2,
               TotalGames = totalGames,
               RolloutCount = rolloutCount,
-              IsFirst = (not isFirst),
+              IsFirst = (isFirst),
               IsTraining = isTraining,
-              ShouldUpdate= isTraining,
+              ShouldUpdate= True,#isTraining,
               WinsThreshold = winThresh,
               PastWinsLimit = pastWinLim,
               Id = Id1,
               Port = port,
-              IsMCTS=isTraining
+              IsMCTS=isTraining#False#
             )
   time.sleep(1)
   print("	runningAi2 "+ str(Id2) + ":" + Deck2)
@@ -307,9 +320,9 @@ def main_game_runner(isTraining, totalGames, Id1, Id2, Deck1, Deck2, port):
               Hand = 3,
               TotalGames = totalGames,
               RolloutCount = rolloutCount,
-              IsFirst = (isFirst),
+              IsFirst = (not isFirst),
               IsTraining = isTraining,
-              ShouldUpdate= False,
+              ShouldUpdate= isTraining,#False,#True,#
               WinsThreshold = winThresh,
               PastWinsLimit = pastWinLim,
               Id = Id2,
@@ -349,7 +362,7 @@ def main_game_runner(isTraining, totalGames, Id1, Id2, Deck1, Deck2, port):
   print("Average Game Time:"+str(datetime.timedelta(seconds=int((end - start)/(totalGames)))))
 
 def main():
-  global reset, totalGames, generations, cycles
+  global reset, totalGames, generations, cycles, swap, isFirst, deck1, deck2
   parseArg()
   setup()
 
@@ -358,14 +371,20 @@ def main():
   #   softResetDB()
 
   for g in range(generations):
+    
+    if reset:
+      shuffle_deck(deck1)
+      shuffle_deck(deck2)
+    
     for c in range(cycles):
       read_game_data.read_data()
       get_action_weights.fetchDatabaseData()
       get_action_weights.load_data()
-      resetMCTS()
-
-      shuffle_deck(deck1)
-      shuffle_deck(deck2)
+      if reset:
+        resetMCTS()
+      if swap:
+        swap_decks(deck1, deck2)
+        isFirst = not isFirst
 
       #resetDB()
       proc = multiprocessing.Process(target=get_action_weights.run_server, args=())
@@ -387,8 +406,8 @@ def main():
 
       for i in range(len(pairs)):
         print("generation " + str(g) + " cycle: " + str(c) +" running game " + str(i) + ":" + str(pairs[i][0]) + "vs" + str(pairs[i][1]) + ": Total games " + str(totalGames))
-        port = 7910 + i
-        p = multiprocessing.Process(target=main_game_runner, args=(True, totalGames, str(pairs[i][0]), str(pairs[i][1]), AI1Deck, AI2Deck, port))
+        port = 7911 + i
+        p = multiprocessing.Process(target=main_game_runner, args=(isTraining, totalGames, str(pairs[i][0]), str(pairs[i][1]), AI1Deck, AI2Deck, port, isFirst))
         #psutil.Process(p.pid).nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
         jobs.append(p)
         p.start()
@@ -398,9 +417,13 @@ def main():
       
       proc.terminate()  # sends a SIGTERM
       print("done cycle")
+
+      # Swap the decks
+      isFirst = not isFirst
+
     if g <= generations - 1:
       limit = parallelGames * cycles
-
+      
       read_game_data.read_data()
       read_game_data.createBetterDataset()
       #softResetDB()

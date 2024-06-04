@@ -45,6 +45,7 @@ namespace WindBot
             public long ActionId = 0;
             public bool Performed = false;
             public ClientCard Card = null;
+            public long Desc = -1;
 
             public double GetWeight(List<CompareTo> state)
             {
@@ -62,7 +63,10 @@ namespace WindBot
 
             public override string ToString()
             {
-                return "[" + ActionId + "]" + Name + " " + Action.ToString();
+                string str = "[" + ActionId + "]" + Name + " " + Action.ToString();
+                if (Desc >= 0)
+                    str += " " + Desc.ToString();
+                return str;
             }
         }
 
@@ -94,9 +98,9 @@ namespace WindBot
             return c;
         }
 
-        public ActionInfo GenerateActionInfo(string name, ExecutorType action, ClientCard card)
+        public ActionInfo GenerateActionInfo(string name, ExecutorType action, ClientCard card, long desc = -1)
         {
-            ActionInfo actionInfo = new ActionInfo() { Name = name, Action = action, Card = card };
+            ActionInfo actionInfo = new ActionInfo() { Name = name, Action = action, Card = card, Desc = desc };
             actionInfo.ActionId = SQLComm.GetActionId(actionInfo);
 
             return actionInfo;

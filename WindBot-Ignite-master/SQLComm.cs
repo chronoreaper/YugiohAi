@@ -48,8 +48,8 @@ namespace WindBot
             using(SqliteConnection conn = ConnectToDatabase())
             {
                 conn.Open();
-                string sql = $"SELECT rowid, Reward, Visited FROM MCST WHERE " +
-                    $"ParentId = \"{node.Parent?.NodeId ?? -4}\" AND CardId = \"{node.CardId}\" AND Action = \"{node.Action}\" AND IsFirst = \"{IsFirst}\"";
+                string sql = $"SELECT rowid, Reward, Visited, AvgTurn FROM MCST WHERE " +
+                    $"ParentId = \"{node.Parent?.NodeId ?? -4}\" AND CardId = \"{node.CardId}\" AND Action = \"{node.Action}\" AND IsFirst = \"{IsFirst}\" AND Name = \"{Name}\"";
                 using (SqliteCommand cmd = new SqliteCommand(sql, conn))
                 {
                     using (SqliteDataReader rdr = cmd.ExecuteReader())
@@ -58,6 +58,7 @@ namespace WindBot
                         node.NodeId = long.Parse(rdr["rowid"].ToString());
                         node.Rewards = rdr.GetDouble(1);
                         node.Visited = rdr.GetInt32(2);
+                        node.AvgTurn = rdr.GetDouble(3);
                         gotInfo = true;
                     }
                 }
@@ -75,7 +76,7 @@ namespace WindBot
             using (SqliteConnection conn = ConnectToDatabase())
             {
                 conn.Open();
-                string sql = $"SELECT SUM(Reward), COUNT(Visited) from MCST WHERE CardId = \"{node.CardId}\" AND Action = \"{node.Action}\" AND IsFirst = \"{IsFirst}\" AND Visited > 0" +
+                string sql = $"SELECT SUM(Reward), COUNT(Visited) from MCST WHERE CardId = \"{node.CardId}\" AND Action = \"{node.Action}\" AND IsFirst = \"{IsFirst}\" AND Visited > 0 AND Name = \"{Name}\"" +
                     $" AND rowid != \"{node.NodeId}\"";
                 double reward = 0;
                 int visited = 0;
@@ -110,7 +111,7 @@ namespace WindBot
             using (SqliteConnection conn = ConnectToDatabase())
             {
                 conn.Open();
-                string sql = $"SELECT SUM(Visited) FROM MCST WHERE ParentId = 1 AND IsFirst = \"{IsFirst}\" AND IsTraining = \"{ShouldUpdate}\"";
+                string sql = $"SELECT SUM(Visited) FROM MCST WHERE ParentId = 1 AND IsFirst = \"{IsFirst}\" AND IsTraining = \"{ShouldUpdate}\" AND Name = \"{Name}\"";
                 try
                 {
                     using (SqliteCommand cmd = new SqliteCommand(sql, conn))
@@ -153,7 +154,7 @@ namespace WindBot
                     childId = node.Children[0].NodeId;
                 }
 
-                string sql = $"INSERT INTO MCST (ParentId,ChildId,CardId,Action,Reward,Visited,IsFirst,IsTraining) VALUES (\"{parentId}\",\"{childId}\",\"{node.CardId}\",\"{node.Action}\",\"0\",\"0\",\"{IsFirst}\",\"{IsTraining}\")";
+                string sql = $"INSERT INTO MCST (Name,ParentId,ChildId,CardId,Action,AvgTurn,Reward,Visited,IsFirst,IsTraining) VALUES (\"{Name}\",\"{parentId}\",\"{childId}\",\"{node.CardId}\",\"{node.Action}\",\"0\",\"0\",\"0\",\"{IsFirst}\",\"{IsTraining}\")";
                 using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                 {
                     cmd2.ExecuteNonQuery();
@@ -173,7 +174,7 @@ namespace WindBot
         /***
          * Result, 0 = win, 1 = lose, 2 = tie
          */
-        public static void Backpropagate(List<Node> nodes, Node node, double reward)
+        public static void Backpropagate(List<Node> nodes, Node node, double reward, int turn)
         {
             if (!IsMCTS)
                 return;
@@ -211,8 +212,10 @@ namespace WindBot
                     if (n.NodeId != -4)
                     {
                         sql = $"UPDATE MCST SET Reward = Reward + {totalRewards / rolloutCount}, " + //+ Math.Max(0, Math.Round(node.Heuristic() / RolloutCount) / 10)
-                            $"Visited = Visited + 1 WHERE " +
-                            $"rowid = \"{n.NodeId}\" AND IsFirst = \"{IsFirst}\" AND IsTraining = \"{IsTraining}\"";
+                            $"Visited = Visited + 1";
+                        if (totalRewards > 0)
+                            sql += $", AvgTurn = (AvgTurn * Reward + {turn})/(Reward +  {totalRewards / rolloutCount})";
+                        sql += $" WHERE rowid = \"{n.NodeId}\" AND IsFirst = \"{IsFirst}\" AND IsTraining = \"{IsTraining}\" AND Name = \"{Name}\"";
 
                         using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                         {
@@ -235,7 +238,7 @@ namespace WindBot
                             childId = n.Children[0].NodeId;
                         }*/
 
-                        sql = $"INSERT INTO MCST (ParentId,ChildId,CardId,Action,Reward,Visited,IsFirst,IsTraining) VALUES (\"{parentId}\",\"{childId}\",\"{n.CardId}\",\"{n.Action}\",\"{totalRewards / rolloutCount}\",\"1\",\"{IsFirst}\",\"{IsTraining}\")";
+                        sql = $"INSERT INTO MCST (Name,ParentId,ChildId,CardId,Action,AvgTurn,Reward,Visited,IsFirst,IsTraining) VALUES (\"{Name}\",\"{parentId}\",\"{childId}\",\"{n.CardId}\",\"{n.Action}\",\"{turn}\",\"{totalRewards / rolloutCount}\",\"1\",\"{IsFirst}\",\"{IsTraining}\")";
                         using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                         {
                             rowsUpdated = cmd2.ExecuteNonQuery();
@@ -259,23 +262,7 @@ namespace WindBot
             TotalRewards = 0;
         }
 
-        public static void Cleanup()
-        {
-            using (SqliteConnection conn = ConnectToDatabase())
-            {
-                conn.Open();
 
-                SqliteTransaction transaction = conn.BeginTransaction();
-                // Remove the rollout
-                string sql = $"DELETE FROM MCST WHERE CardId = \"Result\" AND IsFirst = \"{IsFirst}\" AND IsTraining = \"{IsTraining}\"";
-                using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
-                {
-                    cmd2.ExecuteNonQuery();
-                }
-                transaction.Commit();
-                conn.Close();
-            }
-        }
 
         public static void Reset()
         {
@@ -285,13 +272,13 @@ namespace WindBot
 
                 SqliteTransaction transaction = conn.BeginTransaction();
                 // Remove the rollout
-                string sql = $"DELETE FROM MCST WHERE IsFirst = \"{IsFirst}\" AND IsTraining = \"False\"";
+                string sql = $"DELETE FROM MCST WHERE IsFirst = \"{IsFirst}\" AND IsTraining = \"False\" AND Name = \"{Name}\"";
                 using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                 {
                     cmd2.ExecuteNonQuery();
                 }
 
-                sql = $"UPDATE MCST SET IsTraining = \"False\" WHERE IsFirst = \"{IsFirst}\" AND IsTraining = \"True\"";
+                sql = $"UPDATE MCST SET IsTraining = \"False\" WHERE IsFirst = \"{IsFirst}\" AND IsTraining = \"True\" AND Name = \"{Name}\"";
                 using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                 {
                     var v = cmd2.ExecuteNonQuery();
@@ -566,8 +553,8 @@ namespace WindBot
 
         public static void SavePlayHistory(List<History> records, int result)
         {
-            if (!IsTraining && !IsManual)
-                return;
+            //if (!IsTraining && !IsManual)
+            //    return;
             if (!ShouldUpdate)
                 return;
 

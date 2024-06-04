@@ -21,14 +21,16 @@ records = c.fetchall()
 group_count = 0
 for record in records:
     rowid = record[0]
-    parentid = record[1]
-    childid = record[2]
-    cardid = record[3]
-    action = record[4]
-    reward = record[5]
-    visited = max(0.0001, record[6])
-    isFirst = record[7]
-    isTraining = record[8]
+    name = record[1]
+    parentid = record[2]
+    childid = record[3]
+    cardid = record[4]
+    action = record[5]
+    avgturn = record[6]
+    reward = record[7]
+    visited = max(0.0001, record[8])
+    isFirst = record[9]
+    isTraining = record[10]
 
     if visited < 1:
       continue

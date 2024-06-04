@@ -269,31 +269,7 @@ namespace WindBot.Game
             {
                 Logger.WriteLine("Done Games, Cleaning up");
                 response = 0;
-                SQLComm.Cleanup();
             }
-           /*else if (SQLComm.PreviousWins.Count >= SQLComm.PastWinsLimit && SQLComm.IsTraining)
-            {
-                if (winRate > SQLComm.WinsThreshold && SQLComm.ShouldUpdate)
-                {
-                    SQLComm.Reset();
-                    SQLComm.ShouldUpdate = false;
-                    SQLComm.PastXWins = 0;
-                    SQLComm.PreviousWins.Clear();
-                    Logger.WriteLine("Now is not training");
-
-                    //response = 0;
-                    //SQLComm.Cleanup();
-                }
-                else if (winRate < SQLComm.WinsThreshold && SQLComm.ShouldUpdate)
-                {
-                    Logger.WriteLine("Now is training");
-                    SQLComm.ShouldUpdate = true;
-                    SQLComm.PastXWins = 0;
-                    SQLComm.PreviousWins.Clear();
-                }
-            }*/
-
-
 
             Connection.Send(CtosMessage.RematchResponse, (byte)(response));
         }

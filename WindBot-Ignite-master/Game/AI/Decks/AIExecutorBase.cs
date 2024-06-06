@@ -795,7 +795,29 @@ namespace WindBot.Game.AI.Decks
                 }
                 else
                 {
-                    return Tree.ShouldActivate(BuildActionString(Card, Duel.Phase.ToString()), Type, GetComparisons());
+                    bool performed = Tree.ShouldActivate(BuildActionString(Card, Duel.Phase.ToString()), Type, GetComparisons());
+
+                    // Save data to train
+                    ActionNumber++;
+                    var info = History.GenerateGameInfo(SQLComm.Id, Duel.Turn, ActionNumber);
+                    var compare = GetComparisons();
+                    string cardName = BuildActionString(Card, Duel.Phase.ToString());
+                    PlayHistory.ActionInfo action = History.GenerateActionInfo(BuildActionString(Card, Duel.Phase.ToString()), Type, Card);
+                    PlayHistory.ActionInfo noaction = History.GenerateActionInfo(cardName + "[No]", Type, Card);
+                    List<PlayHistory.ActionInfo> actions = new List<PlayHistory.ActionInfo>
+                    {
+                        action,
+                        noaction
+                    };
+
+                    if (performed)
+                        action.Performed = true;
+                    else
+                        noaction.Performed = true;
+
+                    History.AddHistory(History.GenerateHistory(info, compare, actions), Duel);
+
+                    return performed;
                 }
             }
 

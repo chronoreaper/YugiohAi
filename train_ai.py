@@ -29,7 +29,7 @@ import torch
 
 #The Deck name and location	
 AI1Deck = 'Random1'
-AI2Deck =  'Swordsoul'#'Random2'#
+AI2Deck =  'Random2'#'Swordsoul'#
 AIMaster = 'Swordsoul'#'Master'#
 
 deck1 = 'AI_Swordsoul.ydk'#'AI_Random1.ydk'
@@ -43,7 +43,7 @@ parallelGames = 1
 rolloutCount = 1
 isFirst = True
 isTraining = True
-winThresh = 60
+winThresh = 100
 pastWinLim = 5
 idNumber = 1
 
@@ -148,7 +148,7 @@ def parseArg():
   global reset, isTraining, repeatFor, matches, totalGames, isFirst, swap
 
   reset = len(sys.argv)>1 and ("--reset" in sys.argv or "-r" in sys.argv)
-  swap = len(sys.argv)>1 and ("--swap" in sys.argv or "-w" in sys.argv)
+  swap = len(sys.argv)>1 and ("--swap" in sys.argv or "-s" in sys.argv)
   isTraining = len(sys.argv)>1 and ("--training" in sys.argv or "-t" in sys.argv)
   isFirst = len(sys.argv)>1 and ("--first" in sys.argv or "-f" in sys.argv)
 
@@ -251,7 +251,7 @@ def shuffle_deck(deck_name):
 
   f.close()
 
-def swap_decks(deck1, deck2):
+def swap_decks(deck1, deck2, name1, name2):
   if deck1 == deck2:
     return
   path = os.getcwd() + '/WindBot-Ignite-master/bin/Debug/Decks/'
@@ -322,7 +322,7 @@ def main_game_runner(isTraining, totalGames, Id1, Id2, Deck1, Deck2, port, isFir
               RolloutCount = rolloutCount,
               IsFirst = (not isFirst),
               IsTraining = isTraining,
-              ShouldUpdate= isTraining,#False,#True,#
+              ShouldUpdate= False,#True,#isTraining,#
               WinsThreshold = winThresh,
               PastWinsLimit = pastWinLim,
               Id = Id2,
@@ -380,11 +380,11 @@ def main():
       read_game_data.read_data()
       get_action_weights.fetchDatabaseData()
       get_action_weights.load_data()
-      if reset:
+      if reset or swap:
         resetMCTS()
-      if swap:
-        swap_decks(deck1, deck2)
-        isFirst = not isFirst
+      #if swap:
+        #swap_decks(deck1, deck2)
+        #isFirst = not isFirst
 
       #resetDB()
       proc = multiprocessing.Process(target=get_action_weights.run_server, args=())
@@ -402,7 +402,10 @@ def main():
         while bots:
           r1 = bots.pop(0)
           r2 = bots.pop(0)
-          pairs.append((r1, r2))
+          if swap and c % 2 == 1:
+            pairs.append((r2, r1))
+          else:
+            pairs.append((r1, r2))    
 
       for i in range(len(pairs)):
         print("generation " + str(g) + " cycle: " + str(c) +" running game " + str(i) + ":" + str(pairs[i][0]) + "vs" + str(pairs[i][1]) + ": Total games " + str(totalGames))
@@ -419,7 +422,8 @@ def main():
       print("done cycle")
 
       # Swap the decks
-      isFirst = not isFirst
+      if swap:
+        isFirst = not isFirst
 
     if g <= generations - 1:
       limit = parallelGames * cycles

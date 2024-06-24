@@ -97,6 +97,11 @@ namespace WindBot.Game.AI
             return true;
         }
 
+        public virtual void OnPostActivate(bool activate)
+        {
+            // To Override
+        }
+
         public virtual void OnChaining(int player, ClientCard card)
         {
             // For overriding

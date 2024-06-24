@@ -1161,6 +1161,7 @@ namespace WindBot.Game
                     _activatedCards[card.Id] += count;
                 }
             }
+            Executor.OnPostActivate(result);
             return result;
         }
     }

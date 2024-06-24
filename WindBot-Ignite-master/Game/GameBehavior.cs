@@ -270,6 +270,12 @@ namespace WindBot.Game
                 Logger.WriteLine("Done Games, Cleaning up");
                 response = 0;
             }
+            // End games short if MCTS Comm is past a certain win limit
+            if (SQLComm.IsMCTS && SQLComm.Wins >= SQLComm.WinsThreshold)
+            {
+                Logger.WriteLine("MCTS Win limit reached, Cleaning up");
+                response = 0;
+            }
 
             Connection.Send(CtosMessage.RematchResponse, (byte)(response));
         }
@@ -471,10 +477,10 @@ namespace WindBot.Game
             Logger.DebugWriteLine("Duel finished against " + otherName + ", result: " + textResult);
             SQLComm.Wins += result == 0 ? 1 : 0;
 
-            if (SQLComm.PreviousWins.Count >= SQLComm.PastWinsLimit)
+            /*if (SQLComm.PreviousWins.Count >= SQLComm.PastWinsLimit)
                 SQLComm.PastXWins -= SQLComm.PreviousWins.Dequeue();
             SQLComm.PastXWins += result == 0 ? 1 : 0;
-            SQLComm.PreviousWins.Enqueue(result == 0 ? 1 : 0);
+            SQLComm.PreviousWins.Enqueue(result == 0 ? 1 : 0);*/
 
             _ai.OnWin(result);
         }

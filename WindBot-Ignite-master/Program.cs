@@ -136,6 +136,7 @@ namespace WindBot
                 SQLComm.TotalGames = Config.GetInt("TotalGames", SQLComm.TotalGames);
                 SQLComm.IsFirst = Config.GetBool("IsFirst", SQLComm.IsFirst);
                 SQLComm.IsMCTS = Config.GetBool("IsMCTS", SQLComm.IsMCTS);
+                SQLComm.IsHardCoded = Config.GetBool("IsHardCoded", SQLComm.IsHardCoded);
                 SQLComm.IsTraining = Config.GetBool("IsTraining", SQLComm.IsTraining);
                 SQLComm.ShouldUpdate = Config.GetBool("ShouldUpdate", SQLComm.ShouldUpdate);
                 SQLComm.WinsThreshold = Config.GetInt("WinsThreshold", SQLComm.WinsThreshold);

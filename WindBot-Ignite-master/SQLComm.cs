@@ -19,6 +19,7 @@ namespace WindBot
         public static bool ShouldUpdate = true;
         public static bool IsMCTS = false;
         public static bool IsRollout = false;
+        public static bool IsHardCoded = false;
         public static bool ShouldBackPropagate = false;
         public static int TotalGames = 201;
         public static int RolloutCount = 2;
@@ -133,6 +134,34 @@ namespace WindBot
             return total;
         }
 
+        public static float GetAvgCount()
+        {
+            float total = 0;
+            using (SqliteConnection conn = ConnectToDatabase())
+            {
+                conn.Open();
+                string sql = $"SELECT AVG(AvgTurn) FROM MCST WHERE AvgTurn != 9999 AND IsFirst = \"{IsFirst}\" AND Name = \"{Name}\"";
+                try
+                {
+                    using (SqliteCommand cmd = new SqliteCommand(sql, conn))
+                    {
+                        using (SqliteDataReader rdr = cmd.ExecuteReader())
+                            while (rdr.Read())
+                            {
+                                total += rdr.GetFloat(0);
+                            }
+                    }
+                }
+                catch (InvalidCastException)
+                {
+                    Logger.WriteLine("Empty MCST Database AvgCount");
+                }
+                conn.Close();
+            }
+
+            return total;
+        }
+
         public static void InsertNode(Node node)
         {
             if (!IsMCTS)
@@ -154,7 +183,7 @@ namespace WindBot
                     childId = node.Children[0].NodeId;
                 }
 
-                string sql = $"INSERT INTO MCST (Name,ParentId,ChildId,CardId,Action,AvgTurn,Reward,Visited,IsFirst,IsTraining) VALUES (\"{Name}\",\"{parentId}\",\"{childId}\",\"{node.CardId}\",\"{node.Action}\",\"0\",\"0\",\"0\",\"{IsFirst}\",\"{IsTraining}\")";
+                string sql = $"INSERT INTO MCST (Name,ParentId,ChildId,CardId,Action,AvgTurn,Reward,Visited,IsFirst,IsTraining) VALUES (\"{Name}\",\"{parentId}\",\"{childId}\",\"{node.CardId}\",\"{node.Action}\",\"9999\",\"0\",\"0\",\"{IsFirst}\",\"{IsTraining}\")";
                 using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                 {
                     cmd2.ExecuteNonQuery();
@@ -214,7 +243,7 @@ namespace WindBot
                         sql = $"UPDATE MCST SET Reward = Reward + {totalRewards / rolloutCount}, " + //+ Math.Max(0, Math.Round(node.Heuristic() / RolloutCount) / 10)
                             $"Visited = Visited + 1";
                         if (totalRewards > 0)
-                            sql += $", AvgTurn = (AvgTurn * Reward + {turn})/(Reward +  {totalRewards / rolloutCount})";
+                            sql += $", AvgTurn = min(AvgTurn,{turn})";
                         sql += $" WHERE rowid = \"{n.NodeId}\" AND IsFirst = \"{IsFirst}\" AND IsTraining = \"{IsTraining}\" AND Name = \"{Name}\"";
 
                         using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))

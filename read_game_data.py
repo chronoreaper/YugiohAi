@@ -27,7 +27,7 @@ from torch.utils.data.dataloader import default_collate
 from sys import platform
 from pathlib import Path
 
-TrainData = not (len(sys.argv)>1 and ("--s" in sys.argv or "-s" in sys.argv))
+TrainData = not (len(sys.argv)>1 and ("--f" in sys.argv or "-f" in sys.argv))
 ShowData = True
 ShowAcc = False
 
@@ -503,7 +503,7 @@ def showGameHistory():
       for game_record in play_record[game_id]:
         records.append((game_record, game_result[name][game_id].result, name))
 
-  #random.shuffle(records)
+  random.shuffle(records)
   
   for r in records:
     record = r[0]
@@ -1091,7 +1091,7 @@ def compileData():
           result = game_result[name][game_id].result
           
           if (result == -1):
-            continue # Only select wins
+            #continue # Only select wins
             result = 0
           
           # if (result != 1):

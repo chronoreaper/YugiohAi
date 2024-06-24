@@ -226,11 +226,11 @@ namespace WindBot.Game.AI.Decks
             if (best_predict.Count == 0)
                 best_predict = new List<double>(new double[max_id + 1]);
 
-            //if (SQLComm.IsTraining)
+            if (SQLComm.IsTraining)
             {
-               // List<double> base_values = CSVReader.GetBaseActionValues(best_predict.Count, actions, comparisons);
-               // for (var i = 0; i < best_predict.Count; i++)
-               //     best_predict[i] += base_values[i];
+               List<double> base_values = CSVReader.GetBaseActionValues(best_predict.Count, actions, comparisons);
+               for (var i = 0; i < best_predict.Count; i++)
+                   best_predict[i] += base_values[i];
             }
 
             //Get Best Action
@@ -252,7 +252,9 @@ namespace WindBot.Game.AI.Decks
                     if (best_predict.Count > 0 && best_predict.Count > (int)action.ActionId)
                         Console.WriteLine(" " + action.ActionId + ":" + action.ToString() + " Weight:" + best_predict[(int)action.ActionId].ToString("#.#####"));
                     else
+                    {
                         Console.WriteLine(" " + action.ActionId + ":" + action.ToString() + " Weight:not trained");
+                    }
                 }
 
                 // If only one option, only choose if greater than .5
@@ -270,8 +272,7 @@ namespace WindBot.Game.AI.Decks
 
                 var chosen = actions[Rand.Next(actions.Count)];
                 //FIXED RNG
-                //var
-                if (!SQLComm.IsTraining)
+                //if (!SQLComm.IsTraining)
                     chosen = actions[0];
 
                 var result = best_predict.Select((v, i) => new { v, i }).OrderByDescending(x => x.v).ThenByDescending(x => x.i).Where(x => actions.Find(y => y.ActionId == x.i) != null).ToList();
@@ -874,21 +875,25 @@ namespace WindBot.Game.AI.Decks
             {
                 //if (SQLComm.IsTraining)
                 //    SQLComm.ShouldUpdate = false;
-                if (SQLComm.GamesPlayed >= SQLComm.TotalGames/2 && SQLComm.TotalGames > 0 && result == 0)
+                Tree.OnGameEnd(result, Duel, History);
+                Tree.OnNewGame();
+
+                if (SQLComm.GamesPlayed >= SQLComm.TotalGames && SQLComm.TotalGames > 0 ||
+                    SQLComm.IsMCTS && SQLComm.Wins >= SQLComm.WinsThreshold)
                 {
-                 //   SQLComm.ShouldUpdate = true;
-                    /*int index = Tree.Path.Count;
-                    if (index < History.Records.Count)
-                        History.Records.RemoveRange(index, History.Records.Count - index);
-                    else
-                        Logger.WriteErrorLine("History entry is less than tree entry?");*/
+                    History.Records = Tree.BestRecord;
+                    History.SaveHistory(result);
                 }
 
-                Tree.OnGameEnd(result, Duel);
-                Tree.OnNewGame();
+                History.Records = new List<PlayHistory.History>();
+
             }
-            History.SaveHistory(result);
-            History.Records.Clear();
+            else
+            {
+                History.SaveHistory(result);
+                History.Records.Clear();
+                //History.Records = new List<PlayHistory.History>();
+            }
         }
 
         private string SelectStringBuilder(ClientCard Card, int Quant = 1)

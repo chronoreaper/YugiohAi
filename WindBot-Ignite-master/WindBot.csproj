@@ -64,6 +64,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CSVReader.cs" />
+    <Compile Include="Game\AI\Decks\AIHardCoded2.cs" />
+    <Compile Include="Game\AI\Decks\AIHardCoded1.cs" />
+    <Compile Include="Game\AI\Decks\AIHardCodedBase.cs" />
     <Compile Include="HttpComm.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="Game\AI\Deck.cs" />
@@ -154,6 +157,7 @@
     <None Include="COPYING">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Decks\AI_SnakeEyes.ydk" />
     <None Include="LICENSE">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

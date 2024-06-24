@@ -149,8 +149,10 @@ namespace WindBot
         Node _current;
         Node _lastNode = null;
         public List<Node> possibleActions;
-        int TotalGames = 0;
         int ActionCount = 0;
+        int BestActionCount = int.MaxValue;
+        public List<History> BestRecord = new List<History>();
+        float AvgCount = 0;
 
         public MCST()
         {
@@ -161,25 +163,31 @@ namespace WindBot
         public void OnNewGame()
         {
             possibleActions = new List<Node>();
-            TotalGames = SQLComm.GetTotalGames();
             _current = new Node(null, "", default(ExecutorType));
             _lastNode = _current;
             if (Path.Count == 0)
                 Path.Add(_current);
             PathIndex = 1;
             ActionCount = 0;
+            AvgCount = SQLComm.GetAvgCount();
         }
 
-        public void OnGameEnd(int result, Duel duel)
+        public void OnGameEnd(int result, Duel duel, PlayHistory history)
         {
             bool reset = SQLComm.ShouldBackPropagate;
             double reward = result == 0 ? 1 : 0;
             //double reward = result == 0 ? 1.0 - Math.Min(duel.Turn * 0.01, 0.1) - Math.Min(ActionCount * 0.001, 0.2): 0;
-            SQLComm.Backpropagate(Path, _lastNode, reward, duel.Turn);
+            SQLComm.Backpropagate(Path, _lastNode, reward, ActionCount);// duel.Turn);
 
             if (reset)
             {
                 Path.Clear();
+            }
+
+            if (ActionCount < BestActionCount && result == 0)
+            {
+                BestActionCount = ActionCount;
+                BestRecord = history.Records;
             }
         }
 
@@ -216,7 +224,7 @@ namespace WindBot
         {
             Node best = _current;
             double weight = -1;
-            double c = 0.01;
+            double c = 1;
 
             if (!SQLComm.IsRollout)
             {
@@ -225,11 +233,13 @@ namespace WindBot
                     double visited = Math.Max(0.01, n.Visited);
                     double estimate = SQLComm.GetNodeEstimate(n);
                     //double w = n.Rewards/visited + c * Math.Sqrt((Math.Log(n.Parent.Visited + 1) + 1) / visited);
-                    double w = n.Rewards / visited + c * Math.Sqrt((Math.Log(n.Parent.Visited + 1) + 1) / visited);
-                    if (n.AvgTurn > 0)
-                        w += 1 / n.AvgTurn;
+                    double w = 0.1 * n.Rewards / visited + (n.Parent.Visited) / visited;//c * Math.Sqrt(Math.Log(n.Parent.Visited + 1) / visited);
+                    if (n.AvgTurn > 0 && n.AvgTurn != 9999)
+                        w += AvgCount / n.AvgTurn;
+                    else
+                        w += 1; // Default just increase the weight by 1
                     //w += estimate;
-                    if (CSVReader.InBaseActions(n.CardId, n.Action, comparisons) && visited < 20)
+                    if (CSVReader.InBaseActions(n.CardId, n.Action, comparisons) && visited < 10)
                         w += 1;
 
                     if (w >= weight)
@@ -244,12 +254,12 @@ namespace WindBot
                     _current.Children.Add(best);
                     _current = best;
                     Path.Add(best);
-                    if (best.Visited <= 0 && best.NodeId != 0)
+                    /*if (best.Visited <= 0 && best.NodeId != 0)
                     {
                         _lastNode = best;
                         SQLComm.IsRollout = true;
                         PathIndex = Path.Count;
-                    }
+                    }*/
                 }
 
             }
@@ -306,6 +316,9 @@ namespace WindBot
                 _current = best;
             }
 
+            if (possibleActions.Count > 1)
+                ActionCount++;
+
             if (pop)
             {
                 possibleActions.Remove(best);
@@ -314,8 +327,6 @@ namespace WindBot
             {
                 possibleActions.Clear();
             }
-
-            ActionCount ++;
 
             return best;
         }

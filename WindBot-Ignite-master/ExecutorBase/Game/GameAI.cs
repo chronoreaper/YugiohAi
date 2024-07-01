@@ -2,6 +2,7 @@ using System.Linq;
 using System.Collections.Generic;
 using WindBot.Game.AI;
 using YGOSharp.OCGWrapper.Enums;
+using YGOSharp.OCGWrapper;
 
 namespace WindBot.Game
 {
@@ -17,6 +18,9 @@ namespace WindBot.Game
         public Executor Executor { get; set; }
 
         public Dialogs _dialogs;
+
+        public List<int> Deck { get; set; } = new List<int>();
+
         private System.Action<string, int> _log;
 
         // record activated count to prevent infinite actions
@@ -66,7 +70,10 @@ namespace WindBot.Game
 
         public void OnWin(int result)
         {
-            Executor.OnWin(result);
+            List<string> namedDeck = new List<string>();
+            foreach (int id in Deck)
+                namedDeck.Add(NamedCardsManager.GetCard(id).Name);
+            Executor.OnWin(result, namedDeck);
         }
 
         /// <summary>
@@ -93,6 +100,17 @@ namespace WindBot.Game
         public void OnDraw(int player)
         {
             Executor.OnDraw(player);
+        }
+
+        /// <summary>
+        /// Called when side deck is needed
+        /// </summary>
+        /// <param name="Main"></param>
+        /// <param name="Extra"></param>
+        /// <param name="Side"></param>
+        public void OnChangeSide(IList<int> main, IList<int> extra, IList<int> side)
+        {
+            Executor.OnChangeSide(main, extra, side);
         }
 
         /// <summary>
@@ -142,7 +160,24 @@ namespace WindBot.Game
         {
             Executor.OnChaining(player,card);
         }
-        
+
+        /// <summary>
+        /// Called when a chain is resolving
+        /// </summary>
+        public void OnChainSolving()
+        {
+            Executor.OnChainSolving();
+        }
+
+        /// <summary>
+        /// Called when 1 chainlink is finished
+        /// </summary>
+        public void OnChainSolved()
+        {
+            Executor.OnChainSolved();
+        }
+
+
         /// <summary>
         /// Called when a chain has been solved.
         /// </summary>

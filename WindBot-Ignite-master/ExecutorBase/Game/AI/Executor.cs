@@ -50,7 +50,7 @@ namespace WindBot.Game.AI
             return Rand.Next(2) > 0;
         }
 
-        public virtual void OnWin(int result)
+        public virtual void OnWin(int result, List<string> deck)
         {
             //For overriding 
         }
@@ -85,6 +85,10 @@ namespace WindBot.Game.AI
             return null;
         }
 
+        public virtual void OnChangeSide(IList<int> main, IList<int> extra, IList<int> side)
+        {
+        }
+
         public virtual bool OnPreBattleBetween(ClientCard attacker, ClientCard defender)
         {
             // Overrided in DefaultExecutor
@@ -103,6 +107,16 @@ namespace WindBot.Game.AI
         }
 
         public virtual void OnChaining(int player, ClientCard card)
+        {
+            // For overriding
+        }
+
+        public virtual void OnChainSolving()
+        {
+            // For overriding
+        }
+
+        public virtual void OnChainSolved()
         {
             // For overriding
         }

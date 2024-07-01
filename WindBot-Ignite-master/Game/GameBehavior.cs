@@ -76,6 +76,10 @@ namespace WindBot.Game
                 Logger.WriteLine("Custom deck provided, loading: " + Game.DeckFile + ".");
             Deck = Deck.Load(Game.DeckFile ?? _ai.Executor.Deck);
 
+            _ai.Deck.Clear();
+            _ai.Deck.AddRange(Deck.Cards);
+            _ai.Deck.AddRange(Deck.ExtraCards);
+
             _select_hint = 0;
         }
 
@@ -140,6 +144,17 @@ namespace WindBot.Game
             _messages.Add(GameMessage.AttackDisabled, OnAttackDisabled);
             _messages.Add(GameMessage.PosChange, OnPosChange);
             _messages.Add(GameMessage.Chaining, OnChaining);
+
+            _messages.Add(GameMessage.ChainSolving, OnChainSolving);
+            _messages.Add(GameMessage.ChainSolved, OnChainSolved);
+
+            //Chaining = 70,
+            //Chained = 71,
+            //ChainSolving = 72,
+            //ChainSolved = 73,
+            //ChainEnd = 74,
+            //ChainNegated = 75,
+
             _messages.Add(GameMessage.ChainEnd, OnChainEnd);
             _messages.Add(GameMessage.SortCard, OnCardSorting);
             _messages.Add(GameMessage.SortChain, OnChainSorting);
@@ -175,6 +190,8 @@ namespace WindBot.Game
             _messages.Add(GameMessage.SpSummoned, OnSpSummoned);
             _messages.Add(GameMessage.FlipSummoning, OnSummoning);
             _messages.Add(GameMessage.FlipSummoned, OnSummoned);
+
+
         }
 
         private void OnJoinGame(BinaryReader packet)
@@ -225,6 +242,8 @@ namespace WindBot.Game
 
         private void OnChangeSide(BinaryReader packet)
         {
+            //TODO Side deck
+            _ai.OnChangeSide(Deck.Cards, Deck.ExtraCards, Deck.SideCards);
             BinaryWriter deck = GamePacketFactory.Create(CtosMessage.UpdateDeck);
             deck.Write(Deck.Cards.Count + Deck.ExtraCards.Count);
             deck.Write(Deck.SideCards.Count);
@@ -234,6 +253,11 @@ namespace WindBot.Game
                 deck.Write(card);
             foreach (int card in Deck.SideCards)
                 deck.Write(card);
+
+            _ai.Deck.Clear();
+            _ai.Deck.AddRange(Deck.Cards);
+            _ai.Deck.AddRange(Deck.ExtraCards);
+
             Connection.Send(deck);
             _ai.OnJoinGame();
         }
@@ -481,6 +505,13 @@ namespace WindBot.Game
                 SQLComm.PastXWins -= SQLComm.PreviousWins.Dequeue();
             SQLComm.PastXWins += result == 0 ? 1 : 0;
             SQLComm.PreviousWins.Enqueue(result == 0 ? 1 : 0);*/
+            // Find enemy name
+            for (int i = 0; i < _room.Players; i++)
+                if (_room.Names[i] != SQLComm.Name && _room.Names[i] != null)
+                {
+                    SQLComm.Opp = _room.Names[i];
+                    break;
+                }
 
             _ai.OnWin(result);
         }
@@ -872,6 +903,18 @@ namespace WindBot.Game
             _duel.CurrentChain.Add(card);
             _duel.LastChainPlayer = cc;
 
+        }
+
+        // Start Chain resolution
+        private void OnChainSolving(BinaryReader packet)
+        {
+            _ai.OnChainSolving();
+        }
+
+        // After 1 chain link is finished
+        private void OnChainSolved(BinaryReader packet)
+        {
+            _ai.OnChainSolved();
         }
 
         private void OnChainEnd(BinaryReader packet)

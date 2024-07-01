@@ -158,6 +158,23 @@ namespace WindBot.Game
             return zones;
         }
 
+        public int GetLinkMaterialWorth()
+        {
+            return GetLinkMaterialWorth(new int[]{ });
+        }
+
+        public int GetLinkMaterialWorth(int[] exclude)
+        {
+            int worth = 0;
+            foreach (var card in GetMonsters())
+            {
+                if (exclude.Contains(card.Id))
+                    continue;
+                worth += (card.HasType(CardType.Link)) ? card.LinkCount : 1;
+            }
+            return worth;
+        }
+
         public List<ClientCard> GetMonsters()
         {
             return GetCards(MonsterZone);
@@ -298,6 +315,11 @@ namespace WindBot.Game
             return HasInSpellZone(cardId) || HasInGraveyard(cardId);
         }
 
+        public bool HasInMonsterZoneSpellZoneOrGraveyard(int cardId)
+        {
+            return HasInMonstersZone(cardId) || HasInSpellZone(cardId) || HasInGraveyard(cardId);
+        }
+
         public bool HasInHandOrInMonstersZoneOrInGraveyard(int cardId)
         {
             return HasInHand(cardId) || HasInMonstersZone(cardId) || HasInGraveyard(cardId);
@@ -331,6 +353,11 @@ namespace WindBot.Game
         public bool HasInSpellZoneOrInGraveyard(IList<int> cardId)
         {
             return HasInSpellZone(cardId) || HasInGraveyard(cardId);
+        }
+
+        public bool HasInMonsterZoneSpellZoneOrGraveyard(IList<int> cardId)
+        {
+            return HasInMonstersZone(cardId) || HasInSpellZone(cardId) || HasInGraveyard(cardId);
         }
 
         public bool HasInHandOrInMonstersZoneOrInGraveyard(IList<int> cardId)

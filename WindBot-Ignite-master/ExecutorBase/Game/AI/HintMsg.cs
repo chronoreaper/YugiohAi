@@ -55,6 +55,7 @@ namespace WindBot.Game.AI
         Zone = 569,
         DisableZone = 570,
         ToZone = 571,
-        Counter = 572;
+        Counter = 572,
+        GYToHand = 573;
     }
 }

@@ -2,6 +2,7 @@ using Mono.Data.Sqlite;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using static System.Net.Mime.MediaTypeNames;
 using static WindBot.MCST;
@@ -30,12 +31,19 @@ namespace WindBot
         public static double TotalRewards = 0;
 
         public static string Name = "Bot";
+        public static string Opp = "Enemy";
 
         public static int PastWinsLimit = 10;
         public static int PastXWins = 0;
         public static Queue<int> PreviousWins = new Queue<int>();
         public static int WinsThreshold = 45;
         public static string sqlPath = $@"Data Source=./cardData.cdb";
+
+        public class CardQuant
+        {
+            public string Name;
+            public int Quant;
+        }
 
         private static SqliteConnection ConnectToDatabase()
         {
@@ -579,6 +587,43 @@ namespace WindBot
         #endregion
 
         #region Recording
+
+        public static void SavePlayedCards(bool isFirst, bool postSide, int result, List<string> playedCards, List<CardQuant> allCards)
+        {
+            playedCards = playedCards.Distinct().ToList();
+            using (SqliteConnection conn = ConnectToDatabase())
+            {
+                conn.Open();
+
+                SqliteTransaction transaction = conn.BeginTransaction();
+
+                string sql = $"INSERT INTO GameTable (Name, IsFirst, PostSide, Pool, Result, Enemy) VALUES (\"{Name}\", \"{isFirst}\", \"{postSide}\", \"{Id}\", \"{result}\", \"{Opp}\")";
+                using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                {
+                    cmd2.ExecuteNonQuery();
+                }
+
+                long rowid = 0;
+                sql = "select last_insert_rowid()";
+                using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                {
+                    rowid = (long)cmd2.ExecuteScalar();
+                }
+
+                foreach(CardQuant card in allCards)
+                {
+                    bool played = playedCards.Contains(card.Name);
+                    sql = $"INSERT INTO GameStats (GameId, CardId, Played, Quant) VALUES (\"{rowid}\", \"{card.Name}\", \"{played}\", \"{card.Quant}\")";
+                    using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
+                    {
+                        cmd2.ExecuteNonQuery();
+                    }
+                }
+
+                transaction.Commit();
+                conn.Close();
+            }
+        }
 
         public static void SavePlayHistory(List<History> records, int result)
         {

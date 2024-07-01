@@ -238,5 +238,11 @@
         "deck": "[ImaginaryArk]",
         "difficulty": 2,
         "masterRules": [ 7 ]
+    },
+    {
+        "name": "Snake Eyes",
+        "deck": "SnakeEyes",
+        "difficulty": 4,
+        "masterRules": [ 3, 4, 5 ]
     }
 ]

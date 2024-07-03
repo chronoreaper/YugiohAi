@@ -493,6 +493,8 @@ namespace WindBot.Game.AI.Decks
 
         public override void OnPostActivate(bool activate)
         {
+            if (!activate)
+                return;
             if (!used.Contains(Card.Name))
                 used.Add(Card.Name);
             previousActions.Add(new PreviousAction()
@@ -537,6 +539,10 @@ namespace WindBot.Game.AI.Decks
 
             // Tenpai field spell
             ClientCard last = Util.GetLastChainCard();
+
+            if (last == null)
+                return false;
+
             bool isTenpaiType = (last.HasAttribute(CardAttribute.Fire) && last.HasRace(CardRace.Dragon) && last.Location == CardLocation.MonsterZone);
             if (Enemy.HasInSpellZone(CardId.SangenSummoning) && isTenpaiType && Duel.Phase == DuelPhase.Main1 && Duel.Player == 1)
                 return false;

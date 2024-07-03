@@ -83,15 +83,10 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.Summon, CardId.SnakeEyePoplar);
             AddExecutor(ExecutorType.SpSummon, CardId.TyphonSkyCrisis, TyphonSummon);
             AddExecutor(ExecutorType.Activate, CardId.TyphonSkyCrisis, TyphonActivate);
-            
+
             // Reactive
-            AddExecutor(ExecutorType.Activate, CardId.EffectVeiler, FaceUpEffectNegate);
-            AddExecutor(ExecutorType.Activate, CardId.GhostMourner, FaceUpEffectNegate);
-            AddExecutor(ExecutorType.Activate, CardId.InfiniteImpermanence, FaceUpEffectNegate);
-            AddExecutor(ExecutorType.Activate, CardId.AshBlossom, AshBlossomActivate);
-            AddExecutor(ExecutorType.Activate, CardId.DrollnLockBird);
-            AddExecutor(ExecutorType.Activate, CardId.Nibiru);
             AddExecutor(ExecutorType.Activate, CardId.CrossoutDesignator, CrossoutActivate);
+            AddExecutor(ExecutorType.Activate, CardId.CalledByTheGrave, CalledByActivate);
 
             AddExecutor(ExecutorType.SpellSet, DefaultSpellSet);
 
@@ -206,6 +201,68 @@ namespace WindBot.Game.AI.Decks
                         AddCardsToList(_main, pool, mainCount, toAdd);
                     }
                     break;
+                case Archetypes.Tenpai:
+                    if (winResult == 0) // win
+                    {
+                        int[] toAdd =
+                        {
+                            CardId.AshBlossom,
+                            CardId.AshBlossom,
+                            CardId.AshBlossom,
+                            CardId.EffectVeiler,
+                            CardId.EffectVeiler,
+                            CardId.EffectVeiler,
+                            CardId.InfiniteImpermanence,
+                            CardId.InfiniteImpermanence,
+                            CardId.InfiniteImpermanence,
+                            CardId.DrollnLockBird,
+                            CardId.DrollnLockBird,
+                            CardId.DrollnLockBird,
+                            CardId.CalledByTheGrave,
+                            CardId.AntiSpellFragrance,
+                            CardId.SkillDrain,
+                            CardId.SkillDrain,
+                            CardId.SkillDrain,
+                            CardId.TripleTacticsTalent,
+                            CardId.TripleTacticsTalent,
+                            CardId.TripleTacticsTalent,
+                            CardId.GhostMourner,
+                            CardId.GhostMourner,
+                            CardId.GhostMourner,
+                        };
+                        AddCardsToList(_main, pool, mainCount, toAdd);
+                    }
+                    else // lose
+                    {
+                        int[] toAdd =
+                        {
+                            CardId.AshBlossom,
+                            CardId.AshBlossom,
+                            CardId.AshBlossom,
+                            CardId.EffectVeiler,
+                            CardId.EffectVeiler,
+                            CardId.EffectVeiler,
+                            CardId.InfiniteImpermanence,
+                            CardId.InfiniteImpermanence,
+                            CardId.InfiniteImpermanence,
+                            CardId.DrollnLockBird,
+                            CardId.DrollnLockBird,
+                            CardId.DrollnLockBird,
+                            CardId.CalledByTheGrave,
+                            CardId.AntiSpellFragrance,
+                            CardId.SkillDrain,
+                            CardId.SkillDrain,
+                            CardId.SkillDrain,
+                            CardId.TripleTacticsTalent,
+                            CardId.TripleTacticsTalent,
+                            CardId.TripleTacticsTalent,
+                            CardId.GhostMourner,
+                            CardId.GhostMourner,
+                            CardId.GhostMourner,
+                        };
+                        AddCardsToList(_main, pool, mainCount, toAdd);
+                    }
+                    break;
             }
 
 
@@ -215,38 +272,6 @@ namespace WindBot.Game.AI.Decks
             AddCardsToList(_side, pool, sideCount);
 
             postSide = true;
-        }
-
-        /// <summary>
-        /// Add as many of the given cards from the main/side list to the cards to add list
-        /// </summary>
-        /// <param name="toAddTo">The list to add to</param>
-        /// <param name="cardsToAdd">Cards you want to add</param>
-        /// <param name="pool">the pool of cards to take from</param>
-        void AddCardsToList(IList<int> toAddTo, IList<int> pool, int limit, int[] cardsToAdd = null)
-        {
-            if (cardsToAdd != null)
-            {
-                foreach (int card in cardsToAdd)
-                {
-                    if (toAddTo.Count() >= limit)
-                        break;
-                    if (pool.Contains(card))
-                    {
-                        toAddTo.Add(card);
-                        pool.Remove(card);
-                    }
-                }
-            }
-            else
-            {
-                while(toAddTo.Count() < limit && pool.Count() > 0)
-                {
-                    var card = pool.ElementAt(0);
-                    pool.RemoveAt(0);
-                    toAddTo.Add(card);
-                }
-            }
         }
 
 

@@ -33,13 +33,25 @@ namespace WindBot.Game.AI.Decks
             CardId.SalamangreatRagingPhoenix
         };
 
-        public int[] reactiveTargets =
+        public int[] reactiveEnemyTurn =
         {
                 CardId.SnakeEyeAsh,
                 CardId.DiabellstarBlackWitch,
                 CardId.SnakeEyePoplar,
+                CardId.SnakeEyeOak,
+                CardId.PromethianPrincess,
                 CardId.Apollusa,
-                CardId.SnakeEyeOak
+        };
+
+        public int[] protactiveEnemyTurn =
+        {
+                CardId.AccesscodeTalker,
+        };
+
+        public int[] reactivePlayerTurn =
+        {
+                CardId.Apollusa,
+                CardId.IPMasquerena,
         };
 
         public int[] dontUseAsMaterial =
@@ -48,6 +60,15 @@ namespace WindBot.Game.AI.Decks
             CardId.WorldseadragonZealantis,
             CardId.UnderworldGoddess,
             CardId.Apollusa
+        };
+
+        public int[] removeSpellTrap =
+        {
+            CardId.SkillDrain,
+            CardId.SangenSummoning,
+            CardId.AntiSpellFragrance,
+            CardId.DivineTempleSnakeEyes,
+            CardId.SnakeEyeDiabellstar
         };
 
         public enum ActivatedEffect
@@ -81,8 +102,11 @@ namespace WindBot.Game.AI.Decks
             public const int AshBlossom = 14558128;
             public const int EffectVeiler = 97268402;
             public const int GhostMourner = 52038441;
+            public const int GhostOgre = 59438930;
+            public const int GhostBelle = 73642296;
             public const int DrollnLockBird = 94145021;
             public const int Nibiru = 27204311;
+            public const int DimensionShifter = 91800273;
 
 
             // Generic Spells
@@ -93,12 +117,26 @@ namespace WindBot.Game.AI.Decks
             public const int CalledByTheGrave = 24224830;
             public const int FeatherDuster = 18144507;
             public const int LightningStorm = 14532163;
-
+            public const int Terraforming = 73628505;
+            public const int PotofProsperity = 84211599;
+            public const int ForbiddenDroplet = 24299458;
+            public const int CosmicCyclone = 8267140;
+            public const int HeatWave = 45141013;
 
             // Generic Traps
             public const int InfiniteImpermanence = 10045474;
             public const int AntiSpellFragrance = 58921041;
             public const int SkillDrain = 82732705;
+            public const int DimensionalBarrier = 83326048;
+
+            // Generic Synchro
+            public const int BlackRoseMoonlightDragon = 33698022;
+            public const int BlackroseDragon = 73580471;
+            public const int UltimayaTzolkin = 1686814;
+            public const int CrystalWingSynchroDragon = 50954680;
+            public const int KuibeltTheBladeDragon = 87837090;
+            public const int AncientFairyDragon = 25862681;
+
 
 
             // Generic xyz
@@ -120,6 +158,7 @@ namespace WindBot.Game.AI.Decks
             public const int SeleneQueenofMasterMagicians = 45819647;
             public const int Apollusa = 4280259;
             public const int UnderworldGoddess = 98127546;
+            public const int HieraticSealsOfSpheres = 24361622;
 
             // Snake Eyes
             public const int SnakeEyeAsh = 9674034;
@@ -135,8 +174,25 @@ namespace WindBot.Game.AI.Decks
 
             public const int SinfulSpoilSilvera = 38511382;
 
+            // Tenpai
+            public const int TenpaiPaidra = 39931513;
+            public const int TenpaiChundra = 91810826;
+            public const int TenpaiFadra = 65326118;
 
-            // Dragons
+            public const int SangenKaimen = 66730191;
+            public const int SangenSummoning = 30336082;
+
+            public const int SangenpaiTranscendentDragion = 18969888;
+            public const int SangenpaiBidentDragion = 82570174;
+            public const int TridentDragion = 39402797;
+
+            // Kashtira
+            public const int KashtiraFenrir = 32909498;
+            public const int PlanetWraithsoth = 71832012;
+
+
+
+            // Bystial
             public const int BystialMagnamhut = 33854624;
             public const int BystialDruiswurm = 6637331;
             public const int BystialSaronir = 60242223;
@@ -145,7 +201,15 @@ namespace WindBot.Game.AI.Decks
         public AIHardCodedBase(GameAI ai, Duel duel)
             : base(ai, duel)
         {
-            // Add in children class
+            // Reactive
+            AddExecutor(ExecutorType.Activate, CardId.EffectVeiler, FaceUpEffectNegate);
+            AddExecutor(ExecutorType.Activate, CardId.GhostMourner, FaceUpEffectNegate);
+            AddExecutor(ExecutorType.Activate, CardId.GhostOgre, GhostOgreActivate);
+            AddExecutor(ExecutorType.Activate, CardId.GhostBelle, DefaultGhostBelleAndHauntedMansion);
+            AddExecutor(ExecutorType.Activate, CardId.InfiniteImpermanence, FaceUpEffectNegate);
+            AddExecutor(ExecutorType.Activate, CardId.AshBlossom, AshBlossomActivate);
+            AddExecutor(ExecutorType.Activate, CardId.DrollnLockBird, DrollActivate);
+            AddExecutor(ExecutorType.Activate, CardId.Nibiru);
         }
 
         protected List<long> HintMsgForEnemy = new List<long>
@@ -224,6 +288,7 @@ namespace WindBot.Game.AI.Decks
         {
  
             IList<ClientCard> cards = new List<ClientCard>(_cards);
+            ClientCard currentCard = GetCurrentCardResolveInChain();
 
             // Default selection
             if (HintMsg.Target == hint)
@@ -235,6 +300,21 @@ namespace WindBot.Game.AI.Decks
                         CardId.GhostMourner == Card.Id)
                         selected.Add(_cards.Where(x => x.Id == Duel.CurrentChain[Duel.CurrentChain.Count - 2].Id).FirstOrDefault());
                 }
+                if (CardId.CalledByTheGrave == currentCard.Id)
+                {
+                    selected.Add(_cards.Where(x => x.Controller == 1 && x.Location == CardLocation.Grave && Duel.CurrentChain.Any(y => y.IsCode(x.Id))).FirstOrDefault());
+                }
+                int[] GYBanish =
+                {
+                    CardId.BystialMagnamhut,
+                    CardId.BystialDruiswurm,
+                    CardId.BystialSaronir
+                };
+                if (GYBanish.Any(x => x == currentCard.Id))
+                    selected.Add(_cards.Where(x => x.Location == CardLocation.Grave && x.HasAttribute(CardAttribute.Dark | CardAttribute.Light) && Duel.ChainTargets.Any(y => y.Id == x.Id))
+                                        .OrderBy(x => x.Owner == 1? 0: 1)
+                                        .FirstOrDefault()
+                                 );
             }
 
             #region Random selection
@@ -449,6 +529,22 @@ namespace WindBot.Game.AI.Decks
 
 
         #region Generic Actions
+
+        public bool DefaultNegate()
+        {
+            if (Duel.LastChainPlayer == 0)
+                return false;
+
+            // Tenpai field spell
+            ClientCard last = Util.GetLastChainCard();
+            bool isTenpaiType = (last.HasAttribute(CardAttribute.Fire) && last.HasRace(CardRace.Dragon) && last.Location == CardLocation.MonsterZone);
+            if (Enemy.HasInSpellZone(CardId.SangenSummoning) && isTenpaiType && Duel.Phase == DuelPhase.Main1 && Duel.Player == 1)
+                return false;
+
+
+            return true;
+        }
+
         public bool FaceUpEffectNegate()
         {
             
@@ -456,34 +552,34 @@ namespace WindBot.Game.AI.Decks
             if (Duel.Player == 0 && Enemy.GetMonsters().Where(x => x.Id == CardId.Apollusa && x.Attack >= 800 && !Util.IsChainTarget(x)).Any())
                 return true;
 
-            // Accesscode negate
-            if (Duel.Player == 1 && Enemy.GetMonsters().Where(x => x.Id == CardId.AccesscodeTalker && !Util.IsChainTarget(x)).Any())
-                return true;
 
-            // Premtive negates
-            int[] preEmptiveTargets =
-            {
-            };
-            foreach (int id in preEmptiveTargets)
+            foreach (int id in protactiveEnemyTurn)
                 if (Duel.Player == 1 && Enemy.GetMonsters().Where(x => x.Id == id && !x.IsDisabled()).Any())
                     return true;
 
-            if (Duel.LastChainPlayer == 0)
+            if (!DefaultNegate())
                 return false;
 
-            foreach (int id in reactiveTargets)
-                if (Duel.CurrentChain.Where(x => x.Id == id && !x.IsDisabled() && !Util.IsChainTarget(x)).Any())
-                    return true;
+            if (Duel.Player == 1)
+                foreach (int id in reactiveEnemyTurn)
+                    if (Duel.CurrentChain.Where(x => x.Id == id && !x.IsDisabled() && !Util.IsChainTarget(x)).Any())
+                        return true;
+
+            if (Duel.Player == 0)
+                foreach (int id in reactivePlayerTurn)
+                    if (Duel.CurrentChain.Where(x => x.Id == id && !x.IsDisabled() && !Util.IsChainTarget(x)).Any())
+                        return true;
 
             return false;
         }
+
         #endregion
 
 
         #region Generic Monsters
         public bool AshBlossomActivate()
         {
-            if (Duel.LastChainPlayer == 0)
+            if (!DefaultNegate())
                 return false;
 
             int[] ashTargets =
@@ -496,6 +592,27 @@ namespace WindBot.Game.AI.Decks
                 return true;
 
             return false;
+        }
+
+        public bool GhostOgreActivate()
+        {
+            if (!DefaultNegate())
+                return false;
+
+            int[] dont =
+            {
+                CardId.SnakeEyeFlamberge,
+                CardId.SnakeEyePoplar
+            };
+
+            return true;
+        }
+
+        public bool DrollActivate()
+        {
+            if (Duel.Player == 0)
+                return false;
+            return true;
         }
 
         public bool ApollusaSummon()
@@ -522,6 +639,15 @@ namespace WindBot.Game.AI.Decks
             return false;
         }
 
+        public bool BystialActivate()
+        {
+            if (Duel.ChainTargets.Where(x => x.Location == CardLocation.Grave && x.HasAttribute(CardAttribute.Dark | CardAttribute.Light)).Any())
+                return true;
+            if (Duel.Phase == DuelPhase.End)
+                return true;
+            return false;
+        }
+
         #endregion
 
 
@@ -541,6 +667,30 @@ namespace WindBot.Game.AI.Decks
                 return true;
             return false;
         }
+
+        public bool CalledByActivate()
+        {
+            if (Duel.CurrentChain.Where(x => x.Controller == 1 && x.Location == CardLocation.Grave && x.HasType(CardType.Monster)).Any())
+                return true;
+            return false;
+        }
+
+        public bool CosmicActivate()
+        {
+            if (Duel.CurrentChain.Any(x => removeSpellTrap.Contains(x.Id) && !Duel.ChainTargets.Any()))
+                return true;
+            if (Duel.Player == 1 && Enemy.SpellZone.Any(x => x.HasPosition(CardPosition.FaceDown)))
+                return true;
+            if (Duel.Player == 0 && Enemy.SpellZone.Count(x => x.HasPosition(CardPosition.FaceDown)) == 1)
+                return true;
+
+            return false;
+        }
+
+        public bool DropletActivate()
+        {
+            return FaceUpEffectNegate();
+        }
         #endregion
 
 
@@ -553,6 +703,11 @@ namespace WindBot.Game.AI.Decks
         protected bool HasPerformedPreviously(ExecutorType action)
         {
             return previousActions.Where(x => x.type == action).Any();
+        }
+
+        protected bool HasPerformedPreviously(long cardId)
+        {
+            return previousActions.Any(x => x.cardId == cardId);
         }
 
         protected bool HasPerformedPreviously(long cardId, ExecutorType action)
@@ -620,8 +775,50 @@ namespace WindBot.Game.AI.Decks
 
             };
 
+            int[] Tenpai =
+            {
+                CardId.TenpaiChundra,
+                CardId.TenpaiFadra,
+                CardId.TenpaiPaidra,
+                CardId.SangenKaimen,
+                CardId.SangenSummoning,
+            };
+            if (Tenpai.Any(x => seenCards.Contains(x)))
+                return Archetypes.Tenpai;
 
             return Archetypes.Unknown;
+        }
+
+        /// <summary>
+        /// Add as many of the given cards from the main/side list to the cards to add list
+        /// </summary>
+        /// <param name="toAddTo">The list to add to</param>
+        /// <param name="cardsToAdd">Cards you want to add</param>
+        /// <param name="pool">the pool of cards to take from</param>
+        protected void AddCardsToList(IList<int> toAddTo, IList<int> pool, int limit, int[] cardsToAdd = null)
+        {
+            if (cardsToAdd != null)
+            {
+                foreach (int card in cardsToAdd)
+                {
+                    if (toAddTo.Count() >= limit)
+                        break;
+                    if (pool.Contains(card))
+                    {
+                        toAddTo.Add(card);
+                        pool.Remove(card);
+                    }
+                }
+            }
+            else
+            {
+                while (toAddTo.Count() < limit && pool.Count() > 0)
+                {
+                    var card = pool.ElementAt(0);
+                    pool.RemoveAt(0);
+                    toAddTo.Add(card);
+                }
+            }
         }
         #endregion
     }

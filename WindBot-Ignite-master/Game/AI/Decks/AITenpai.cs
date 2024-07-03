@@ -159,11 +159,49 @@ namespace WindBot.Game.AI.Decks
             IList<ClientCard> selected = new List<ClientCard>();
 
             #region AI Selected
-            if (hint == HintMsg.AddToHand)
+            if (CardId.SangenSummoning == currentCard)
             {
-            
-                selected.Add(_cards.Where(x => x.Id == CardId.DivineTempleSnakeEyes).FirstOrDefault());
+                if (!HasPerformedPreviously(ExecutorType.Summon))
+                {
+                    if (!Bot.HasInHand(CardId.TenpaiPaidra))
+                        selected.Add(_cards.Where(x => x.Id == CardId.TenpaiPaidra).FirstOrDefault());
+                }
+                if (!Bot.HasInHand(CardId.TenpaiChundra))
+                    selected.Add(_cards.Where(x => x.Id == CardId.TenpaiChundra).FirstOrDefault());
 
+
+                // Field spell gy target
+                selected.Add(_cards.Where(x => x.Id == CardId.TridentDragion).FirstOrDefault());
+                selected.Add(_cards.Where(x => x.Id == CardId.SangenpaiTranscendentDragion).FirstOrDefault());
+                selected.Add(_cards.Where(x => x.Id == CardId.SangenpaiBidentDragion).FirstOrDefault());
+            }
+            else if (CardId.SangenKaimen == currentCard)
+            {
+
+            }
+            else if (CardId.TenpaiPaidra == currentCard)
+            {
+
+            }
+            else if (CardId.TenpaiChundra == currentCard)
+            {
+
+            }
+            else if (CardId.SangenpaiBidentDragion == currentCard)
+            {
+
+            }
+            else if (CardId.SangenpaiTranscendentDragion == currentCard)
+            {
+
+            }
+            else if (CardId.TridentDragion == currentCard)
+            {
+                selected.Add(_cards.Where(x => x.Id == CardId.SangenSummoning).FirstOrDefault());
+                selected.Add(_cards.Where(x => x.Id == CardId.SangenpaiTranscendentDragion).FirstOrDefault());
+            }
+            else if (CardId.KuibeltTheBladeDragon == currentCard)
+            {
 
             }
             #endregion

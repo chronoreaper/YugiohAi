@@ -737,7 +737,7 @@ namespace WindBot.Game.AI.Decks
 
         public bool SnakeEyeAshSummon()
         {
-            if (Bot.HasInHand(CardId.SnakeEyeOak) && Bot.Graveyard.Where(x => x.Level == 1 && x.HasAttribute(CardAttribute.Fire)) != null)
+            if (Bot.HasInHand(CardId.SnakeEyeOak) && !SnakeEyeOakSummon())
                 return false;
 
             return true;
@@ -762,7 +762,7 @@ namespace WindBot.Game.AI.Decks
 
         public bool SnakeEyeOakSummon()
         {
-            if (Bot.GetGraveyardMonsters().Where(x => x.Level == 1 && x.HasAttribute(CardAttribute.Fire)) != null || Bot.Banished.Where(x => x.Level == 1 && x.HasAttribute(CardAttribute.Fire)) != null)
+            if (Bot.GetGraveyardMonsters().Any(x => x.Level == 1 && x.HasAttribute(CardAttribute.Fire)) || Bot.Banished.Any(x => x.Level == 1 && x.HasAttribute(CardAttribute.Fire)))
                 return true;
 
             return false;

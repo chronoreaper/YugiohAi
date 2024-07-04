@@ -126,6 +126,12 @@ namespace WindBot.Game.AI
             AddExecutor(ExecutorType.Activate, _CardId.SantaClaws);
         }
 
+        /*public override ClientCard OnSelectAttacker(IList<ClientCard> attackers, IList<ClientCard> defenders)
+        {
+            // Smallest to largest
+            return attackers.OrderBy(x => x.Attack).FirstOrDefault();
+        }*/
+
         /// <summary>
         /// Decide which card should the attacker attack.
         /// </summary>
@@ -700,6 +706,8 @@ namespace WindBot.Game.AI
         /// </summary>
         protected bool DefaultSpellSet()
         {
+            if (Duel.Turn != 1 && Duel.Phase == DuelPhase.Main1)
+                return false;
             return (Card.IsTrap() || Card.HasType(CardType.QuickPlay) || DefaultSpellMustSetFirst()) && Bot.GetSpellCountWithoutField() < 4;
         }
 

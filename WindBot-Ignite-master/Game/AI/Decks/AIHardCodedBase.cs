@@ -408,6 +408,14 @@ namespace WindBot.Game.AI.Decks
                 selected = selected.Take(max).ToList();
             }
 
+            // Add to previousActions
+            foreach (var card in selected)
+            {
+                if (!used.Contains(card.Name))
+                    used.Add(card.Name);
+                previousActionsEnemy.Add(new PreviousAction() { cardId = card.Id, type = ExecutorType.Select, description = hint });
+            }
+
             return selected;
         }
 
@@ -733,6 +741,11 @@ namespace WindBot.Game.AI.Decks
 
 
             return previousActions.Where(x => x.cardId == cardId && x.description == hint && x.type == ExecutorType.Activate).Any();
+        }
+
+        protected bool HasPerformedPreviously(long cardId, ExecutorType action, long option)
+        {
+            return previousActions.Where(x => x.cardId == cardId && x.type == action && x.description == option).Any();
         }
 
         // Returns the card that is currently resolving that you need to resolve

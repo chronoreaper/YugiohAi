@@ -1,12 +1,12 @@
 rowid,GameId,CardId,Played,Quant
 1,1,"Nibiru, the Primal Being",False,3
 2,1,Snake-Eyes Flamberge Dragon,False,1
-3,1,Snake-Eyes Diabellstar,True,1
+3,1,Snake-Eyes Diabellstar,False,1
 4,1,Diabellstar the Black Witch,False,3
-5,1,Ash Blossom & Joyous Spring,True,3
-6,1,Ghost Mourner & Moonlit Chill,True,3
+5,1,Ash Blossom & Joyous Spring,False,3
+6,1,Ghost Mourner & Moonlit Chill,False,3
 7,1,Snake-Eye Oak,False,1
-8,1,Snake-Eye Ash,True,3
+8,1,Snake-Eye Ash,False,3
 9,1,Snake-Eyes Poplar,True,2
 10,1,Droll & Lock Bird,False,3
 11,1,Effect Veiler,False,3
@@ -16,470 +16,513 @@ rowid,GameId,CardId,Played,Quant
 15,1,Original Sinful Spoils - Snake-Eye,False,1
 16,1,Crossout Designator,False,3
 17,1,WANTED: Seeker of Sinful Spoils,False,3
-18,1,Divine Temple of the Snake-Eye,True,1
-19,1,Infinite Impermanence,True,3
+18,1,Divine Temple of the Snake-Eye,False,1
+19,1,Infinite Impermanence,False,3
 20,1,Super Starslayer TY-PHON - Sky Crisis,False,1
 21,1,Underworld Goddess of the Closed World,False,1
-22,1,Salamangreat Raging Phoenix,True,1
+22,1,Salamangreat Raging Phoenix,False,1
 23,1,Worldsea Dragon Zealantis,False,1
 24,1,Accesscode Talker,False,1
 25,1,"Apollousa, Bow of the Goddess",False,1
-26,1,"Promethean Princess, Bestower of Flames",True,1
+26,1,"Promethean Princess, Bestower of Flames",False,1
 27,1,"Selene, Queen of the Master Magicians",False,1
 28,1,Knightmare Phoenix,False,1
 29,1,"Dharc the Dark Charmer, Gloomy",False,1
-30,1,"Hiita the Fire Charmer, Ablaze",True,1
+30,1,"Hiita the Fire Charmer, Ablaze",False,1
 31,1,S:P Little Knight,False,1
 32,1,I:P Masquerena,False,1
 33,1,Link Spider,False,1
 34,1,Relinquished Anima,True,1
-35,2,"Nibiru, the Primal Being",False,3
-36,2,Snake-Eyes Flamberge Dragon,True,1
-37,2,Snake-Eyes Diabellstar,False,1
-38,2,Diabellstar the Black Witch,False,3
+35,2,Tenpai Dragon Paidra,False,3
+36,2,Tenpai Dragon Chundra,True,3
+37,2,Tenpai Dragon Fadra,True,2
+38,2,Kashtira Fenrir,False,2
 39,2,Ash Blossom & Joyous Spring,False,3
-40,2,Ghost Mourner & Moonlit Chill,True,3
-41,2,Snake-Eye Oak,True,1
-42,2,Snake-Eye Ash,True,3
-43,2,Snake-Eyes Poplar,True,2
-44,2,Droll & Lock Bird,True,3
-45,2,Effect Veiler,False,3
-46,2,One for One,True,1
-47,2,Triple Tactics Talent,False,1
-48,2,Bonfire,False,3
-49,2,Original Sinful Spoils - Snake-Eye,False,1
-50,2,Crossout Designator,True,3
-51,2,WANTED: Seeker of Sinful Spoils,False,3
-52,2,Divine Temple of the Snake-Eye,True,1
-53,2,Infinite Impermanence,False,3
-54,2,Super Starslayer TY-PHON - Sky Crisis,False,1
-55,2,Underworld Goddess of the Closed World,False,1
-56,2,Salamangreat Raging Phoenix,True,1
-57,2,Worldsea Dragon Zealantis,False,1
-58,2,Accesscode Talker,True,1
-59,2,"Apollousa, Bow of the Goddess",False,1
-60,2,"Promethean Princess, Bestower of Flames",True,1
-61,2,"Selene, Queen of the Master Magicians",False,1
-62,2,Knightmare Phoenix,False,1
-63,2,"Dharc the Dark Charmer, Gloomy",False,1
-64,2,"Hiita the Fire Charmer, Ablaze",True,1
-65,2,S:P Little Knight,False,1
-66,2,I:P Masquerena,False,1
-67,2,Link Spider,False,1
-68,2,Relinquished Anima,True,1
-69,3,Snake-Eyes Flamberge Dragon,True,1
-70,3,Snake-Eyes Diabellstar,True,1
-71,3,Diabellstar the Black Witch,True,3
-72,3,Snake-Eye Oak,True,1
-73,3,Snake-Eye Ash,True,3
-74,3,Snake-Eyes Poplar,True,2
-75,3,Bonfire,True,3
-76,3,Original Sinful Spoils - Snake-Eye,True,1
-77,3,WANTED: Seeker of Sinful Spoils,True,3
-78,3,Divine Temple of the Snake-Eye,True,1
-79,3,Ash Blossom & Joyous Spring,True,3
-80,3,Ghost Mourner & Moonlit Chill,False,3
-81,3,Effect Veiler,False,3
+40,2,Effect Veiler,False,3
+41,2,Ghost Ogre & Snow Rabbit,False,2
+42,2,Ghost Belle & Haunted Mansion,False,2
+43,2,Ghost Mourner & Moonlit Chill,False,2
+44,2,Bystial Magnamhut,False,1
+45,2,Sangen Kaimen,True,3
+46,2,Sangen Summoning,False,3
+47,2,Pressured Planet Wraitsoth,False,1
+48,2,Terraforming,False,1
+49,2,Pot of Prosperity,False,3
+50,2,Forbidden Droplet,False,3
+51,2,Infinite Impermanence,True,3
+52,2,Sangenpai Transcendent Dragion,False,1
+53,2,Sangenpai Bident Dragion,True,2
+54,2,Trident Dragion,False,1
+55,2,Black Rose Moonlight Dragon,False,1
+56,2,Black Rose Dragon,False,1
+57,2,Ultimaya Tzolkin,False,1
+58,2,Crystal Wing Synchro Dragon,False,1
+59,2,Kuibelt the Blade Dragon,False,1
+60,2,Ancient Fairy Dragon,False,1
+61,2,Hieratic Seal of the Heavenly Spheres,False,1
+62,2,Worldsea Dragon Zealantis,False,1
+63,2,Salamangreat Raging Phoenix,False,1
+64,2,"Promethean Princess, Bestower of Flames",False,1
+65,2,"Hiita the Fire Charmer, Ablaze",False,1
+66,3,Tenpai Dragon Paidra,False,3
+67,3,Tenpai Dragon Chundra,True,3
+68,3,Tenpai Dragon Fadra,True,2
+69,3,Kashtira Fenrir,False,2
+70,3,Ash Blossom & Joyous Spring,False,3
+71,3,Effect Veiler,True,3
+72,3,Ghost Ogre & Snow Rabbit,False,2
+73,3,Ghost Belle & Haunted Mansion,False,2
+74,3,Ghost Mourner & Moonlit Chill,False,2
+75,3,Bystial Magnamhut,True,1
+76,3,Sangen Kaimen,False,3
+77,3,Sangen Summoning,False,3
+78,3,Pressured Planet Wraitsoth,False,1
+79,3,Terraforming,False,1
+80,3,Pot of Prosperity,False,3
+81,3,Forbidden Droplet,True,3
 82,3,Infinite Impermanence,True,3
-83,3,"Nibiru, the Primal Being",False,3
-84,3,Crossout Designator,False,3
-85,3,Anti-Spell Fragrance,False,1
-86,3,Skill Drain,True,3
-87,3,Triple Tactics Talent,False,1
-88,3,Super Starslayer TY-PHON - Sky Crisis,False,1
-89,3,Underworld Goddess of the Closed World,False,1
-90,3,Salamangreat Raging Phoenix,True,1
-91,3,Worldsea Dragon Zealantis,True,1
-92,3,Accesscode Talker,True,1
-93,3,"Apollousa, Bow of the Goddess",True,1
-94,3,"Promethean Princess, Bestower of Flames",True,1
-95,3,"Selene, Queen of the Master Magicians",True,1
-96,3,Knightmare Phoenix,False,1
-97,3,"Dharc the Dark Charmer, Gloomy",True,1
-98,3,"Hiita the Fire Charmer, Ablaze",True,1
-99,3,S:P Little Knight,False,1
-100,3,I:P Masquerena,False,1
-101,3,Link Spider,False,1
-102,3,Relinquished Anima,True,1
-103,4,Snake-Eyes Flamberge Dragon,True,1
-104,4,Snake-Eyes Diabellstar,True,1
-105,4,Diabellstar the Black Witch,True,3
-106,4,Snake-Eye Oak,True,1
-107,4,Snake-Eye Ash,True,3
-108,4,Snake-Eyes Poplar,True,2
-109,4,Bonfire,True,3
-110,4,Original Sinful Spoils - Snake-Eye,True,1
-111,4,WANTED: Seeker of Sinful Spoils,True,3
-112,4,Divine Temple of the Snake-Eye,True,1
-113,4,Ash Blossom & Joyous Spring,True,3
-114,4,Ghost Mourner & Moonlit Chill,False,3
-115,4,Effect Veiler,True,3
-116,4,Infinite Impermanence,True,3
-117,4,"Nibiru, the Primal Being",True,3
-118,4,Crossout Designator,False,3
-119,4,One for One,True,1
-120,4,Triple Tactics Talent,False,3
-121,4,Droll & Lock Bird,False,1
-122,4,Super Starslayer TY-PHON - Sky Crisis,False,1
-123,4,Underworld Goddess of the Closed World,False,1
-124,4,Salamangreat Raging Phoenix,True,1
-125,4,Worldsea Dragon Zealantis,False,1
-126,4,Accesscode Talker,False,1
-127,4,"Apollousa, Bow of the Goddess",False,1
-128,4,"Promethean Princess, Bestower of Flames",True,1
-129,4,"Selene, Queen of the Master Magicians",False,1
-130,4,Knightmare Phoenix,False,1
-131,4,"Dharc the Dark Charmer, Gloomy",True,1
-132,4,"Hiita the Fire Charmer, Ablaze",True,1
-133,4,S:P Little Knight,False,1
-134,4,I:P Masquerena,False,1
-135,4,Link Spider,False,1
-136,4,Relinquished Anima,True,1
-137,5,Snake-Eyes Flamberge Dragon,False,1
-138,5,Snake-Eyes Diabellstar,False,1
-139,5,Diabellstar the Black Witch,False,3
-140,5,Snake-Eye Oak,True,1
-141,5,Snake-Eye Ash,True,3
-142,5,Snake-Eyes Poplar,False,2
-143,5,Bonfire,True,3
-144,5,Original Sinful Spoils - Snake-Eye,False,1
-145,5,WANTED: Seeker of Sinful Spoils,False,3
-146,5,Divine Temple of the Snake-Eye,False,1
-147,5,Ash Blossom & Joyous Spring,False,3
-148,5,Ghost Mourner & Moonlit Chill,False,3
-149,5,Effect Veiler,True,3
-150,5,Infinite Impermanence,True,3
-151,5,"Nibiru, the Primal Being",True,3
-152,5,Crossout Designator,True,3
-153,5,One for One,False,1
-154,5,Triple Tactics Talent,False,3
-155,5,Droll & Lock Bird,False,1
-156,5,Super Starslayer TY-PHON - Sky Crisis,False,1
-157,5,Underworld Goddess of the Closed World,False,1
-158,5,Salamangreat Raging Phoenix,True,1
-159,5,Worldsea Dragon Zealantis,False,1
-160,5,Accesscode Talker,False,1
-161,5,"Apollousa, Bow of the Goddess",False,1
-162,5,"Promethean Princess, Bestower of Flames",True,1
-163,5,"Selene, Queen of the Master Magicians",False,1
-164,5,Knightmare Phoenix,False,1
-165,5,"Dharc the Dark Charmer, Gloomy",False,1
-166,5,"Hiita the Fire Charmer, Ablaze",True,1
-167,5,S:P Little Knight,False,1
-168,5,I:P Masquerena,False,1
-169,5,Link Spider,True,1
-170,5,Relinquished Anima,True,1
-171,6,Snake-Eyes Flamberge Dragon,True,1
-172,6,Snake-Eyes Diabellstar,False,1
-173,6,Diabellstar the Black Witch,True,3
-174,6,Snake-Eye Oak,True,1
-175,6,Snake-Eye Ash,True,3
-176,6,Snake-Eyes Poplar,True,2
-177,6,Bonfire,True,3
-178,6,Original Sinful Spoils - Snake-Eye,True,1
-179,6,WANTED: Seeker of Sinful Spoils,True,3
-180,6,Divine Temple of the Snake-Eye,True,1
-181,6,Ash Blossom & Joyous Spring,True,3
-182,6,Ghost Mourner & Moonlit Chill,False,3
-183,6,Effect Veiler,False,3
-184,6,Infinite Impermanence,False,3
-185,6,"Nibiru, the Primal Being",True,3
-186,6,Crossout Designator,True,3
-187,6,Anti-Spell Fragrance,False,1
-188,6,Skill Drain,False,3
-189,6,Triple Tactics Talent,False,1
-190,6,Super Starslayer TY-PHON - Sky Crisis,False,1
-191,6,Underworld Goddess of the Closed World,False,1
-192,6,Salamangreat Raging Phoenix,True,1
-193,6,Worldsea Dragon Zealantis,True,1
-194,6,Accesscode Talker,True,1
-195,6,"Apollousa, Bow of the Goddess",False,1
-196,6,"Promethean Princess, Bestower of Flames",True,1
-197,6,"Selene, Queen of the Master Magicians",True,1
-198,6,Knightmare Phoenix,False,1
-199,6,"Dharc the Dark Charmer, Gloomy",True,1
-200,6,"Hiita the Fire Charmer, Ablaze",True,1
-201,6,S:P Little Knight,False,1
-202,6,I:P Masquerena,False,1
-203,6,Link Spider,True,1
-204,6,Relinquished Anima,False,1
-205,7,Snake-Eyes Flamberge Dragon,False,1
-206,7,Snake-Eyes Diabellstar,False,1
-207,7,Diabellstar the Black Witch,True,1
-208,7,Snake-Eye Oak,False,1
-209,7,Snake-Eye Ash,True,3
-210,7,Snake-Eyes Poplar,False,2
-211,7,Bonfire,False,3
-212,7,Original Sinful Spoils - Snake-Eye,True,1
-213,7,WANTED: Seeker of Sinful Spoils,True,3
-214,7,Divine Temple of the Snake-Eye,False,1
-215,7,Ash Blossom & Joyous Spring,False,3
+83,3,Sangenpai Transcendent Dragion,False,1
+84,3,Sangenpai Bident Dragion,False,2
+85,3,Trident Dragion,False,1
+86,3,Black Rose Moonlight Dragon,False,1
+87,3,Black Rose Dragon,False,1
+88,3,Ultimaya Tzolkin,False,1
+89,3,Crystal Wing Synchro Dragon,False,1
+90,3,Kuibelt the Blade Dragon,False,1
+91,3,Ancient Fairy Dragon,False,1
+92,3,Hieratic Seal of the Heavenly Spheres,False,1
+93,3,Worldsea Dragon Zealantis,False,1
+94,3,Salamangreat Raging Phoenix,False,1
+95,3,"Promethean Princess, Bestower of Flames",False,1
+96,3,"Hiita the Fire Charmer, Ablaze",True,1
+97,4,Snake-Eyes Flamberge Dragon,True,1
+98,4,Snake-Eyes Diabellstar,False,1
+99,4,Diabellstar the Black Witch,True,1
+100,4,Snake-Eye Oak,True,1
+101,4,Snake-Eye Ash,True,3
+102,4,Snake-Eyes Poplar,False,2
+103,4,Bonfire,False,3
+104,4,Original Sinful Spoils - Snake-Eye,True,1
+105,4,WANTED: Seeker of Sinful Spoils,True,3
+106,4,Divine Temple of the Snake-Eye,False,1
+107,4,Ash Blossom & Joyous Spring,False,3
+108,4,Effect Veiler,False,3
+109,4,Infinite Impermanence,True,3
+110,4,Droll & Lock Bird,False,3
+111,4,Called by the Grave,False,1
+112,4,Anti-Spell Fragrance,False,1
+113,4,Skill Drain,True,3
+114,4,Triple Tactics Talent,True,3
+115,4,Ghost Mourner & Moonlit Chill,True,3
+116,4,"Nibiru, the Primal Being",False,2
+117,4,Super Starslayer TY-PHON - Sky Crisis,False,1
+118,4,Underworld Goddess of the Closed World,False,1
+119,4,Salamangreat Raging Phoenix,False,1
+120,4,Worldsea Dragon Zealantis,False,1
+121,4,Accesscode Talker,False,1
+122,4,"Apollousa, Bow of the Goddess",False,1
+123,4,"Promethean Princess, Bestower of Flames",False,1
+124,4,"Selene, Queen of the Master Magicians",False,1
+125,4,Knightmare Phoenix,False,1
+126,4,"Dharc the Dark Charmer, Gloomy",False,1
+127,4,"Hiita the Fire Charmer, Ablaze",True,1
+128,4,S:P Little Knight,False,1
+129,4,I:P Masquerena,False,1
+130,4,Link Spider,False,1
+131,4,Relinquished Anima,True,1
+132,5,Snake-Eyes Flamberge Dragon,False,1
+133,5,Snake-Eyes Diabellstar,False,1
+134,5,Diabellstar the Black Witch,False,1
+135,5,Snake-Eye Oak,False,1
+136,5,Snake-Eye Ash,True,3
+137,5,Snake-Eyes Poplar,True,2
+138,5,Bonfire,False,3
+139,5,Original Sinful Spoils - Snake-Eye,False,1
+140,5,WANTED: Seeker of Sinful Spoils,False,3
+141,5,Divine Temple of the Snake-Eye,False,1
+142,5,Ash Blossom & Joyous Spring,False,3
+143,5,Effect Veiler,False,3
+144,5,Infinite Impermanence,False,3
+145,5,Droll & Lock Bird,False,3
+146,5,Called by the Grave,False,1
+147,5,Anti-Spell Fragrance,True,1
+148,5,Skill Drain,True,3
+149,5,Triple Tactics Talent,True,3
+150,5,Ghost Mourner & Moonlit Chill,False,3
+151,5,"Nibiru, the Primal Being",False,2
+152,5,Super Starslayer TY-PHON - Sky Crisis,False,1
+153,5,Underworld Goddess of the Closed World,False,1
+154,5,Salamangreat Raging Phoenix,False,1
+155,5,Worldsea Dragon Zealantis,False,1
+156,5,Accesscode Talker,False,1
+157,5,"Apollousa, Bow of the Goddess",False,1
+158,5,"Promethean Princess, Bestower of Flames",False,1
+159,5,"Selene, Queen of the Master Magicians",False,1
+160,5,Knightmare Phoenix,False,1
+161,5,"Dharc the Dark Charmer, Gloomy",False,1
+162,5,"Hiita the Fire Charmer, Ablaze",False,1
+163,5,S:P Little Knight,False,1
+164,5,I:P Masquerena,False,1
+165,5,Link Spider,False,1
+166,5,Relinquished Anima,True,1
+167,6,Tenpai Dragon Paidra,True,3
+168,6,Tenpai Dragon Chundra,True,3
+169,6,Tenpai Dragon Fadra,False,2
+170,6,Kashtira Fenrir,False,2
+171,6,Ash Blossom & Joyous Spring,False,3
+172,6,Effect Veiler,False,3
+173,6,Ghost Ogre & Snow Rabbit,False,2
+174,6,Ghost Belle & Haunted Mansion,False,2
+175,6,Ghost Mourner & Moonlit Chill,False,2
+176,6,Bystial Magnamhut,False,1
+177,6,Sangen Kaimen,False,3
+178,6,Sangen Summoning,True,3
+179,6,Pressured Planet Wraitsoth,True,1
+180,6,Terraforming,True,1
+181,6,Pot of Prosperity,False,3
+182,6,Forbidden Droplet,True,3
+183,6,Infinite Impermanence,True,3
+184,6,Sangenpai Transcendent Dragion,False,1
+185,6,Sangenpai Bident Dragion,False,2
+186,6,Trident Dragion,False,1
+187,6,Black Rose Moonlight Dragon,False,1
+188,6,Black Rose Dragon,False,1
+189,6,Ultimaya Tzolkin,False,1
+190,6,Crystal Wing Synchro Dragon,False,1
+191,6,Kuibelt the Blade Dragon,False,1
+192,6,Ancient Fairy Dragon,False,1
+193,6,Hieratic Seal of the Heavenly Spheres,False,1
+194,6,Worldsea Dragon Zealantis,False,1
+195,6,Salamangreat Raging Phoenix,False,1
+196,6,"Promethean Princess, Bestower of Flames",False,1
+197,6,"Hiita the Fire Charmer, Ablaze",True,1
+198,7,Snake-Eyes Flamberge Dragon,True,1
+199,7,Snake-Eyes Diabellstar,True,1
+200,7,Diabellstar the Black Witch,True,1
+201,7,Snake-Eye Oak,True,1
+202,7,Snake-Eye Ash,True,3
+203,7,Snake-Eyes Poplar,True,2
+204,7,Bonfire,False,3
+205,7,Original Sinful Spoils - Snake-Eye,True,1
+206,7,WANTED: Seeker of Sinful Spoils,True,3
+207,7,Divine Temple of the Snake-Eye,False,1
+208,7,Ash Blossom & Joyous Spring,True,3
+209,7,Effect Veiler,True,3
+210,7,Infinite Impermanence,False,3
+211,7,Droll & Lock Bird,True,3
+212,7,Called by the Grave,False,1
+213,7,Anti-Spell Fragrance,False,1
+214,7,Skill Drain,False,3
+215,7,Triple Tactics Talent,False,3
 216,7,Ghost Mourner & Moonlit Chill,False,3
-217,7,Effect Veiler,False,3
-218,7,Infinite Impermanence,True,3
-219,7,"Nibiru, the Primal Being",True,3
-220,7,Crossout Designator,False,3
-221,7,Anti-Spell Fragrance,False,1
-222,7,Skill Drain,False,3
-223,7,Triple Tactics Talent,True,2
-224,7,One for One,False,1
-225,7,Super Starslayer TY-PHON - Sky Crisis,False,1
-226,7,Underworld Goddess of the Closed World,False,1
-227,7,Salamangreat Raging Phoenix,False,1
-228,7,Worldsea Dragon Zealantis,False,1
-229,7,Accesscode Talker,False,1
-230,7,"Apollousa, Bow of the Goddess",False,1
-231,7,"Promethean Princess, Bestower of Flames",False,1
-232,7,"Selene, Queen of the Master Magicians",False,1
-233,7,Knightmare Phoenix,False,1
-234,7,"Dharc the Dark Charmer, Gloomy",False,1
-235,7,"Hiita the Fire Charmer, Ablaze",True,1
-236,7,S:P Little Knight,False,1
-237,7,I:P Masquerena,False,1
-238,7,Link Spider,False,1
-239,7,Relinquished Anima,False,1
-240,8,Snake-Eyes Flamberge Dragon,True,1
-241,8,Snake-Eyes Diabellstar,False,1
-242,8,Diabellstar the Black Witch,False,1
-243,8,Snake-Eye Oak,True,1
-244,8,Snake-Eye Ash,True,3
-245,8,Snake-Eyes Poplar,True,2
-246,8,Bonfire,False,3
-247,8,Original Sinful Spoils - Snake-Eye,False,1
-248,8,WANTED: Seeker of Sinful Spoils,False,3
-249,8,Divine Temple of the Snake-Eye,True,1
-250,8,Ash Blossom & Joyous Spring,True,3
-251,8,Ghost Mourner & Moonlit Chill,False,3
-252,8,Effect Veiler,True,3
-253,8,Infinite Impermanence,False,3
-254,8,"Nibiru, the Primal Being",False,3
-255,8,Crossout Designator,True,3
-256,8,One for One,True,1
-257,8,Triple Tactics Talent,True,3
-258,8,Anti-Spell Fragrance,False,1
-259,8,Skill Drain,True,2
-260,8,Super Starslayer TY-PHON - Sky Crisis,False,1
-261,8,Underworld Goddess of the Closed World,False,1
-262,8,Salamangreat Raging Phoenix,True,1
-263,8,Worldsea Dragon Zealantis,True,1
-264,8,Accesscode Talker,True,1
-265,8,"Apollousa, Bow of the Goddess",True,1
-266,8,"Promethean Princess, Bestower of Flames",True,1
-267,8,"Selene, Queen of the Master Magicians",True,1
-268,8,Knightmare Phoenix,False,1
-269,8,"Dharc the Dark Charmer, Gloomy",False,1
-270,8,"Hiita the Fire Charmer, Ablaze",True,1
-271,8,S:P Little Knight,False,1
-272,8,I:P Masquerena,False,1
-273,8,Link Spider,False,1
-274,8,Relinquished Anima,False,1
-275,9,Snake-Eyes Flamberge Dragon,False,1
-276,9,Snake-Eyes Diabellstar,False,1
-277,9,Diabellstar the Black Witch,False,1
-278,9,Snake-Eye Oak,False,1
-279,9,Snake-Eye Ash,True,3
-280,9,Snake-Eyes Poplar,False,2
-281,9,Bonfire,True,3
-282,9,Original Sinful Spoils - Snake-Eye,False,1
-283,9,WANTED: Seeker of Sinful Spoils,False,3
-284,9,Divine Temple of the Snake-Eye,False,1
-285,9,Ash Blossom & Joyous Spring,False,3
-286,9,Ghost Mourner & Moonlit Chill,True,3
-287,9,Effect Veiler,True,3
-288,9,Infinite Impermanence,True,3
-289,9,"Nibiru, the Primal Being",True,3
-290,9,Crossout Designator,True,3
-291,9,One for One,False,1
-292,9,Triple Tactics Talent,False,3
-293,9,Anti-Spell Fragrance,False,1
-294,9,Skill Drain,False,2
-295,9,Super Starslayer TY-PHON - Sky Crisis,False,1
-296,9,Underworld Goddess of the Closed World,False,1
-297,9,Salamangreat Raging Phoenix,False,1
-298,9,Worldsea Dragon Zealantis,False,1
-299,9,Accesscode Talker,False,1
-300,9,"Apollousa, Bow of the Goddess",False,1
-301,9,"Promethean Princess, Bestower of Flames",True,1
-302,9,"Selene, Queen of the Master Magicians",False,1
-303,9,Knightmare Phoenix,False,1
-304,9,"Dharc the Dark Charmer, Gloomy",False,1
-305,9,"Hiita the Fire Charmer, Ablaze",True,1
-306,9,S:P Little Knight,False,1
-307,9,I:P Masquerena,False,1
-308,9,Link Spider,False,1
-309,9,Relinquished Anima,False,1
-310,10,Snake-Eyes Flamberge Dragon,True,1
-311,10,Snake-Eyes Diabellstar,False,1
-312,10,Diabellstar the Black Witch,False,1
-313,10,Snake-Eye Oak,True,1
-314,10,Snake-Eye Ash,True,3
-315,10,Snake-Eyes Poplar,True,2
-316,10,Bonfire,True,3
-317,10,Original Sinful Spoils - Snake-Eye,True,1
-318,10,WANTED: Seeker of Sinful Spoils,False,3
-319,10,Divine Temple of the Snake-Eye,True,1
-320,10,Ash Blossom & Joyous Spring,False,3
-321,10,Ghost Mourner & Moonlit Chill,False,3
-322,10,Effect Veiler,False,3
-323,10,Infinite Impermanence,True,3
-324,10,"Nibiru, the Primal Being",False,3
-325,10,Crossout Designator,True,3
-326,10,Anti-Spell Fragrance,False,1
-327,10,Skill Drain,False,3
-328,10,Triple Tactics Talent,False,2
-329,10,One for One,False,1
-330,10,Super Starslayer TY-PHON - Sky Crisis,False,1
-331,10,Underworld Goddess of the Closed World,False,1
-332,10,Salamangreat Raging Phoenix,True,1
-333,10,Worldsea Dragon Zealantis,False,1
-334,10,Accesscode Talker,True,1
-335,10,"Apollousa, Bow of the Goddess",False,1
-336,10,"Promethean Princess, Bestower of Flames",True,1
-337,10,"Selene, Queen of the Master Magicians",True,1
-338,10,Knightmare Phoenix,False,1
-339,10,"Dharc the Dark Charmer, Gloomy",False,1
-340,10,"Hiita the Fire Charmer, Ablaze",True,1
-341,10,S:P Little Knight,True,1
-342,10,I:P Masquerena,False,1
-343,10,Link Spider,True,1
-344,10,Relinquished Anima,True,1
-345,11,Snake-Eyes Flamberge Dragon,False,1
-346,11,Snake-Eyes Diabellstar,True,1
-347,11,Diabellstar the Black Witch,False,1
-348,11,Snake-Eye Oak,True,1
-349,11,Snake-Eye Ash,True,3
-350,11,Snake-Eyes Poplar,True,2
-351,11,Bonfire,True,3
-352,11,Original Sinful Spoils - Snake-Eye,False,1
-353,11,WANTED: Seeker of Sinful Spoils,False,3
-354,11,Divine Temple of the Snake-Eye,True,1
-355,11,Ash Blossom & Joyous Spring,False,3
-356,11,Ghost Mourner & Moonlit Chill,True,3
-357,11,Effect Veiler,False,3
-358,11,Infinite Impermanence,False,3
-359,11,"Nibiru, the Primal Being",False,3
-360,11,Crossout Designator,True,3
-361,11,One for One,False,1
-362,11,Triple Tactics Talent,False,3
-363,11,Anti-Spell Fragrance,False,1
-364,11,Skill Drain,False,2
-365,11,Super Starslayer TY-PHON - Sky Crisis,False,1
-366,11,Underworld Goddess of the Closed World,False,1
-367,11,Salamangreat Raging Phoenix,False,1
-368,11,Worldsea Dragon Zealantis,False,1
-369,11,Accesscode Talker,False,1
-370,11,"Apollousa, Bow of the Goddess",False,1
-371,11,"Promethean Princess, Bestower of Flames",False,1
-372,11,"Selene, Queen of the Master Magicians",False,1
-373,11,Knightmare Phoenix,False,1
-374,11,"Dharc the Dark Charmer, Gloomy",False,1
-375,11,"Hiita the Fire Charmer, Ablaze",True,1
-376,11,S:P Little Knight,False,1
-377,11,I:P Masquerena,False,1
-378,11,Link Spider,False,1
-379,11,Relinquished Anima,False,1
-380,12,Snake-Eyes Flamberge Dragon,True,1
-381,12,Snake-Eyes Diabellstar,True,1
-382,12,Diabellstar the Black Witch,True,1
-383,12,Snake-Eye Oak,True,1
-384,12,Snake-Eye Ash,True,3
-385,12,Snake-Eyes Poplar,True,2
-386,12,Bonfire,True,3
-387,12,Original Sinful Spoils - Snake-Eye,True,1
-388,12,WANTED: Seeker of Sinful Spoils,True,3
-389,12,Divine Temple of the Snake-Eye,True,1
-390,12,Ash Blossom & Joyous Spring,False,3
-391,12,Ghost Mourner & Moonlit Chill,False,3
-392,12,Effect Veiler,False,3
-393,12,Infinite Impermanence,True,3
-394,12,"Nibiru, the Primal Being",False,3
-395,12,Crossout Designator,False,3
-396,12,Anti-Spell Fragrance,True,1
-397,12,Skill Drain,False,3
-398,12,Triple Tactics Talent,False,2
-399,12,One for One,False,1
-400,12,Super Starslayer TY-PHON - Sky Crisis,False,1
-401,12,Underworld Goddess of the Closed World,False,1
-402,12,Salamangreat Raging Phoenix,True,1
-403,12,Worldsea Dragon Zealantis,False,1
-404,12,Accesscode Talker,True,1
-405,12,"Apollousa, Bow of the Goddess",True,1
-406,12,"Promethean Princess, Bestower of Flames",True,1
-407,12,"Selene, Queen of the Master Magicians",True,1
-408,12,Knightmare Phoenix,False,1
-409,12,"Dharc the Dark Charmer, Gloomy",False,1
-410,12,"Hiita the Fire Charmer, Ablaze",True,1
-411,12,S:P Little Knight,False,1
-412,12,I:P Masquerena,False,1
-413,12,Link Spider,False,1
-414,12,Relinquished Anima,True,1
-415,13,Snake-Eyes Flamberge Dragon,False,1
-416,13,Snake-Eyes Diabellstar,True,1
-417,13,Diabellstar the Black Witch,False,1
-418,13,Snake-Eye Oak,True,1
-419,13,Snake-Eye Ash,True,3
-420,13,Snake-Eyes Poplar,False,2
-421,13,Bonfire,True,3
-422,13,Original Sinful Spoils - Snake-Eye,True,1
-423,13,WANTED: Seeker of Sinful Spoils,False,3
-424,13,Divine Temple of the Snake-Eye,True,1
-425,13,Ash Blossom & Joyous Spring,False,3
-426,13,Ghost Mourner & Moonlit Chill,False,3
-427,13,Effect Veiler,False,3
-428,13,Infinite Impermanence,False,3
-429,13,"Nibiru, the Primal Being",False,3
-430,13,Crossout Designator,False,3
-431,13,One for One,True,1
-432,13,Triple Tactics Talent,False,3
-433,13,Anti-Spell Fragrance,False,1
-434,13,Skill Drain,False,2
-435,13,Super Starslayer TY-PHON - Sky Crisis,False,1
-436,13,Underworld Goddess of the Closed World,False,1
-437,13,Salamangreat Raging Phoenix,False,1
-438,13,Worldsea Dragon Zealantis,False,1
-439,13,Accesscode Talker,False,1
-440,13,"Apollousa, Bow of the Goddess",False,1
-441,13,"Promethean Princess, Bestower of Flames",True,1
-442,13,"Selene, Queen of the Master Magicians",False,1
-443,13,Knightmare Phoenix,False,1
-444,13,"Dharc the Dark Charmer, Gloomy",False,1
-445,13,"Hiita the Fire Charmer, Ablaze",True,1
-446,13,S:P Little Knight,True,1
-447,13,I:P Masquerena,False,1
-448,13,Link Spider,False,1
-449,13,Relinquished Anima,True,1
-450,14,Snake-Eyes Flamberge Dragon,False,1
-451,14,Snake-Eyes Diabellstar,False,1
-452,14,Diabellstar the Black Witch,False,1
-453,14,Snake-Eye Oak,True,1
-454,14,Snake-Eye Ash,True,3
-455,14,Snake-Eyes Poplar,False,2
-456,14,Bonfire,False,3
-457,14,Original Sinful Spoils - Snake-Eye,False,1
-458,14,WANTED: Seeker of Sinful Spoils,False,3
-459,14,Divine Temple of the Snake-Eye,False,1
-460,14,Ash Blossom & Joyous Spring,True,3
-461,14,Ghost Mourner & Moonlit Chill,False,3
-462,14,Effect Veiler,True,3
-463,14,Infinite Impermanence,True,3
-464,14,"Nibiru, the Primal Being",False,3
-465,14,Crossout Designator,True,3
-466,14,Anti-Spell Fragrance,False,1
-467,14,Skill Drain,True,3
-468,14,Triple Tactics Talent,False,2
-469,14,One for One,True,1
-470,14,Super Starslayer TY-PHON - Sky Crisis,False,1
-471,14,Underworld Goddess of the Closed World,False,1
-472,14,Salamangreat Raging Phoenix,False,1
-473,14,Worldsea Dragon Zealantis,False,1
-474,14,Accesscode Talker,False,1
-475,14,"Apollousa, Bow of the Goddess",False,1
-476,14,"Promethean Princess, Bestower of Flames",False,1
-477,14,"Selene, Queen of the Master Magicians",False,1
-478,14,Knightmare Phoenix,False,1
-479,14,"Dharc the Dark Charmer, Gloomy",False,1
-480,14,"Hiita the Fire Charmer, Ablaze",False,1
-481,14,S:P Little Knight,False,1
-482,14,I:P Masquerena,False,1
-483,14,Link Spider,False,1
-484,14,Relinquished Anima,False,1
+217,7,"Nibiru, the Primal Being",True,2
+218,7,Super Starslayer TY-PHON - Sky Crisis,False,1
+219,7,Underworld Goddess of the Closed World,False,1
+220,7,Salamangreat Raging Phoenix,True,1
+221,7,Worldsea Dragon Zealantis,False,1
+222,7,Accesscode Talker,False,1
+223,7,"Apollousa, Bow of the Goddess",True,1
+224,7,"Promethean Princess, Bestower of Flames",True,1
+225,7,"Selene, Queen of the Master Magicians",True,1
+226,7,Knightmare Phoenix,False,1
+227,7,"Dharc the Dark Charmer, Gloomy",False,1
+228,7,"Hiita the Fire Charmer, Ablaze",True,1
+229,7,S:P Little Knight,False,1
+230,7,I:P Masquerena,False,1
+231,7,Link Spider,False,1
+232,7,Relinquished Anima,True,1
+233,8,Tenpai Dragon Paidra,True,3
+234,8,Tenpai Dragon Chundra,False,3
+235,8,Tenpai Dragon Fadra,True,2
+236,8,Kashtira Fenrir,False,2
+237,8,Ash Blossom & Joyous Spring,False,3
+238,8,Effect Veiler,True,3
+239,8,Ghost Ogre & Snow Rabbit,True,2
+240,8,Ghost Belle & Haunted Mansion,False,2
+241,8,Ghost Mourner & Moonlit Chill,True,2
+242,8,Bystial Magnamhut,True,1
+243,8,Sangen Kaimen,True,3
+244,8,Sangen Summoning,True,3
+245,8,Pressured Planet Wraitsoth,False,1
+246,8,Terraforming,False,1
+247,8,Pot of Prosperity,True,3
+248,8,Forbidden Droplet,True,3
+249,8,Infinite Impermanence,False,3
+250,8,Sangenpai Transcendent Dragion,True,1
+251,8,Sangenpai Bident Dragion,True,2
+252,8,Trident Dragion,False,1
+253,8,Black Rose Moonlight Dragon,True,1
+254,8,Black Rose Dragon,True,1
+255,8,Ultimaya Tzolkin,True,1
+256,8,Crystal Wing Synchro Dragon,True,1
+257,8,Kuibelt the Blade Dragon,True,1
+258,8,Ancient Fairy Dragon,True,1
+259,8,Hieratic Seal of the Heavenly Spheres,True,1
+260,8,Worldsea Dragon Zealantis,True,1
+261,8,Salamangreat Raging Phoenix,True,1
+262,8,"Promethean Princess, Bestower of Flames",True,1
+263,8,"Hiita the Fire Charmer, Ablaze",True,1
+264,9,Tenpai Dragon Paidra,True,3
+265,9,Tenpai Dragon Chundra,True,3
+266,9,Tenpai Dragon Fadra,False,2
+267,9,Kashtira Fenrir,False,2
+268,9,Ash Blossom & Joyous Spring,False,3
+269,9,Effect Veiler,False,3
+270,9,Ghost Ogre & Snow Rabbit,False,2
+271,9,Ghost Belle & Haunted Mansion,False,2
+272,9,Ghost Mourner & Moonlit Chill,True,2
+273,9,Bystial Magnamhut,False,1
+274,9,Sangen Kaimen,True,3
+275,9,Sangen Summoning,True,3
+276,9,Pressured Planet Wraitsoth,False,1
+277,9,Terraforming,False,1
+278,9,Pot of Prosperity,True,3
+279,9,Forbidden Droplet,True,3
+280,9,Infinite Impermanence,True,3
+281,9,Sangenpai Transcendent Dragion,False,1
+282,9,Sangenpai Bident Dragion,True,2
+283,9,Trident Dragion,False,1
+284,9,Black Rose Moonlight Dragon,False,1
+285,9,Black Rose Dragon,False,1
+286,9,Ultimaya Tzolkin,True,1
+287,9,Crystal Wing Synchro Dragon,True,1
+288,9,Kuibelt the Blade Dragon,False,1
+289,9,Ancient Fairy Dragon,True,1
+290,9,Hieratic Seal of the Heavenly Spheres,False,1
+291,9,Worldsea Dragon Zealantis,False,1
+292,9,Salamangreat Raging Phoenix,False,1
+293,9,"Promethean Princess, Bestower of Flames",False,1
+294,9,"Hiita the Fire Charmer, Ablaze",False,1
+295,10,Snake-Eyes Flamberge Dragon,False,1
+296,10,Snake-Eyes Diabellstar,False,1
+297,10,Diabellstar the Black Witch,False,1
+298,10,Snake-Eye Oak,False,1
+299,10,Snake-Eye Ash,True,3
+300,10,Snake-Eyes Poplar,False,2
+301,10,Bonfire,False,3
+302,10,Original Sinful Spoils - Snake-Eye,False,1
+303,10,WANTED: Seeker of Sinful Spoils,False,3
+304,10,Divine Temple of the Snake-Eye,False,1
+305,10,Ash Blossom & Joyous Spring,False,3
+306,10,Effect Veiler,False,3
+307,10,Infinite Impermanence,False,3
+308,10,Droll & Lock Bird,True,3
+309,10,Called by the Grave,False,1
+310,10,Anti-Spell Fragrance,False,1
+311,10,Skill Drain,True,3
+312,10,Triple Tactics Talent,False,3
+313,10,Ghost Mourner & Moonlit Chill,False,3
+314,10,"Nibiru, the Primal Being",False,2
+315,10,Super Starslayer TY-PHON - Sky Crisis,False,1
+316,10,Underworld Goddess of the Closed World,False,1
+317,10,Salamangreat Raging Phoenix,False,1
+318,10,Worldsea Dragon Zealantis,False,1
+319,10,Accesscode Talker,False,1
+320,10,"Apollousa, Bow of the Goddess",False,1
+321,10,"Promethean Princess, Bestower of Flames",False,1
+322,10,"Selene, Queen of the Master Magicians",False,1
+323,10,Knightmare Phoenix,False,1
+324,10,"Dharc the Dark Charmer, Gloomy",False,1
+325,10,"Hiita the Fire Charmer, Ablaze",False,1
+326,10,S:P Little Knight,False,1
+327,10,I:P Masquerena,False,1
+328,10,Link Spider,False,1
+329,10,Relinquished Anima,False,1
+330,11,Tenpai Dragon Paidra,True,3
+331,11,Tenpai Dragon Chundra,True,3
+332,11,Tenpai Dragon Fadra,True,2
+333,11,Kashtira Fenrir,False,2
+334,11,Ash Blossom & Joyous Spring,True,3
+335,11,Effect Veiler,True,3
+336,11,Ghost Ogre & Snow Rabbit,True,2
+337,11,Ghost Belle & Haunted Mansion,False,2
+338,11,Ghost Mourner & Moonlit Chill,False,2
+339,11,Bystial Magnamhut,False,1
+340,11,Sangen Kaimen,True,3
+341,11,Sangen Summoning,True,3
+342,11,Pressured Planet Wraitsoth,False,1
+343,11,Terraforming,False,1
+344,11,Pot of Prosperity,True,3
+345,11,Forbidden Droplet,True,3
+346,11,Infinite Impermanence,True,3
+347,11,Sangenpai Transcendent Dragion,True,1
+348,11,Sangenpai Bident Dragion,True,2
+349,11,Trident Dragion,True,1
+350,11,Black Rose Moonlight Dragon,True,1
+351,11,Black Rose Dragon,True,1
+352,11,Ultimaya Tzolkin,True,1
+353,11,Crystal Wing Synchro Dragon,True,1
+354,11,Kuibelt the Blade Dragon,True,1
+355,11,Ancient Fairy Dragon,True,1
+356,11,Hieratic Seal of the Heavenly Spheres,True,1
+357,11,Worldsea Dragon Zealantis,True,1
+358,11,Salamangreat Raging Phoenix,True,1
+359,11,"Promethean Princess, Bestower of Flames",True,1
+360,11,"Hiita the Fire Charmer, Ablaze",True,1
+361,12,Snake-Eyes Flamberge Dragon,True,1
+362,12,Snake-Eyes Diabellstar,True,1
+363,12,Diabellstar the Black Witch,False,1
+364,12,Snake-Eye Oak,True,1
+365,12,Snake-Eye Ash,True,3
+366,12,Snake-Eyes Poplar,True,2
+367,12,Bonfire,True,3
+368,12,Original Sinful Spoils - Snake-Eye,True,1
+369,12,WANTED: Seeker of Sinful Spoils,False,3
+370,12,Divine Temple of the Snake-Eye,True,1
+371,12,Ash Blossom & Joyous Spring,False,3
+372,12,Effect Veiler,True,3
+373,12,Infinite Impermanence,True,3
+374,12,Droll & Lock Bird,False,3
+375,12,Called by the Grave,True,1
+376,12,Anti-Spell Fragrance,False,1
+377,12,Skill Drain,False,3
+378,12,Triple Tactics Talent,False,3
+379,12,Ghost Mourner & Moonlit Chill,False,3
+380,12,"Nibiru, the Primal Being",True,2
+381,12,Super Starslayer TY-PHON - Sky Crisis,False,1
+382,12,Underworld Goddess of the Closed World,False,1
+383,12,Salamangreat Raging Phoenix,True,1
+384,12,Worldsea Dragon Zealantis,False,1
+385,12,Accesscode Talker,False,1
+386,12,"Apollousa, Bow of the Goddess",False,1
+387,12,"Promethean Princess, Bestower of Flames",True,1
+388,12,"Selene, Queen of the Master Magicians",False,1
+389,12,Knightmare Phoenix,False,1
+390,12,"Dharc the Dark Charmer, Gloomy",False,1
+391,12,"Hiita the Fire Charmer, Ablaze",True,1
+392,12,S:P Little Knight,False,1
+393,12,I:P Masquerena,False,1
+394,12,Link Spider,False,1
+395,12,Relinquished Anima,True,1
+396,13,Tenpai Dragon Paidra,True,3
+397,13,Tenpai Dragon Chundra,True,3
+398,13,Tenpai Dragon Fadra,False,2
+399,13,Kashtira Fenrir,False,2
+400,13,Ash Blossom & Joyous Spring,True,3
+401,13,Effect Veiler,False,3
+402,13,Ghost Ogre & Snow Rabbit,False,2
+403,13,Ghost Belle & Haunted Mansion,False,2
+404,13,Ghost Mourner & Moonlit Chill,False,2
+405,13,Bystial Magnamhut,False,1
+406,13,Sangen Kaimen,True,3
+407,13,Sangen Summoning,False,3
+408,13,Pressured Planet Wraitsoth,False,1
+409,13,Terraforming,False,1
+410,13,Pot of Prosperity,False,3
+411,13,Forbidden Droplet,False,3
+412,13,Infinite Impermanence,False,3
+413,13,Sangenpai Transcendent Dragion,False,1
+414,13,Sangenpai Bident Dragion,False,2
+415,13,Trident Dragion,False,1
+416,13,Black Rose Moonlight Dragon,False,1
+417,13,Black Rose Dragon,False,1
+418,13,Ultimaya Tzolkin,False,1
+419,13,Crystal Wing Synchro Dragon,False,1
+420,13,Kuibelt the Blade Dragon,False,1
+421,13,Ancient Fairy Dragon,False,1
+422,13,Hieratic Seal of the Heavenly Spheres,False,1
+423,13,Worldsea Dragon Zealantis,False,1
+424,13,Salamangreat Raging Phoenix,False,1
+425,13,"Promethean Princess, Bestower of Flames",False,1
+426,13,"Hiita the Fire Charmer, Ablaze",False,1
+427,14,Snake-Eyes Flamberge Dragon,True,1
+428,14,Snake-Eyes Diabellstar,True,1
+429,14,Diabellstar the Black Witch,True,1
+430,14,Snake-Eye Oak,True,1
+431,14,Snake-Eye Ash,True,3
+432,14,Snake-Eyes Poplar,True,2
+433,14,Bonfire,False,3
+434,14,Original Sinful Spoils - Snake-Eye,True,1
+435,14,WANTED: Seeker of Sinful Spoils,True,3
+436,14,Divine Temple of the Snake-Eye,True,1
+437,14,Ash Blossom & Joyous Spring,True,3
+438,14,Effect Veiler,False,3
+439,14,Infinite Impermanence,True,3
+440,14,Droll & Lock Bird,False,3
+441,14,Called by the Grave,False,1
+442,14,Anti-Spell Fragrance,False,1
+443,14,Skill Drain,False,3
+444,14,Triple Tactics Talent,True,3
+445,14,Ghost Mourner & Moonlit Chill,False,3
+446,14,"Nibiru, the Primal Being",False,2
+447,14,Super Starslayer TY-PHON - Sky Crisis,False,1
+448,14,Underworld Goddess of the Closed World,False,1
+449,14,Salamangreat Raging Phoenix,True,1
+450,14,Worldsea Dragon Zealantis,False,1
+451,14,Accesscode Talker,False,1
+452,14,"Apollousa, Bow of the Goddess",True,1
+453,14,"Promethean Princess, Bestower of Flames",True,1
+454,14,"Selene, Queen of the Master Magicians",True,1
+455,14,Knightmare Phoenix,False,1
+456,14,"Dharc the Dark Charmer, Gloomy",False,1
+457,14,"Hiita the Fire Charmer, Ablaze",True,1
+458,14,S:P Little Knight,False,1
+459,14,I:P Masquerena,True,1
+460,14,Link Spider,False,1
+461,14,Relinquished Anima,False,1
+462,15,Snake-Eyes Flamberge Dragon,True,1
+463,15,Snake-Eyes Diabellstar,True,1
+464,15,Diabellstar the Black Witch,False,1
+465,15,Snake-Eye Oak,True,1
+466,15,Snake-Eye Ash,True,3
+467,15,Snake-Eyes Poplar,True,2
+468,15,Bonfire,False,3
+469,15,Original Sinful Spoils - Snake-Eye,False,1
+470,15,WANTED: Seeker of Sinful Spoils,False,3
+471,15,Divine Temple of the Snake-Eye,True,1
+472,15,Ash Blossom & Joyous Spring,False,3
+473,15,Effect Veiler,False,3
+474,15,Infinite Impermanence,False,3
+475,15,Droll & Lock Bird,True,3
+476,15,Called by the Grave,False,1
+477,15,Anti-Spell Fragrance,False,1
+478,15,Skill Drain,True,3
+479,15,Triple Tactics Talent,False,3
+480,15,Ghost Mourner & Moonlit Chill,False,3
+481,15,"Nibiru, the Primal Being",False,2
+482,15,Super Starslayer TY-PHON - Sky Crisis,False,1
+483,15,Underworld Goddess of the Closed World,False,1
+484,15,Salamangreat Raging Phoenix,True,1
+485,15,Worldsea Dragon Zealantis,True,1
+486,15,Accesscode Talker,True,1
+487,15,"Apollousa, Bow of the Goddess",True,1
+488,15,"Promethean Princess, Bestower of Flames",True,1
+489,15,"Selene, Queen of the Master Magicians",True,1
+490,15,Knightmare Phoenix,False,1
+491,15,"Dharc the Dark Charmer, Gloomy",False,1
+492,15,"Hiita the Fire Charmer, Ablaze",True,1
+493,15,S:P Little Knight,False,1
+494,15,I:P Masquerena,True,1
+495,15,Link Spider,False,1
+496,15,Relinquished Anima,False,1
+497,16,Tenpai Dragon Paidra,False,3
+498,16,Tenpai Dragon Chundra,True,3
+499,16,Tenpai Dragon Fadra,True,2
+500,16,Kashtira Fenrir,False,2
+501,16,Ash Blossom & Joyous Spring,False,3
+502,16,Effect Veiler,False,3
+503,16,Ghost Ogre & Snow Rabbit,False,2
+504,16,Ghost Belle & Haunted Mansion,False,2
+505,16,Ghost Mourner & Moonlit Chill,True,2
+506,16,Bystial Magnamhut,False,1
+507,16,Sangen Kaimen,True,3
+508,16,Sangen Summoning,False,3
+509,16,Pressured Planet Wraitsoth,False,1
+510,16,Terraforming,False,1
+511,16,Pot of Prosperity,True,3
+512,16,Forbidden Droplet,False,3
+513,16,Infinite Impermanence,False,3
+514,16,Sangenpai Transcendent Dragion,False,1
+515,16,Sangenpai Bident Dragion,False,2
+516,16,Trident Dragion,False,1
+517,16,Black Rose Moonlight Dragon,True,1
+518,16,Black Rose Dragon,True,1
+519,16,Ultimaya Tzolkin,True,1
+520,16,Crystal Wing Synchro Dragon,True,1
+521,16,Kuibelt the Blade Dragon,True,1
+522,16,Ancient Fairy Dragon,True,1
+523,16,Hieratic Seal of the Heavenly Spheres,False,1
+524,16,Worldsea Dragon Zealantis,False,1
+525,16,Salamangreat Raging Phoenix,False,1
+526,16,"Promethean Princess, Bestower of Flames",False,1
+527,16,"Hiita the Fire Charmer, Ablaze",False,1

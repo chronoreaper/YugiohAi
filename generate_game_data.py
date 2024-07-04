@@ -30,10 +30,10 @@ import torch
 
 #The Deck name and location	
 AI1Deck = 'SnakeEyes'
-AI2Deck =  'SnakeEyes'
+AI2Deck =  'Tenpai'
 
 deck1 = os.getcwd() +'/decks/AI_SnakeEyes.ydk'
-deck2 = os.getcwd() +'/decks/AI_SnakeEyes.ydk'
+deck2 = os.getcwd() +'/decks/AI_Tenpai.ydk'
 
 reset = False
 totalGames = 3
@@ -265,9 +265,12 @@ def main():
   jobs = []
   pairs = []
 
-  print("running game " + str(0) + ":" + str(0) + "vs" + str(1) + ": Total games " + str(totalGames))
+  name1 = "snakeeyes"
+  name2 = "tenpai"
+
+  print("running game " + str(0) + ":" + str(name1) + "vs" + str(name2) + ": Total games " + str(totalGames))
   port = 7911 + 0
-  p = multiprocessing.Process(target=main_game_runner, args=(pool, totalGames, str(0), str(1), AI1Deck, AI2Deck, deck1, deck2, port))
+  p = multiprocessing.Process(target=main_game_runner, args=(pool, totalGames, str(name1), str(name2), AI1Deck, AI2Deck, deck1, deck2, port))
   #psutil.Process(p.pid).nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
   jobs.append(p)
   p.start()

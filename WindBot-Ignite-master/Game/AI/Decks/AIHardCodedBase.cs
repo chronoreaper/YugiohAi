@@ -141,6 +141,7 @@ namespace WindBot.Game.AI.Decks
 
             // Generic xyz
             public const int TyphonSkyCrisis = 93039339;
+            public const int BeatriceLadyOfEnternal = 27552504
 
 
             // Generic Links
@@ -159,6 +160,9 @@ namespace WindBot.Game.AI.Decks
             public const int Apollusa = 4280259;
             public const int UnderworldGoddess = 98127546;
             public const int HieraticSealsOfSpheres = 24361622;
+            public const int MoonOfTheClosedHeaven = 71818935l
+
+
 
             // Snake Eyes
             public const int SnakeEyeAsh = 9674034;
@@ -190,7 +194,22 @@ namespace WindBot.Game.AI.Decks
             public const int KashtiraFenrir = 32909498;
             public const int PlanetWraithsoth = 71832012;
 
+            // Fiendsmith
+            public const int TheFiendsmith = 60764609;
+            
+            public const int FiendsmithTractus = 98567237;
+            public const int FiendsmithSanctus = 35552985;
 
+            public const int FiendsmithDiesIrae = 82135803;
+            public const int FiendsmithLacrimosa = 46640168;
+
+            public const int FiendsmithRequiem = 02463794;
+            public const int FiendsmithSequentia = 49867899;
+
+
+            // Fabled
+            public const int FabledLurrie = 97651498;
+            
 
             // Bystial
             public const int BystialMagnamhut = 33854624;
@@ -316,6 +335,37 @@ namespace WindBot.Game.AI.Decks
                                         .FirstOrDefault()
                                  );
             }
+
+            #region Fiendsmith Selection
+            if (CardId.TheFiendsmith == currentCard)
+            {
+                if (hint == HintMsg.AddToHand)
+                {
+                    selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.FiendsmithTractus));
+                }
+                // Shuffle into deck
+                if (hint == HintMsg.ShuffleToDeck)
+                    foreach(var id in FiendsmithShuffleToDeck)
+                    {
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == id));
+                    }
+            }
+            else if (CardId.FiendsmithLacrimosa)
+            {
+                if (hint == HintMsg.Special)
+                    selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.TheFiendsmith));
+                                // Shuffle into deck
+                if (hint == HintMsg.ShuffleToDeck)
+                    foreach(var id in FiendsmithShuffleToDeck)
+                    {
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == id));
+                    }
+            }
+            else if (CardId.FiendsmithTractus)
+            {
+                selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.FabledLurrie));
+            }
+            #endregion
 
             #region Random selection
             // Fill in the remaining with defaults
@@ -709,6 +759,45 @@ namespace WindBot.Game.AI.Decks
 
 
         #region Generic Traps
+        #endregion
+
+        #region Fiendsmith
+        
+        public int[] FiendsmithShuffleToDeck = 
+        {
+            CardId.FiendsmithLacrimosa,
+            CardId.FiendsmithDiesIrae,
+            CardId.FiendsmithRequiem,
+            CardId.FiendsmithSequentia,
+            CardId.FabledLurrie,
+            CardId.MoonOfTheClosedHeaven
+        }
+
+        public bool TheFiendsmithActivate()
+        {
+            if (Card.Location == CardLocation.Hand)
+                return true;
+            if (Card.Location == CardLocation.Grave)
+                return true;
+            if (Card.Location == CardLocation.MonsterZone && Enemy.GetMonsterCount() > 0)
+                return true;
+            return false;
+        }
+
+        public bool FiendsmithTractusActivate()
+        {
+            if (Card.Location != CardLocation.Grave)
+                return true;
+            return false;
+        }
+
+        public bool FiendsmithDiesIraeActivate()
+        {
+            return FaceUpEffectNegate()   
+            // TODO add faceup spell trap negate as well
+        }
+
+
         #endregion
 
 

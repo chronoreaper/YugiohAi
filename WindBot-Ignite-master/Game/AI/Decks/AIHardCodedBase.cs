@@ -107,7 +107,9 @@ namespace WindBot.Game.AI.Decks
             public const int DrollnLockBird = 94145021;
             public const int Nibiru = 27204311;
             public const int DimensionShifter = 91800273;
-
+            public const int MultchummyPurulia = 84192580;
+            public const int FantasticalPhantazmay = 78661338;
+            public const int BackJack = 60990740;
 
             // Generic Spells
             public const int Bonfire = 85106525;
@@ -122,12 +124,26 @@ namespace WindBot.Game.AI.Decks
             public const int ForbiddenDroplet = 24299458;
             public const int CosmicCyclone = 8267140;
             public const int HeatWave = 45141013;
+            public const int PotOfExtravagance = 49238328;
+            public const int PotOfDuality = 98645731;
 
             // Generic Traps
             public const int InfiniteImpermanence = 10045474;
             public const int AntiSpellFragrance = 58921041;
             public const int SkillDrain = 82732705;
             public const int DimensionalBarrier = 83326048;
+            public const int IceDragonPrison = 20899496;
+            public const int SimultaneousCannon = 25096909;
+            public const int DarumaCannon = 30748475;
+            public const int GiganticThundercross = 34047456;
+            public const int TorrentialTribute = 53582587;
+            public const int TerrorsOverroot = 63086455;
+            public const int LostWind = 74003290;
+            public const int TrapTrick = 80101899;
+            public const int TerrorsAfterroot = 85698115;
+            public const int CompulsoryEvac = 94192409;
+            public const int TransactionRollback = 06351147;
+            public const int BlackGoat = 49299410;
 
             // Generic Synchro
             public const int BlackRoseMoonlightDragon = 33698022;
@@ -137,11 +153,11 @@ namespace WindBot.Game.AI.Decks
             public const int KuibeltTheBladeDragon = 87837090;
             public const int AncientFairyDragon = 25862681;
 
-
+            // Generic Fusions
 
             // Generic xyz
             public const int TyphonSkyCrisis = 93039339;
-            public const int BeatriceLadyOfEnternal = 27552504
+            public const int BeatriceLadyOfEnternal = 27552504;
 
 
             // Generic Links
@@ -160,7 +176,7 @@ namespace WindBot.Game.AI.Decks
             public const int Apollusa = 4280259;
             public const int UnderworldGoddess = 98127546;
             public const int HieraticSealsOfSpheres = 24361622;
-            public const int MoonOfTheClosedHeaven = 71818935l
+            public const int MoonOfTheClosedHeaven = 71818935l;
 
 
 
@@ -182,6 +198,8 @@ namespace WindBot.Game.AI.Decks
             public const int TenpaiPaidra = 39931513;
             public const int TenpaiChundra = 91810826;
             public const int TenpaiFadra = 65326118;
+            public const int TenpaiGenroku = 23657016;
+            public const int PokiDraco = 08175346;
 
             public const int SangenKaimen = 66730191;
             public const int SangenSummoning = 30336082;
@@ -215,6 +233,38 @@ namespace WindBot.Game.AI.Decks
             public const int BystialMagnamhut = 33854624;
             public const int BystialDruiswurm = 6637331;
             public const int BystialSaronir = 60242223;
+
+
+            // Labrynth
+            public const int LadyLabrnyth = 81497285;
+            public const int LovelyLabrynth = 02347656;
+            public const int AriasLabrnyth = 73602965;
+            public const int ArianePinkLabrynth = 75730490;
+            public const int AriannaGreenLabrynth = 01225009;
+            public const int LabrynthChandraglier = 37629703;
+            public const int LabrynthStovie = 74018812;
+            public const int LabrynthCooClock = 00002511;
+            public const int LabrynthSetup = 69895264;
+            public const int LabrynthLabyrinth = 33407125;
+            public const int WelcomeLabrynth = 05380979;
+            public const int BigWelcomeLabrnyth = 92714517;
+
+            // Dogmatika
+            public const int DogmatikaMaximus = 95679145;
+            public const int DogmatikaEcclesia = 60303688;
+
+            public const int NadirServant = 01984618;
+
+            public const int DogmatikaPunishment = 82956214;
+            
+            // Rescue Ace
+            public const int RACEImpulse = 38339996;
+            public const int RACEFireAttacker = 64612053;
+
+
+            // Yubel
+
+            // Eldlich
         }
 
         public AIHardCodedBase(GameAI ai, Duel duel)

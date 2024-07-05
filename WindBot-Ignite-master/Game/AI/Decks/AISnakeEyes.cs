@@ -35,7 +35,15 @@ namespace WindBot.Game.AI.Decks
 
             // Normal Priority
             AddExecutor(ExecutorType.Activate, CardId.TripleTacticsTalent);
-
+            AddExecutor(ExecutorType.Activate, CardId.TheFiendsmith, TheFiendsmithActivate);
+            AddExecutor(ExecutorType.Activate, CardId.FiendsmithTractus, FiendsmithTractusActivate);
+            AddExecutor(ExecutorType.Activate, CardId.FiendsmithRequiem);
+            AddExecutor(ExecutorType.SpSummon, CardId.FiendsmithRequiem);
+            AddExecutor(ExecutorType.Activate, CardId.FiendsmithSequentia);
+            AddExecutor(ExecutorType.SpSummon, CardId.FiendsmithSequentia);
+            AddExecutor(ExecutorType.Activate, CardId.FiendsmithLacrimosa);
+            AddExecutor(ExecutorType.Activate, CardId.FiendsmithDiesIrae, FiendsmithDiesIraeActivate);
+            
             AddExecutor(ExecutorType.Summon, CardId.SnakeEyeAsh, SnakeEyeAshSummon);
             AddExecutor(ExecutorType.Activate, CardId.SnakeEyeAsh, SnakeEyeAshActivate);
             AddExecutor(ExecutorType.Activate, CardId.SnakeEyeFlamberge, SnakeEyeFlambergeActivate);

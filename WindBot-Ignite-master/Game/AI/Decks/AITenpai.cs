@@ -29,6 +29,10 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.Activate, CardId.TenpaiPaidra, PaidraActivate);
             AddExecutor(ExecutorType.Activate, CardId.TenpaiFadra, FadraActivate);
             AddExecutor(ExecutorType.Activate, CardId.TenpaiChundra, ChundraActivate);
+            AddExecutor(ExecutorType.Summon, CardId.PokiDraco);
+            AddExecutor(ExecutorType.Activate, CardId.PokiDraco, PokiDracoActivate);
+            AddExecutor(ExecutorType.Summon, CardId.TenpaiGenroku);
+            AddExecutor(ExecutorType.Activate, CardId.TenpaiGenroku);
             AddExecutor(ExecutorType.Summon, CardId.TenpaiPaidra);
             AddExecutor(ExecutorType.Summon, CardId.TenpaiFadra);
             AddExecutor(ExecutorType.Summon, CardId.TenpaiChundra);
@@ -125,7 +129,7 @@ namespace WindBot.Game.AI.Decks
                     else // lose
                     {
                         int[] toAdd =
-{
+                        {
 
                         };
                         AddCardsToList(_main, pool, mainCount, toAdd);

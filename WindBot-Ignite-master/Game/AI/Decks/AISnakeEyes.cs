@@ -31,6 +31,7 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.Activate, CardId.Bonfire);
             AddExecutor(ExecutorType.Activate, CardId.SkillDrain);
             AddExecutor(ExecutorType.Activate, CardId.AntiSpellFragrance);
+            AddExecutor(ExecutorType.Activate, CardId.DarkRulerNoMore);
 
             // Normal Priority
             AddExecutor(ExecutorType.Activate, CardId.TripleTacticsTalent);

@@ -110,6 +110,7 @@ namespace WindBot.Game.AI.Decks
             public const int MultchummyPurulia = 84192580;
             public const int FantasticalPhantazmay = 78661338;
             public const int BackJack = 60990740;
+            public const int Kuriphoton = 35112613;
 
             // Generic Spells
             public const int Bonfire = 85106525;
@@ -126,6 +127,7 @@ namespace WindBot.Game.AI.Decks
             public const int HeatWave = 45141013;
             public const int PotOfExtravagance = 49238328;
             public const int PotOfDuality = 98645731;
+            public const int DarkRulerNoMore = 54693926;
 
             // Generic Traps
             public const int InfiniteImpermanence = 10045474;
@@ -144,6 +146,7 @@ namespace WindBot.Game.AI.Decks
             public const int CompulsoryEvac = 94192409;
             public const int TransactionRollback = 06351147;
             public const int BlackGoat = 49299410;
+            public const int RiseToFullHeight = 19254117;
 
             // Generic Synchro
             public const int BlackRoseMoonlightDragon = 33698022;

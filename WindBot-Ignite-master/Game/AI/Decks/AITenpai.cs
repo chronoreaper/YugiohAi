@@ -23,11 +23,13 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.Activate, CardId.DimensionShifter);
 
             // Normal Priority
+            AddExecutor(ExecutorType.Activate, CardId.PlanetWraithsoth);
+            AddExecutor(ExecutorType.Activate, CardId.KashtiraFenrir);
             AddExecutor(ExecutorType.Activate, CardId.PotofProsperity);
             AddExecutor(ExecutorType.Activate, CardId.SangenSummoning, SummoningActivate);
             AddExecutor(ExecutorType.Activate, CardId.SangenKaimen, KaimenActivate);
-            AddExecutor(ExecutorType.Activate, CardId.TenpaiPaidra, PaidraActivate);
             AddExecutor(ExecutorType.Activate, CardId.TenpaiFadra, FadraActivate);
+            AddExecutor(ExecutorType.Activate, CardId.TenpaiPaidra, PaidraActivate);
             AddExecutor(ExecutorType.Activate, CardId.TenpaiChundra, ChundraActivate);
             AddExecutor(ExecutorType.Summon, CardId.PokiDraco);
             AddExecutor(ExecutorType.Activate, CardId.PokiDraco, PokiDracoActivate);
@@ -65,7 +67,6 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.Activate, CardId.SalamangreatRagingPhoenix);
             AddExecutor(ExecutorType.Activate, CardId.PromethianPrincess);
             AddExecutor(ExecutorType.Activate, CardId.HiitaCharmerAblaze);
-            AddExecutor(ExecutorType.Activate, CardId.KashtiraFenrir);
 
 
             AddExecutor(ExecutorType.Activate, CardId.BystialMagnamhut, BystialActivate);
@@ -76,7 +77,7 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.Activate, CardId.CrossoutDesignator, CrossoutActivate);
             AddExecutor(ExecutorType.Activate, CardId.ForbiddenDroplet, DropletActivate);
             AddExecutor(ExecutorType.Activate, CardId.DimensionalBarrier, DefaultDimensionalBarrier);
-            AddExecutor(ExecutorType.Activate, CardId.CrossoutDesignator, CosmicActivate);
+            AddExecutor(ExecutorType.Activate, CardId.CrossoutDesignator, CrossoutActivate);
 
             AddExecutor(ExecutorType.SpellSet, DefaultSpellSet);
 
@@ -170,13 +171,30 @@ namespace WindBot.Game.AI.Decks
             {
                 if (CardId.SangenSummoning == currentCard.Id)
                 {
-                    if (!HasPerformedPreviously(ExecutorType.Summon))
+                    if (hint == HintMsg.AddToHand)
                     {
-                        if (!Bot.HasInHand(CardId.TenpaiPaidra))
-                            selected.Add(_cards.Where(x => x.Id == CardId.TenpaiPaidra).FirstOrDefault());
+                        if (!HasPerformedPreviously(ExecutorType.Summon))
+                        {
+                            if (!Bot.HasInHand(CardId.TenpaiPaidra))
+                                selected.Add(_cards.Where(x => x.Id == CardId.TenpaiPaidra).FirstOrDefault());
+                        }
+                        if (!Bot.HasInHand(CardId.TenpaiChundra))
+                            selected.Add(_cards.Where(x => x.Id == CardId.TenpaiChundra).FirstOrDefault());
+                        if (!Bot.HasInHand(CardId.TenpaiGenroku))
+                            selected.Add(_cards.Where(x => x.Id == CardId.TenpaiGenroku).FirstOrDefault());
                     }
-                    if (!Bot.HasInHand(CardId.TenpaiChundra))
-                        selected.Add(_cards.Where(x => x.Id == CardId.TenpaiChundra).FirstOrDefault());
+                    else
+                    {
+                        int[] dontDiscard =
+                        {
+                            CardId.TenpaiChundra,
+                            CardId.TenpaiPaidra,
+                            CardId.TenpaiGenroku
+                        };
+                        _cards = _cards.OrderBy(x => x.Id == CardId.TenpaiFadra ? 0 : 1).ThenBy(x => dontDiscard.Any(y => x.Id == y) ? 1 : 0).ToArray();
+                    }
+
+
 
 
                     // Field spell gy target
@@ -186,12 +204,23 @@ namespace WindBot.Game.AI.Decks
                 }
                 else if (CardId.SangenKaimen == currentCard.Id)
                 {
+                    if (!Bot.HasInHand(CardId.TenpaiChundra))
+                        selected.Add(_cards.Where(x => x.Id == CardId.TenpaiChundra).FirstOrDefault());
+                    if (!Bot.HasInHand(CardId.TenpaiGenroku))
+                        selected.Add(_cards.Where(x => x.Id == CardId.TenpaiGenroku).FirstOrDefault());
+                    if (!Bot.HasInHand(CardId.TenpaiPaidra))
+                        selected.Add(_cards.Where(x => x.Id == CardId.TenpaiPaidra).FirstOrDefault());
+
+                    selected.Add(_cards.Where(x => x.Id == CardId.TenpaiChundra).FirstOrDefault());
+                    selected.Add(_cards.Where(x => x.Id == CardId.TenpaiFadra).FirstOrDefault());
+                    selected.Add(_cards.Where(x => x.Id == CardId.TenpaiGenroku).FirstOrDefault());
+                    selected.Add(_cards.Where(x => x.Id == CardId.TenpaiPaidra).FirstOrDefault());
 
                 }
                 else if (CardId.TenpaiPaidra == currentCard.Id)
                 {
                     if (hint == HintMsg.SpSummon)
-                        selected.Concat(TenpaiBattlePhaseSynchro(_cards));
+                        selected = selected.Concat(TenpaiBattlePhaseSynchro(_cards)).ToList();
                     // Add to Hand
                     if (!Bot.HasInHand(CardId.SangenKaimen))
                         selected.Add(_cards.Where(x => x.Id == CardId.SangenKaimen).FirstOrDefault());
@@ -201,7 +230,7 @@ namespace WindBot.Game.AI.Decks
                 else if (CardId.TenpaiChundra == currentCard.Id)
                 {
                     if (hint == HintMsg.SpSummon)
-                        selected.Concat(TenpaiBattlePhaseSynchro(_cards));
+                        selected = selected.Concat(TenpaiBattlePhaseSynchro(_cards)).ToList();
                     // Special from deck
                     if (!Bot.HasInHand(CardId.SangenKaimen) && !HasPerformedPreviously(CardId.SangenKaimen))
                         selected.Add(_cards.Where(x => x.Id == CardId.TenpaiPaidra).FirstOrDefault());
@@ -213,18 +242,41 @@ namespace WindBot.Game.AI.Decks
                 else if (CardId.TenpaiFadra == currentCard.Id)
                 {
                     if (hint == HintMsg.SpSummon)
-                        selected.Concat(TenpaiBattlePhaseSynchro(_cards));
+                        selected = selected.Concat(TenpaiBattlePhaseSynchro(_cards)).ToList();
                     // Special from gy
                     if (!Bot.HasInMonstersZone(CardId.TenpaiChundra))
                         selected.Add(_cards.Where(x => x.Id == CardId.TenpaiChundra).FirstOrDefault());
                 }
+                else if (CardId.TenpaiGenroku == currentCard.Id)
+                {
+                    if (!Bot.HasInHand(CardId.SangenKaimen) && !HasPerformedPreviously(CardId.SangenKaimen))
+                        selected.Add(_cards.Where(x => x.Id == CardId.TenpaiPaidra).FirstOrDefault());
+                    if (!Bot.HasInMonstersZone(CardId.TenpaiChundra) && !HasPerformedPreviously(CardId.TenpaiChundra))
+                        selected.Add(_cards.Where(x => x.Id == CardId.TenpaiChundra).FirstOrDefault());
+                    if (!Bot.HasInMonstersZone(CardId.TenpaiFadra) && !HasPerformedPreviously(CardId.TenpaiFadra))
+                        selected.Add(_cards.Where(x => x.Id == CardId.TenpaiFadra).FirstOrDefault());
+                    if (!Bot.HasInMonstersZone(CardId.TenpaiPaidra) && !HasPerformedPreviously(CardId.TenpaiPaidra))
+                        selected.Add(_cards.Where(x => x.Id == CardId.TenpaiPaidra).FirstOrDefault());
+                }
                 else if (CardId.SangenpaiBidentDragion == currentCard.Id)
                 {
-                    selected.Add(_cards.Where(x => x.Id == CardId.TenpaiFadra).FirstOrDefault());
+                    if (hint == HintMsg.SpSummon)
+                    {
+                        selected.Add(_cards.Where(x => x.Id == CardId.TenpaiFadra).FirstOrDefault());
+                        selected.Add(_cards.Where(x => x.Id == CardId.TenpaiChundra).FirstOrDefault());
+                    }
+                    else
+                    {
+                        _cards.OrderBy(x => x.Owner == 0 ? 1 : 0);
+                    }
                 }
                 else if (CardId.SangenpaiTranscendentDragion == currentCard.Id)
                 {
-
+                    if (hint == HintMsg.Destroy)
+                    {
+                        selected.Add(_cards.Where(x => x.Id == CardId.SangenSummoning).FirstOrDefault());
+                        _cards.OrderBy(x => x.Owner == 0 ? 1 : 0).ThenBy(x => x.Location == CardLocation.MonsterZone ? 0 : 1);
+                    }
                 }
                 else if (CardId.TridentDragion == currentCard.Id)
                 {
@@ -275,6 +327,11 @@ namespace WindBot.Game.AI.Decks
                             selected.Add(_cards.Where(x => x.Id == CardId.SangenSummoning).FirstOrDefault());
                     }
                 }
+            }
+            else
+            {
+                if (hint == HintMsg.SpSummon)
+                    selected = selected.Concat(TenpaiBattlePhaseSynchro(_cards)).ToList();
             }
             #endregion
 
@@ -331,6 +388,11 @@ namespace WindBot.Game.AI.Decks
             return base.OnAnnounceCard(avail);
         }
 
+        public override ClientCard OnSelectAttacker(IList<ClientCard> attackers, IList<ClientCard> defenders)
+        {
+            return base.OnSelectAttacker(attackers, defenders);
+        }
+
         /// <summary>
         /// Decide which card should the attacker attack.
         /// </summary>
@@ -344,7 +406,9 @@ namespace WindBot.Game.AI.Decks
                 return willAttack;
 
             // Always attack for now
-            ClientCard toAttack = defenders[0];
+            ClientCard toAttack = null;
+            if (defenders.Count > 0)
+                toAttack = defenders[0];
             return AI.Attack(attacker, toAttack);//toAttack == null if it is a direct attack
 
             //return null;
@@ -374,7 +438,7 @@ namespace WindBot.Game.AI.Decks
         #region Tenpai
         public bool SummoningActivate()
         {
-            if (Bot.GetFieldSpellCard() != null)
+            if (Bot.GetFieldSpellCard() != null && Card.Location == CardLocation.Hand)
                 return false;
             return true;
         }
@@ -382,6 +446,8 @@ namespace WindBot.Game.AI.Decks
         public bool KaimenActivate()
         {
             if (Duel.Phase == DuelPhase.Battle || Duel.Phase == DuelPhase.BattleStart)
+                return true;
+            if (Duel.CurrentChain.Count >= 1 && Util.GetLastChainCard().IsCode(CardId.DrollnLockBird))
                 return true;
             return false;
         }
@@ -419,9 +485,8 @@ namespace WindBot.Game.AI.Decks
                 return false;
 
             // Check if all monsters have attacked
-            if (Bot.GetMonsters().Any(x => !x.Attacked))
+            if (CanAttack())
                 return false;
-
             return true;
         }
 
@@ -474,6 +539,13 @@ namespace WindBot.Game.AI.Decks
             if (Bot.HasInHand(CardId.SangenKaimen))
                 return true;
             return false;
+        }
+
+        public bool PokiDracoActivate()
+        {
+            if (Util.GetOptionFromDesc(ActivateDescription) == 1)
+                return false;
+            return true;
         }
 
         #endregion
@@ -543,16 +615,9 @@ namespace WindBot.Game.AI.Decks
 
         public bool SpheresActivate()
         {
-            int[] targets =
-            {
-                CardId.SnakeEyeFlamberge,
-                CardId.PromethianPrincess,
-                CardId.SalamangreatRagingPhoenix,
-                CardId.AccesscodeTalker,
-                CardId.WorldseadragonZealantis
-            };
-
-            if (Enemy.HasInHandOrInSpellZone(targets))
+            if (Enemy.HasInHandOrInSpellZone(FIELD_TARGETS))
+                return true;
+            if (Duel.ChainTargets.Any(x => x.IsCode(CardId.HieraticSealsOfSpheres)))
                 return true;
 
             return false;
@@ -594,5 +659,24 @@ namespace WindBot.Game.AI.Decks
 
 
         #endregion
+
+        public bool CanAttack()
+        {
+            if (Bot.Deck.Any(x => x.Id == CardId.TenpaiFadra))
+            {
+                var a = 1;
+            }
+            if (!Bot.GetMonsters().Any(x => !x.Attacked))
+                return false;
+            if (Bot.GetMonsters().Any(x => x.Id == CardId.TenpaiFadra && !x.IsDisabled()))
+                return true;
+            if (Bot.GetMonsters().Any(x => x.Id == CardId.TenpaiChundra && !x.IsDisabled()) &&
+               !HasPerformedPreviously(CardId.TenpaiChundra, 2))
+                return true;
+
+            if (Bot.GetMonsters().Any(x => !x.Attacked && Enemy.GetMonsters().Any(y => y.GetDefensePower() <= x.Attack)))
+                return true;
+            return false;
+        }
     }
 }

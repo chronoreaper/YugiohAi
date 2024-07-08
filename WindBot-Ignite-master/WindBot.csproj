@@ -64,6 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CSVReader.cs" />
+    <Compile Include="Game\AI\Decks\AILabrynth.cs" />
     <Compile Include="Game\AI\Decks\AITenpai.cs" />
     <Compile Include="Game\AI\Decks\AISnakeEyes.cs" />
     <Compile Include="Game\AI\Decks\AIHardCodedBase.cs" />
@@ -73,7 +74,7 @@
     <Compile Include="Game\AI\Decks\AIExecutor1.cs" />
     <Compile Include="Game\AI\Decks\AIExecutor2.cs" />
     <Compile Include="Game\AI\Decks\AIExecutorBase.cs" />
-    <Compile Include="Game\AI\Decks\AIMasterExecutor.cs" />
+    <Compile Include="Game\AI\Decks\AIExecutorMaster.cs" />
     <Compile Include="Game\AI\Decks\Util\MLUtil.cs" />
     <Compile Include="Game\AI\Decks\[HealingJAMExecutor].cs" />
     <Compile Include="Game\AI\Decks\[ImaginaryArkExecutor].cs" />

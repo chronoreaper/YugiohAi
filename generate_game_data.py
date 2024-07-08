@@ -36,7 +36,7 @@ deck1 = os.getcwd() +'/decks/AI_SnakeEyes.ydk'
 deck2 = os.getcwd() +'/decks/AI_Tenpai.ydk'
 
 reset = False
-totalGames = 3
+totalGames = 10
 parallelGames = 1
 
 def isrespondingPID(PID):

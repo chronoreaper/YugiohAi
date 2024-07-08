@@ -27,10 +27,13 @@ namespace WindBot.Game.AI.Decks
         protected List<int> seenCards = new List<int>();
 
         // Try and take out dangerous targets
-        public long[] FIELD_TARGETS = {
+        public int[] FIELD_TARGETS = {
             CardId.SnakeEyeFlamberge,
             CardId.PromethianPrincess,
-            CardId.SalamangreatRagingPhoenix
+            CardId.SalamangreatRagingPhoenix,
+            CardId.AccesscodeTalker,
+            CardId.WorldseadragonZealantis,
+            CardId.FiendsmithSequentia
         };
 
         public int[] reactiveEnemyTurn =
@@ -59,7 +62,8 @@ namespace WindBot.Game.AI.Decks
             CardId.AccesscodeTalker,
             CardId.WorldseadragonZealantis,
             CardId.UnderworldGoddess,
-            CardId.Apollusa
+            CardId.Apollusa,
+            CardId.SalamangreatRagingPhoenix
         };
 
         public int[] removeSpellTrap =
@@ -179,7 +183,7 @@ namespace WindBot.Game.AI.Decks
             public const int Apollusa = 4280259;
             public const int UnderworldGoddess = 98127546;
             public const int HieraticSealsOfSpheres = 24361622;
-            public const int MoonOfTheClosedHeaven = 71818935l;
+            public const int MoonOfTheClosedHeaven = 71818935;
 
 
 
@@ -363,60 +367,112 @@ namespace WindBot.Game.AI.Decks
             ClientCard currentCard = GetCurrentCardResolveInChain();
 
             // Default selection
-            if (HintMsg.Target == hint)
+            if (currentCard != null)
             {
-                if (Duel.CurrentChain.Count() >= 2)
+                if (HintMsg.Target == hint)
                 {
-                    if (CardId.InfiniteImpermanence == Card.Id ||
-                        CardId.EffectVeiler == Card.Id ||
-                        CardId.GhostMourner == Card.Id)
-                        selected.Add(_cards.Where(x => x.Id == Duel.CurrentChain[Duel.CurrentChain.Count - 2].Id).FirstOrDefault());
-                }
-                if (CardId.CalledByTheGrave == currentCard.Id)
-                {
-                    selected.Add(_cards.Where(x => x.Controller == 1 && x.Location == CardLocation.Grave && Duel.CurrentChain.Any(y => y.IsCode(x.Id))).FirstOrDefault());
-                }
-                int[] GYBanish =
-                {
+                    if (Duel.CurrentChain.Count() >= 2)
+                    {
+                        if (CardId.InfiniteImpermanence == Card.Id ||
+                            CardId.EffectVeiler == Card.Id ||
+                            CardId.GhostMourner == Card.Id)
+                            selected.Add(_cards.Where(x => x.Id == Duel.CurrentChain[Duel.CurrentChain.Count - 2].Id).FirstOrDefault());
+                    }
+                    if (CardId.CalledByTheGrave == currentCard.Id)
+                    {
+                        selected.Add(_cards.Where(x => x.Controller == 1 && x.Location == CardLocation.Grave && Duel.CurrentChain.Any(y => y.IsCode(x.Id))).FirstOrDefault());
+                    }
+                    int[] GYBanish =
+                    {
                     CardId.BystialMagnamhut,
                     CardId.BystialDruiswurm,
                     CardId.BystialSaronir
                 };
-                if (GYBanish.Any(x => x == currentCard.Id))
-                    selected.Add(_cards.Where(x => x.Location == CardLocation.Grave && x.HasAttribute(CardAttribute.Dark | CardAttribute.Light) && Duel.ChainTargets.Any(y => y.Id == x.Id))
-                                        .OrderBy(x => x.Owner == 1? 0: 1)
-                                        .FirstOrDefault()
-                                 );
-            }
-
-            #region Fiendsmith Selection
-            if (CardId.TheFiendsmith == currentCard)
-            {
-                if (hint == HintMsg.AddToHand)
-                {
-                    selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.FiendsmithTractus));
+                    if (GYBanish.Any(x => x == currentCard.Id))
+                        selected.Add(_cards.Where(x => x.Location == CardLocation.Grave && x.HasAttribute(CardAttribute.Dark | CardAttribute.Light) && Duel.ChainTargets.Any(y => y.Id == x.Id))
+                                            .OrderBy(x => x.Owner == 1 ? 0 : 1)
+                                            .FirstOrDefault()
+                                     );
                 }
-                // Shuffle into deck
-                if (hint == HintMsg.ShuffleToDeck)
-                    foreach(var id in FiendsmithShuffleToDeck)
+                if (CardId.ForbiddenDroplet == currentCard.Id)
+                {
+                    if (hint == HintMsg.ToGrave)
                     {
-                        selected.Add(_cards.FirstOrDefault(x => x.Id == id));
+                        int count = 0;
+                        if (Duel.Player == 1)
+                        {
+                            foreach (int id in protactiveEnemyTurn)
+                               count += Enemy.GetMonsters().Where(x => x.Id == id).Count();
+
+                            foreach (int id in reactiveEnemyTurn)
+                                count += Enemy.GetMonsters().Where(x => x.Id == id).Count();
+
+                        }
+                        else if (Duel.Player == 0)
+                        {
+                            foreach (int id in reactivePlayerTurn)
+                                count += Enemy.GetMonsters().Where(x => x.Id == id).Count();
+                        }
+                        foreach(var card in Duel.CurrentChain)
+                        {
+                            if (!_cards.Any(x => x.Equals(card)))
+                                continue;
+
+                            if (card.Owner == 0 && card.Location == CardLocation.SpellZone)
+                                selected.Add(_cards.Where(x => x.Equals(card)).FirstOrDefault());
+
+                            if (selected.Count >= count)
+                                break;
+                        }
                     }
-            }
-            else if (CardId.FiendsmithLacrimosa)
-            {
-                if (hint == HintMsg.Special)
-                    selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.TheFiendsmith));
-                                // Shuffle into deck
-                if (hint == HintMsg.ShuffleToDeck)
-                    foreach(var id in FiendsmithShuffleToDeck)
+                    else
                     {
-                        selected.Add(_cards.FirstOrDefault(x => x.Id == id));
+                        if (Duel.Player == 1)
+                        {
+                            foreach (int id in protactiveEnemyTurn)
+                                selected.Add(_cards.Where(x => x.Id == id).FirstOrDefault());
+
+                            foreach (int id in reactiveEnemyTurn)
+                                selected.Add(_cards.Where(x => x.Id == id).FirstOrDefault());
+
+                        }
+                        else if (Duel.Player == 0)
+                        {
+                            foreach (int id in reactivePlayerTurn)
+                                selected.Add(_cards.Where(x => x.Id == id).FirstOrDefault());
+                        }
                     }
-            }
-            else if (CardId.FiendsmithTractus)
-            {
-                selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.FabledLurrie));
+                }
+
+                #region Fiendsmith Selection
+                if (CardId.TheFiendsmith == currentCard.Id)
+                {
+                    if (hint == HintMsg.AddToHand)
+                    {
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.FiendsmithTractus));
+                    }
+                    // Shuffle into deck
+                    if (hint == HintMsg.ToDeck)
+                        foreach (var id in FiendsmithShuffleToDeck)
+                        {
+                            selected.Add(_cards.FirstOrDefault(x => x.Id == id));
+                        }
+                }
+                else if (CardId.FiendsmithLacrimosa == currentCard.Id)
+                {
+                    if (hint == HintMsg.SpSummon)
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.TheFiendsmith));
+                    // Shuffle into deck
+                    if (hint == HintMsg.ToDeck)
+                        foreach (var id in FiendsmithShuffleToDeck)
+                        {
+                            selected.Add(_cards.FirstOrDefault(x => x.Id == id));
+                        }
+                }
+                else if (CardId.FiendsmithTractus == currentCard.Id)
+                {
+                    selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.FabledLurrie));
+                }
             }
             #endregion
 
@@ -516,7 +572,7 @@ namespace WindBot.Game.AI.Decks
             {
                 if (!used.Contains(card.Name))
                     used.Add(card.Name);
-                previousActionsEnemy.Add(new PreviousAction() { cardId = card.Id, type = ExecutorType.Select, description = hint });
+                previousActions.Add(new PreviousAction() { cardId = card.Id, type = ExecutorType.Select, description = hint });
             }
 
             return selected;
@@ -577,9 +633,18 @@ namespace WindBot.Game.AI.Decks
 
                 if (CardId.TripleTacticsTalent == cardId)
                 {
-                    // Draw 2
-                    if (option == 0)
+                    if (Duel.Turn > 1)
+                    {
+                        if (option == 1)
+                            return index; // steal
+                    }
+                    else if (option == 0) // Draw 2
                         return index;
+                }
+                else if (CardId.FiendsmithLacrimosa == cardId)
+                {
+                    // special summon = 1, add to hand = 0
+                    return 1;
                 }
                 index++;
             }
@@ -815,8 +880,8 @@ namespace WindBot.Game.AI.Decks
         #endregion
 
         #region Fiendsmith
-        
-        public int[] FiendsmithShuffleToDeck = 
+
+        public int[] FiendsmithShuffleToDeck =
         {
             CardId.FiendsmithLacrimosa,
             CardId.FiendsmithDiesIrae,
@@ -824,7 +889,7 @@ namespace WindBot.Game.AI.Decks
             CardId.FiendsmithSequentia,
             CardId.FabledLurrie,
             CardId.MoonOfTheClosedHeaven
-        }
+        };
 
         public bool TheFiendsmithActivate()
         {
@@ -846,8 +911,49 @@ namespace WindBot.Game.AI.Decks
 
         public bool FiendsmithDiesIraeActivate()
         {
-            return FaceUpEffectNegate()   
+            return FaceUpEffectNegate();
             // TODO add faceup spell trap negate as well
+        }
+
+        public bool FiendsmithRequiemActivate()
+        {
+            var option = Util.GetOptionFromDesc(ActivateDescription);
+            // Only equip from gy
+            if (option == 1 && Card.Location != CardLocation.Grave)
+                return false;
+            return true;
+        }
+
+        public bool FiendsmithSequentiaActivate()
+        {
+            var option = Util.GetOptionFromDesc(ActivateDescription);
+            // Only equip from gy
+            if (option == 1 && Card.Location != CardLocation.Grave)
+                return false;
+            return true;
+        }
+
+        public bool FiendsmithSequentiaSummon()
+        {
+            if (Bot.GetLinkMaterialWorth(dontUseAsMaterial) < 2)
+                return false;
+            if (HasPerformedPreviously(CardId.FiendsmithSequentia))
+                return false;
+            return true;
+        }
+
+        public bool FiendSmithRequiemSummon()
+        {
+            int[] dontuse =
+            {
+                CardId.FiendsmithDiesIrae,
+                CardId.FiendsmithLacrimosa
+            };
+            if (Bot.GetLinkMaterialWorth(dontUseAsMaterial.Concat(dontuse).ToArray()) < 1)
+                return false;
+            if (HasPerformedPreviously(CardId.FiendsmithRequiem))
+                return false;
+            return true;
         }
 
 

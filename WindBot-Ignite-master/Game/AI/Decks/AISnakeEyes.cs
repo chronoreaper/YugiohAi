@@ -23,6 +23,15 @@ namespace WindBot.Game.AI.Decks
                 CardId.SnakeEyeAsh
          };
 
+        int[] SNAKE_EYES_STARTER =
+{
+                CardId.SnakeEyeAsh,
+                CardId.DiabellstarBlackWitch,
+                CardId.WANTEDSinfulSpoils,
+                CardId.OriginalSinfulSpoilsSnakeEyes,
+                CardId.SnakeEyePoplar
+        };
+
         public AISnakeEyes(GameAI ai, Duel duel)
             : base(ai, duel)
         {
@@ -35,15 +44,18 @@ namespace WindBot.Game.AI.Decks
 
             // Normal Priority
             AddExecutor(ExecutorType.Activate, CardId.TripleTacticsTalent);
+            AddExecutor(ExecutorType.Activate, CardId.FiendsmithSequentia, FiendsmithSequentiaActivate);
             AddExecutor(ExecutorType.Activate, CardId.TheFiendsmith, TheFiendsmithActivate);
             AddExecutor(ExecutorType.Activate, CardId.FiendsmithTractus, FiendsmithTractusActivate);
-            AddExecutor(ExecutorType.Activate, CardId.FiendsmithRequiem);
-            AddExecutor(ExecutorType.SpSummon, CardId.FiendsmithRequiem);
-            AddExecutor(ExecutorType.Activate, CardId.FiendsmithSequentia);
-            AddExecutor(ExecutorType.SpSummon, CardId.FiendsmithSequentia);
+            AddExecutor(ExecutorType.Activate, CardId.BeatriceLadyOfEnternal);
+
+            AddExecutor(ExecutorType.SpSummon, CardId.BeatriceLadyOfEnternal);
+            AddExecutor(ExecutorType.SpSummon, CardId.FiendsmithRequiem, FiendSmithRequiemSummon);
+            AddExecutor(ExecutorType.SpSummon, CardId.FiendsmithSequentia, FiendsmithSequentiaSummon);
             AddExecutor(ExecutorType.Activate, CardId.FiendsmithLacrimosa);
             AddExecutor(ExecutorType.Activate, CardId.FiendsmithDiesIrae, FiendsmithDiesIraeActivate);
-            
+            AddExecutor(ExecutorType.Activate, CardId.FiendsmithRequiem, FiendsmithRequiemActivate);
+
             AddExecutor(ExecutorType.Summon, CardId.SnakeEyeAsh, SnakeEyeAshSummon);
             AddExecutor(ExecutorType.Activate, CardId.SnakeEyeAsh, SnakeEyeAshActivate);
             AddExecutor(ExecutorType.Activate, CardId.SnakeEyeFlamberge, SnakeEyeFlambergeActivate);
@@ -100,6 +112,7 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.SpellSet, DefaultSpellSet);
 
             AddExecutor(ExecutorType.Repos, DefaultMonsterRepos);
+            AddExecutor(ExecutorType.GoToBattlePhase);
         }
 
 
@@ -302,6 +315,18 @@ namespace WindBot.Game.AI.Decks
             IList<ClientCard> selected = new List<ClientCard>();
 
             #region AI Selected
+            if (currentCard != null)
+            {
+                if (CardId.DivineTempleSnakeEyes == currentCard.Id)
+                {
+                    if (hint == HintMsg.SpSummon)
+                    {
+                        selected.Add(_cards.Where(x => x.Id == CardId.IPMasquerena).FirstOrDefault());
+                        selected.Add(_cards.Where(x => x.Id == CardId.PromethianPrincess).FirstOrDefault());
+                        selected.Add(_cards.Where(x => x.Id == CardId.SnakeEyeFlamberge).FirstOrDefault());
+                    }
+                }
+            }
             if (hint == HintMsg.AddToHand)
             {
                 if (_cards.ContainsCardWithId(CardId.SnakeEyeAsh) && !HasPerformedPreviously(CardId.SnakeEyeAsh, ExecutorType.Summon))
@@ -329,8 +354,9 @@ namespace WindBot.Game.AI.Decks
                     if (_cards.ContainsCardWithId(id))
                         selected.Add(_cards.Where(x => x.Id == id && x.Location == CardLocation.SpellZone).FirstOrDefault());
 
-                // Send from hand first
+                // Send from spell zone then hand first
                 _cards = _cards
+                    .OrderBy(x => x.Location == CardLocation.SpellZone ? 0 : 1)
                     .OrderBy(x => x.Location == CardLocation.Hand ? 0 : 1)
                     .ThenBy(x => x.Id == CardId.DiabellstarBlackWitch ? 0 : 1)
                     .ThenBy(x => x.Id == CardId.SnakeEyeAsh ? 0 : 1)
@@ -340,8 +366,7 @@ namespace WindBot.Game.AI.Decks
             else if (hint == HintMsg.SpSummon) // From anywhere
             {
                 // Summon flamberge from gy first
-                if (_cards.Where(x => x.Id == CardId.SnakeEyeFlamberge && x.Location == CardLocation.Grave).Any())
-                    selected.Add(_cards.Where(x => x.Id == CardId.SnakeEyeFlamberge).First());
+                 selected.Add(_cards.Where(x => x.Id == CardId.SnakeEyeFlamberge && x.Location == CardLocation.Grave).FirstOrDefault());
 
                 if (_cards.Where(x => x.Id == CardId.SnakeEyeOak && x.Location == CardLocation.Deck).Any() && !Bot.HasInSpellZone(CardId.OriginalSinfulSpoilsSnakeEyes))
                     selected.Add(_cards.Where(x => x.Id == CardId.SnakeEyeOak && x.Location == CardLocation.Deck).FirstOrDefault());
@@ -355,10 +380,10 @@ namespace WindBot.Game.AI.Decks
 
                 // Summon ash off flamberge first
                 if (_cards.ContainsCardWithId(CardId.SnakeEyeAsh))
-                    selected.Add(_cards.Where(x => x.Id == CardId.SnakeEyeAsh).First());
+                    selected.Add(_cards.Where(x => x.Id == CardId.SnakeEyeAsh).FirstOrDefault());
 
                 if (_cards.ContainsCardWithId(CardId.SnakeEyeOak))
-                    selected.Add(_cards.Where(x => x.Id == CardId.SnakeEyeOak).First());
+                    selected.Add(_cards.Where(x => x.Id == CardId.SnakeEyeOak).FirstOrDefault());
             }
             else if (hint == HintMsg.Target)
             {
@@ -430,6 +455,46 @@ namespace WindBot.Game.AI.Decks
                 {
                     selected.Add(_cards.Where(x => x.Id == CardId.AntiSpellFragrance).FirstOrDefault());
                     selected.Add(_cards.Where(x => x.Id == CardId.DivineTempleSnakeEyes).FirstOrDefault());
+                }
+                else if (CardId.BeatriceLadyOfEnternal == currentCard.Id)
+                {
+                    if (GetEnemyDeckType() == Archetypes.Tenpai)
+                        selected.Add(_cards.Where(x => x.Id == CardId.RiseToFullHeight).FirstOrDefault());
+                    if (!HasCombo())
+                        selected.Add(_cards.Where(x => x.Id == CardId.SnakeEyeAsh).FirstOrDefault());
+                    selected.Add(_cards.Where(x => x.Id == CardId.BlackGoat).FirstOrDefault());
+                }
+                else if (CardId.FiendsmithSequentia == currentCard.Id)
+                {
+                    if (hint == HintMsg.FusionMaterial)
+                    {
+                        IList<ClientCard> highPriority = new List<ClientCard>();
+                        IList<ClientCard> lowPriority = new List<ClientCard>();
+
+                        int[] highList =
+                        {
+                        };
+                        int[] lowList =
+                        {
+                            CardId.TheFiendsmith,
+                        };
+
+                        _cards = _cards
+                            .OrderBy(x => highList.Contains(x.Id) ? 0 : 1)
+                            .ThenBy(x => x.HasType(CardType.Link) ? -x.LinkCount : 0) // Use the highest link monster first
+                            .ThenBy(x => lowList.Contains(x.Id) ? 1 : 0)
+                            .ToList();
+
+                        // Stop selecting if using low priorty cards
+                        if (materialSelected > 0 && cancelable && _cards.Where(x => lowList.Contains(x.Id)).Count() == _cards.Count())
+                            return null;
+
+                        materialSelected += 1;
+                    }
+                    else if (hint == HintMsg.SpSummon)
+                    {
+                        selected.Add(_cards.Where(x => x.Id == CardId.FiendsmithLacrimosa).FirstOrDefault());
+                    }
                 }
             }
             else if (hint == HintMsg.LinkMaterial)
@@ -538,6 +603,8 @@ namespace WindBot.Game.AI.Decks
 
         public bool PromethianPrincessSummon()
         {
+            if (!Bot.GetMonsters().Any(x => x.HasAttribute(CardAttribute.Fire)) && !Bot.GetGraveyardMonsters().Any(x => x.HasAttribute(CardAttribute.Fire)))
+                return false;
             if (Duel.Turn == 1)
             {
                 if (Bot.HasInGraveyard(CardId.DiabellstarBlackWitch) && Bot.GetLinkMaterialWorth() >= 5)
@@ -545,6 +612,8 @@ namespace WindBot.Game.AI.Decks
                 if (Bot.GetLinkMaterialWorth() >= 4)
                     return true;
                 if (Bot.GetLinkMaterialWorth() == 3 && Bot.GetMonsterCount() == 2)
+                    return true;
+                if (Bot.HasInGraveyard(CardId.SnakeEyeAsh) && !HasPerformedPreviously(CardId.SnakeEyeAsh))
                     return true;
 
                 return false;
@@ -802,6 +871,9 @@ namespace WindBot.Game.AI.Decks
             if (Bot.GetMonsterCount() >= 3 && Bot.GetMonsters().Where(x => x.Level == 1 && x.HasAttribute(CardAttribute.Fire)).Count() >= 2)
                 return true;
 
+            if (Bot.GetMonsterCount() == 2 && Bot.HasInMonstersZone(CardId.RelinquishdAnima))
+                return true;
+
             return false;
         }
 
@@ -871,5 +943,9 @@ namespace WindBot.Game.AI.Decks
 
         #endregion
 
+        public bool HasCombo()
+        {
+            return (SNAKE_EYES_STARTER.Any(x => Bot.HasInHandOrInSpellZone(x) && !HasPerformedPreviously(x)));
+        }
     }
 }

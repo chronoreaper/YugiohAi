@@ -40,6 +40,15 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.Activate, CardId.BackJack, BackJackActivate);
             AddExecutor(ExecutorType.Activate, CardId.DarumaCannon);
             AddExecutor(ExecutorType.Activate, CardId.TrapTrick);
+
+            AddExecutor(ExecutorType.SpSummon, CardId.ChaosAngel, ChaosAngelSpecial);
+            AddExecutor(ExecutorType.Activate, CardId.ChaosAngel);
+            
+            AddExecutor(ExecutorType.SpSummon, CardId.Muckracker, MuckrackerSpecial);
+            AddExecutor(ExecutorType.Activate, CardId.Muckracker);
+
+            AddExecutor(ExecutorType.SpSummon, CardId.TyphonSkyCrisis, TyphonSummon);
+            AddExecutor(ExecutorType.Activate, CardId.TyphonSkyCrisis, TyphonActivate);
             // Low Priority
 
             // Reactive

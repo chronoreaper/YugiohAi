@@ -132,6 +132,7 @@ namespace WindBot.Game.AI.Decks
             public const int PotOfExtravagance = 49238328;
             public const int PotOfDuality = 98645731;
             public const int DarkRulerNoMore = 54693926;
+            public const int SuperPoly = 48130397;
 
             // Generic Traps
             public const int InfiniteImpermanence = 10045474;
@@ -159,13 +160,18 @@ namespace WindBot.Game.AI.Decks
             public const int CrystalWingSynchroDragon = 50954680;
             public const int KuibeltTheBladeDragon = 87837090;
             public const int AncientFairyDragon = 25862681;
-
+            public const int ChaosAngel = 22850702;
+            public const int GoldenBeastMalong = 93125329;
+            public const int EnigmasterPackbit = 72444406;
             // Generic Fusions
-
+            public const int Garura = 11765832;
+            public const int MudragonSwamp = 54757758;
+            public const int ElderEntityNtss = 80532587;
             // Generic xyz
             public const int TyphonSkyCrisis = 93039339;
             public const int BeatriceLadyOfEnternal = 27552504;
-
+            public const int Bagooska = 90590303;
+            public const int ExcitonKnight = 46772449;
 
             // Generic Links
             public const int RelinquishdAnima = 94259633;
@@ -184,8 +190,12 @@ namespace WindBot.Game.AI.Decks
             public const int UnderworldGoddess = 98127546;
             public const int HieraticSealsOfSpheres = 24361622;
             public const int MoonOfTheClosedHeaven = 71818935;
+            public const int Muckracker = 71607202;
 
 
+            // Chimera
+            public const int BerfometKingPhantomBeast = 69601012;
+            public const int ChimeraKingPhantomBeast = 01269875;
 
             // Snake Eyes
             public const int SnakeEyeAsh = 9674034;
@@ -270,8 +280,37 @@ namespace WindBot.Game.AI.Decks
 
 
             // Yubel
+            public const int Yubel = 78371393;
+            public const int Yubel12 = 31764700;
+            public const int Yubel11 = 04779091;
+            public const int SpiritOfYubel = 90829280;
+            public const int SamsaraDLotus = 62318994;
 
-            // Eldlich
+            public const int NightmarePain = 65261141;
+            public const int MatureChronicle = 92670749;
+            public const int NightmareThrone = 93729896;
+
+            public const int EternalFavourite = 87532344;
+
+            public const int YubelLovingDefender = 4717959;
+            public const int PhantomOfYubel = 80453041;
+            // Sacred Beast
+            public const int DarkBeckoningBeast = 81034083;
+            public const int ChaosSummoningBeast = 27439792;
+            public const int OpeningOfTheSpritGates = 80312545;
+
+            // Unchained
+            public const int UnchainedSoulSharvara = 41165831;
+
+            public const int EscapeOfUnchained = 53417695;
+            public const int ChamberOfUnchained = 80801743;
+
+            public const int UnchainedSoulRage = 67680512;
+            public const int UnchainedSoulAnguish = 93084621;
+            public const int UnchainedSoulAbomination = 29479256;
+            public const int UnchainedSoulYama = 24269961;
+
+            // Branded
         }
 
         public AIHardCodedBase(GameAI ai, Duel duel)

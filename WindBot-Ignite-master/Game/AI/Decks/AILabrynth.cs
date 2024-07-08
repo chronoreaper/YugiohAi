@@ -21,7 +21,25 @@ namespace WindBot.Game.AI.Decks
            
 
             // Normal Priority
-            
+            AddExecutor(ExecutorType.Summon, CardId.ArianePinkLabrynth);
+            AddExecutor(ExecutorType.Summon, CardId.AriannaGreenLabrynth);
+            AddExecutor(ExecutorType.Activate, CardId.AriannaGreenLabrynth, GreenActivate);
+            AddExecutor(ExecutorType.Activate, CardId.ArianePinkLabrynth);
+            AddExecutor(ExecutorType.Activate, CardId.LabrynthChandraglier, FurnatureActivate);
+            AddExecutor(ExecutorType.Activate, CardId.LabrynthStovie, FurnatureActivate);
+            AddExecutor(ExecutorType.Activate, CardId.LabrynthCooClock, ClockActivate);
+            AddExecutor(ExecutorType.Activate, CardId.LovelyLabrynth, LovelyActivate);
+            AddExecutor(ExecutorType.Activate, CardId.LadyLabrnyth, LadyActivate);
+            AddExecutor(ExecutorType.Activate, CardId.BigWelcomeLabrnyth, BigWelcomeActivate);
+            AddExecutor(ExecutorType.Activate, CardId.WelcomeLabrynth, WelcomeActivate);
+            AddExecutor(ExecutorType.SpellSet, CardId.BigWelcomeLabrnyth);
+            AddExecutor(ExecutorType.SpellSet, CardId.WelcomeLabrynth);
+            AddExecutor(ExecutorType.Activate, CardId.LabrynthLabyrinth);
+            AddExecutor(ExecutorType.Activate, CardId.LabrynthSetup, SetupActivate);
+            AddExecutor(ExecutorType.Summon, CardId.BackJack);
+            AddExecutor(ExecutorType.Activate, CardId.BackJack, BackJackActivate);
+            AddExecutor(ExecutorType.Activate, CardId.DarumaCannon);
+            AddExecutor(ExecutorType.Activate, CardId.TrapTrick);
             // Low Priority
 
             // Reactive

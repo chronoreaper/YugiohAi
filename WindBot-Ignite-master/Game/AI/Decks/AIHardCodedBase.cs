@@ -90,7 +90,9 @@ namespace WindBot.Game.AI.Decks
             Labrynth,
             Branded,
             Tenpai,
-            Yubel
+            Yubel,
+            VoicelessVoice,
+            Runick
         }
 
         public class PreviousAction
@@ -115,6 +117,8 @@ namespace WindBot.Game.AI.Decks
             public const int FantasticalPhantazmay = 78661338;
             public const int BackJack = 60990740;
             public const int Kuriphoton = 35112613;
+            public const int LordOfHeavelyPrison = 09822220;
+            public const int LavaGolemn = 00102380;
 
             // Generic Spells
             public const int Bonfire = 85106525;
@@ -133,6 +137,9 @@ namespace WindBot.Game.AI.Decks
             public const int PotOfDuality = 98645731;
             public const int DarkRulerNoMore = 54693926;
             public const int SuperPoly = 48130397;
+            public const int InstantFusion = 01845204;
+            public const int UpstartGoblin = 70368879;
+            public const int ChickenGame = 67616300;
 
             // Generic Traps
             public const int InfiniteImpermanence = 10045474;
@@ -152,6 +159,15 @@ namespace WindBot.Game.AI.Decks
             public const int TransactionRollback = 06351147;
             public const int BlackGoat = 49299410;
             public const int RiseToFullHeight = 19254117;
+            public const int RivalyOfWarlords = 90846359;
+            public const int DifferentDimensionGround = 3184916;
+            public const int EradicatorVirus = 5474237;
+            public const int ThereCanBeOnlyOne = 24207889;
+            public const int GozenMatch = 53334471;
+            public const int SynchroZone = 60306277;
+            public const int EvenlyMatched = 1569423;
+            public const int SolemnJudgment = 41420027;
+            public const int GraveOfTheSuperAncient = 83266092;
 
             // Generic Synchro
             public const int BlackRoseMoonlightDragon = 33698022;
@@ -310,7 +326,33 @@ namespace WindBot.Game.AI.Decks
             public const int UnchainedSoulAbomination = 29479256;
             public const int UnchainedSoulYama = 24269961;
 
+            // Tribrigade
+            public const int TriBrigadeBucephalus = 10019086;
+
             // Branded
+
+            // Runick
+            public const int RunickGoldenDroplet = 20618850;
+            public const int RunickFreezingCurse = 30430448;
+            public const int RunickTip = 31562086;
+            public const int RunickDispelling = 66712905;
+            public const int RunickSlumber = 67835547;
+            public const int RunickFlashingFire = 68957034;
+            public const int RunickSmitingStorm = 93229151;
+            public const int RunickDestruction = 94445733;
+            public const int RunickFountain = 92107604;
+
+            public const int SleipnirRunick = 74659582;
+            public const int FrekiRunick = 47219274;
+            public const int MuninRunick = 92385016;
+            public const int HuginRunick = 55990317;
+
+            public const int CardScanner = 77066768;
+            public const int DrawMuscle = 41367003;
+            // Stun
+            public const int MajestyFiend = 33746252;
+            public const int AmanoIwato = 32181268;
+
         }
 
         public AIHardCodedBase(GameAI ai, Duel duel)

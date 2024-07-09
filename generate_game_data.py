@@ -32,8 +32,8 @@ import torch
 AI1Deck = 'SnakeEyes'
 AI2Deck =  'Tenpai'
 
-deck1 = os.getcwd() +'/decks/AI_SnakeEyes.ydk'
-deck2 = os.getcwd() +'/decks/AI_Tenpai.ydk'
+deck1 = os.getcwd() +'/edopro_bin/deck/AI_SnakeEyes.ydk'
+deck2 = os.getcwd() +'/edopro_bin/deck/AI_Tenpai.ydk'
 
 reset = False
 totalGames = 10

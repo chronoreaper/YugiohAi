@@ -18,7 +18,10 @@ namespace WindBot.Game.AI.Decks
             : base(ai, duel)
         {
             // Basically First Actions
-           
+            AddExecutor(ExecutorType.Activate, CardId.EradicatorVirus);
+            AddExecutor(ExecutorType.Activate, CardId.AntiSpellFragrance);
+            AddExecutor(ExecutorType.Activate, CardId.DimensionalBarrier);
+            AddExecutor(ExecutorType.Activate, CardId.DifferentDimensionGround);
 
             // Normal Priority
             AddExecutor(ExecutorType.Summon, CardId.ArianePinkLabrynth);
@@ -49,6 +52,24 @@ namespace WindBot.Game.AI.Decks
 
             AddExecutor(ExecutorType.SpSummon, CardId.TyphonSkyCrisis, TyphonSummon);
             AddExecutor(ExecutorType.Activate, CardId.TyphonSkyCrisis, TyphonActivate);
+
+            AddExecutor(ExecutorType.SpSummon, CardId.RelinquishdAnima, AnimaSummon);
+            AddExecutor(ExecutorType.SpSummon, CardId.UnchainedSoulYama, YamaSummon);
+            AddExecutor(ExecutorType.SpSummon, CardId.UnchainedSoulAnguish, AnguishSummon);
+            AddExecutor(ExecutorType.SpSummon, CardId.UnchainedSoulAbomination, AbominationSummon);
+            AddExecutor(ExecutorType.SpSummon, CardId.SPLittleKnight, SPSummon);
+
+            AddExecutor(ExecutorType.Activate, CardId.EnigmasterPackbit, PackbitActivate);
+            AddExecutor(ExecutorType.Activate, CardId.BerfometKingPhantomBeast, BerfometActivate);
+            AddExecutor(ExecutorType.Activate, CardId.Garura);
+            AddExecutor(ExecutorType.Activate, CardId.ElderEntityNtss);
+            AddExecutor(ExecutorType.Activate, CardId.RelinquishdAnima);
+            AddExecutor(ExecutorType.Activate, CardId.UnchainedSoulYama);
+            AddExecutor(ExecutorType.Activate, CardId.UnchainedSoulAnguish);
+            AddExecutor(ExecutorType.Activate, CardId.UnchainedSoulAbomination, AbominationActivate);
+            AddExecutor(ExecutorType.Activate, CardId.TriBrigadeBucephalus);
+            AddExecutor(ExecutorType.Activate, CardId.SPLittleKnight, SpActivate);
+            AddExecutor(ExecutorType.Activate, CardId.LordOfHeavelyPrison, LordPrisonActivate);
             // Low Priority
 
             // Reactive
@@ -56,6 +77,7 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.Activate, CardId.ForbiddenDroplet, DropletActivate);
             AddExecutor(ExecutorType.Activate, CardId.DimensionalBarrier, DefaultDimensionalBarrier);
             AddExecutor(ExecutorType.Activate, CardId.CrossoutDesignator, CosmicActivate);
+            AddExecutor(ExecutorType.Activate, CardId.FantasticalPhantazmay);
 
             AddExecutor(ExecutorType.SpellSet, DefaultSpellSet);
 
@@ -67,7 +89,7 @@ namespace WindBot.Game.AI.Decks
         // Choose Go first or second
         public override bool OnSelectHand()
         {
-            bool choice = false;
+            bool choice = true;
             return choice;
         }
 
@@ -124,8 +146,6 @@ namespace WindBot.Game.AI.Decks
 
             postSide = true;
         }
-
-
 
         public override bool OnSelectYesNo(long desc)
         {
@@ -197,7 +217,20 @@ namespace WindBot.Game.AI.Decks
 
 
         #region Generic Monsters
+        public bool BackJackActivate()
+        {
+            return true;
+        }
 
+        public bool ChaosAngelSpecial()
+        {
+            return true;
+        }
+
+        public bool MuckrackerSpecial()
+        {
+            return true;
+        }
 
 
         #endregion
@@ -212,8 +245,46 @@ namespace WindBot.Game.AI.Decks
         #endregion
 
         #region Labrynth
-        
+        public bool GreenActivate()
+        {
+            return true;
+        }
 
+        public bool FurnatureActivate()
+        {
+            return true;
+        }
+
+        public bool ClockActivate()
+        {
+            return true;
+        }
+
+        public bool LovelyActivate()
+        {
+            return true;
+        }
+
+        public bool LadyActivate()
+        {
+            return true;
+        }
+
+
+        public bool BigWelcomeActivate()
+        {
+            return true;
+        }
+
+        public bool WelcomeActivate()
+        {
+            return true;
+        }
+
+        public bool SetupActivate()
+        {
+            return true;
+        }
         #endregion
     }
 }

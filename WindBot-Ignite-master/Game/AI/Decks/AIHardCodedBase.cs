@@ -554,6 +554,38 @@ namespace WindBot.Game.AI.Decks
                 {
                     selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.FabledLurrie));
                 }
+                else if (CardId.FiendsmithSequentia == currentCard.Id)
+                {
+                    if (hint == HintMsg.FusionMaterial)
+                    {
+                        IList<ClientCard> highPriority = new List<ClientCard>();
+                        IList<ClientCard> lowPriority = new List<ClientCard>();
+
+                        int[] highList =
+                        {
+                        };
+                        int[] lowList =
+                        {
+                            CardId.TheFiendsmith,
+                        };
+
+                        _cards = _cards
+                            .OrderBy(x => highList.Contains(x.Id) ? 0 : 1)
+                            .ThenBy(x => x.HasType(CardType.Link) ? -x.LinkCount : 0) // Use the highest link monster first
+                            .ThenBy(x => lowList.Contains(x.Id) ? 1 : 0)
+                            .ToList();
+
+                        // Stop selecting if using low priorty cards
+                        if (materialSelected > 0 && _cards.Where(x => lowList.Contains(x.Id)).Count() == _cards.Count())
+                            return null;
+
+                        materialSelected += 1;
+                    }
+                    else if (hint == HintMsg.SpSummon)
+                    {
+                        selected.Add(_cards.Where(x => x.Id == CardId.FiendsmithLacrimosa).FirstOrDefault());
+                    }
+                }
             }
             #endregion
 

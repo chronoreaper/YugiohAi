@@ -17,10 +17,11 @@ namespace WindBot.Game.AI.Decks
                 CardId.SkillDrain,
                 CardId.AntiSpellFragrance,
                 CardId.SnakeEyeDiabellstar,
-                CardId.SnakeEyeFlamberge,
+                CardId.DiabellstarBlackWitch,
                 CardId.SnakeEyePoplar,
                 CardId.SnakeEyeOak,
-                CardId.SnakeEyeAsh
+                CardId.SnakeEyeAsh,
+                CardId.DivineTempleSnakeEyes
          };
 
         int[] SNAKE_EYES_STARTER =
@@ -368,8 +369,8 @@ namespace WindBot.Game.AI.Decks
                 // Summon flamberge from gy first
                  selected.Add(_cards.Where(x => x.Id == CardId.SnakeEyeFlamberge && x.Location == CardLocation.Grave).FirstOrDefault());
 
-                if (_cards.Where(x => x.Id == CardId.SnakeEyeOak && x.Location == CardLocation.Deck).Any() && !Bot.HasInSpellZone(CardId.OriginalSinfulSpoilsSnakeEyes))
-                    selected.Add(_cards.Where(x => x.Id == CardId.SnakeEyeOak && x.Location == CardLocation.Deck).FirstOrDefault());
+                if (_cards.Where(x => x.Id == CardId.SnakeEyeOak).Any() && !Bot.HasInSpellZone(CardId.OriginalSinfulSpoilsSnakeEyes))
+                    selected.Add(_cards.Where(x => x.Id == CardId.SnakeEyeOak).FirstOrDefault());
 
                 if (_cards.ContainsCardWithId(CardId.SnakeEyeFlamberge))
                 {
@@ -463,38 +464,6 @@ namespace WindBot.Game.AI.Decks
                     if (!HasCombo())
                         selected.Add(_cards.Where(x => x.Id == CardId.SnakeEyeAsh).FirstOrDefault());
                     selected.Add(_cards.Where(x => x.Id == CardId.BlackGoat).FirstOrDefault());
-                }
-                else if (CardId.FiendsmithSequentia == currentCard.Id)
-                {
-                    if (hint == HintMsg.FusionMaterial)
-                    {
-                        IList<ClientCard> highPriority = new List<ClientCard>();
-                        IList<ClientCard> lowPriority = new List<ClientCard>();
-
-                        int[] highList =
-                        {
-                        };
-                        int[] lowList =
-                        {
-                            CardId.TheFiendsmith,
-                        };
-
-                        _cards = _cards
-                            .OrderBy(x => highList.Contains(x.Id) ? 0 : 1)
-                            .ThenBy(x => x.HasType(CardType.Link) ? -x.LinkCount : 0) // Use the highest link monster first
-                            .ThenBy(x => lowList.Contains(x.Id) ? 1 : 0)
-                            .ToList();
-
-                        // Stop selecting if using low priorty cards
-                        if (materialSelected > 0 && cancelable && _cards.Where(x => lowList.Contains(x.Id)).Count() == _cards.Count())
-                            return null;
-
-                        materialSelected += 1;
-                    }
-                    else if (hint == HintMsg.SpSummon)
-                    {
-                        selected.Add(_cards.Where(x => x.Id == CardId.FiendsmithLacrimosa).FirstOrDefault());
-                    }
                 }
             }
             else if (hint == HintMsg.LinkMaterial)
@@ -936,8 +905,12 @@ namespace WindBot.Game.AI.Decks
 
         public bool OSSSEActivate()
         {
-            if (!HasPerformedPreviously(CardId.SnakeEyeAsh, ExecutorType.Activate) || !HasPerformedPreviously(CardId.SnakeEyeOak, ExecutorType.Activate))
+            if (HasPerformedPreviously(CardId.SnakeEyeAsh, ExecutorType.Activate) && HasPerformedPreviously(CardId.SnakeEyeOak, ExecutorType.Activate))
+                return false;
+
+            if (Bot.HasInMonsterZoneSpellZone(SNAKE_EYE_SEND_SPELL_COST))
                 return true;
+
             return false;
         }
 

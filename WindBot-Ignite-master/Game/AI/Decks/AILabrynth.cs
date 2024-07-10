@@ -165,7 +165,13 @@ namespace WindBot.Game.AI.Decks
             #region AI Selected
             if (currentCard != null)
             {
-                
+                if (CardId.BigWelcomeLabrnyth == currentCard.Id)
+                {
+                    if (hint == HintMsg.SpSummon)
+                    {
+
+                    }
+                }
             }
             else
             {
@@ -232,6 +238,56 @@ namespace WindBot.Game.AI.Decks
             return true;
         }
 
+        public bool AnimaSummon()
+        {
+            return true;
+        }
+
+        public bool YamaSummon()
+        {
+            return true;
+        }
+
+        public bool AnguishSummon()
+        {
+            return true;
+        }
+
+        public bool AbominationSummon()
+        {
+            return true;
+        }
+
+        public bool SPSummon()
+        {
+            return true;
+        }
+
+        public bool PackbitActivate()
+        {
+            return true;
+        }
+
+        public bool BerfometActivate()
+        {
+            return true;
+        }
+
+        public bool AbominationActivate()
+        {
+            return true;
+        }
+
+        public bool SpActivate()
+        {
+            return true;
+        }
+
+        public bool LordPrisonActivate()
+        {
+            return true;
+        }
+
 
         #endregion
 
@@ -252,7 +308,13 @@ namespace WindBot.Game.AI.Decks
 
         public bool FurnatureActivate()
         {
-            return true;
+            if (Duel.Phase == DuelPhase.End)
+                return true;
+            if (HasPerformedPreviously(CardId.LabrynthCooClock))
+                return true;
+            if (Bot.HasInHand(CardId.BackJack))
+                return true;
+            return false;
         }
 
         public bool ClockActivate()

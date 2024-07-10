@@ -355,6 +355,11 @@ namespace WindBot.Game
             return HasInSpellZone(cardId) || HasInGraveyard(cardId);
         }
 
+        public bool HasInMonsterZoneSpellZone(IList<int> cardId)
+        {
+            return HasInMonstersZone(cardId) || HasInSpellZone(cardId);
+        }
+
         public bool HasInMonsterZoneSpellZoneOrGraveyard(IList<int> cardId)
         {
             return HasInMonstersZone(cardId) || HasInSpellZone(cardId) || HasInGraveyard(cardId);

@@ -32,11 +32,11 @@ import torch
 AI1Deck = 'SnakeEyes'
 AI2Deck =  'Tenpai'
 
-deck1 = os.getcwd() +'/edopro_bin/deck/AI_SnakeEyes.ydk'
-deck2 = os.getcwd() +'/edopro_bin/deck/AI_Tenpai.ydk'
+# deck1 = os.getcwd() +'/edopro_bin/deck/AI_SnakeEyes.ydk'
+# deck2 = os.getcwd() +'/edopro_bin/deck/AI_Tenpai.ydk'
 
 reset = False
-totalGames = 10
+totalGames = 1
 parallelGames = 1
 
 def isrespondingPID(PID):
@@ -262,23 +262,40 @@ def main():
   proc = multiprocessing.Process(target=get_action_weights.run_server, args=())
   proc.start()
 
+  decks = ["SnakeEyes", "Tenpai", "Labrynth", "Branded", "Runick", "Yubel" ]
+  deck1index = 0
+  deck2index = 0
+
+
   jobs = []
   pairs = []
 
-  name1 = "snakeeyes"
-  name2 = "tenpai"
+  while deck2index < len(decks):
+    for _ in range(parallelGames):
+      if deck2index >= len(decks):
+        break
+      name1 = decks[deck1index]
+      name2 = decks[deck2index]
+      deck1 = os.getcwd() +'/edopro_bin/deck/AI_' + name1 + '.ydk'
+      deck2 = os.getcwd() +'/edopro_bin/deck/AI_' + name2 + '.ydk'
 
-  print("running game " + str(0) + ":" + str(name1) + "vs" + str(name2) + ": Total games " + str(totalGames))
-  port = 7911 + 0
-  p = multiprocessing.Process(target=main_game_runner, args=(pool, totalGames, str(name1), str(name2), AI1Deck, AI2Deck, deck1, deck2, port))
-  #psutil.Process(p.pid).nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
-  jobs.append(p)
-  p.start()
+      print("running game " + str(0) + ":" + str(name1) + "vs" + str(name2) + ": Total games " + str(totalGames))
+      port = 7911 + 0
+      p = multiprocessing.Process(target=main_game_runner, args=(pool, totalGames, str(name1), str(name2), name1, name2, deck1, deck2, port))
+      #psutil.Process(p.pid).nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+      jobs.append(p)
+      p.start()
 
-  for job in jobs:
-    job.join()
-  
-  proc.terminate()  # sends a SIGTERM
+      deck1index += 1
+      if deck1index >= len(decks):
+        deck1index = 0
+        deck2index += 1
+
+    for job in jobs:
+      job.join()
+    jobs.clear()
+    
+    proc.terminate()  # sends a SIGTERM
   print("done cycle")
   export_database()
 

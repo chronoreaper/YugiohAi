@@ -18,9 +18,65 @@ namespace WindBot.Game.AI.Decks
             : base(ai, duel)
         {
             // Basically First Actions
-            
+            AddExecutor(ExecutorType.GoToBattlePhase, GoToBattlePhase);
+            AddExecutor(ExecutorType.Activate, CardId.EvenlyMatched);
             // Normal Priority
-            
+            AddExecutor(ExecutorType.Summon, CardId.AluberDespia);
+            AddExecutor(ExecutorType.Summon, CardId.GuidingQuem);
+            AddExecutor(ExecutorType.Summon, CardId.BlazingCartesia);
+            AddExecutor(ExecutorType.Summon, CardId.FallenOfAlbaz);
+            AddExecutor(ExecutorType.Summon, CardId.SpringansKitt);
+
+            AddExecutor(ExecutorType.SpSummon, CardId.BystialLubellion);
+
+            AddExecutor(ExecutorType.Activate, CardId.BystialLubellion);
+            AddExecutor(ExecutorType.Activate, CardId.AlbionTheShroudedDragon);
+            AddExecutor(ExecutorType.Activate, CardId.BystialSaronir, BystialActivate);
+            AddExecutor(ExecutorType.Activate, CardId.BystialMagnamhut, BystialActivate);
+            AddExecutor(ExecutorType.Activate, CardId.AluberDespia);
+            AddExecutor(ExecutorType.Activate, CardId.FallenOfAlbaz);
+            AddExecutor(ExecutorType.Activate, CardId.SpringansKitt);
+            AddExecutor(ExecutorType.Activate, CardId.BlazingCartesia, CartesiaActivate);
+            AddExecutor(ExecutorType.Activate, CardId.GuidingQuem);
+            AddExecutor(ExecutorType.Activate, CardId.TriBrigadeMercourier, MercourierActivate);
+            AddExecutor(ExecutorType.Activate, CardId.DespianTragedy);
+
+            AddExecutor(ExecutorType.Activate, CardId.AllureOfDarkness, DefaultAllureofDarkness);
+            AddExecutor(ExecutorType.Activate, CardId.BrandedFusion);
+            AddExecutor(ExecutorType.Activate, CardId.FoolishBurial);
+            AddExecutor(ExecutorType.Activate, CardId.FusionDeployment);
+            AddExecutor(ExecutorType.Activate, CardId.GoldSarc);
+            AddExecutor(ExecutorType.Activate, CardId.TripleTacticsTalent);
+            AddExecutor(ExecutorType.Activate, CardId.TripleTacticsThrust);
+            AddExecutor(ExecutorType.Activate, CardId.BrandedInHighSpirits, HighSpiritsActivate);
+            AddExecutor(ExecutorType.Activate, CardId.BrandedInRed, BrandedInRedActivate);
+            AddExecutor(ExecutorType.Activate, CardId.BrandedOpening);
+            AddExecutor(ExecutorType.Activate, CardId.CalledByTheGrave, CalledByActivate);
+            AddExecutor(ExecutorType.Activate, CardId.ForbiddenDroplet, DropletActivate);
+            AddExecutor(ExecutorType.Activate, CardId.BrandedRetribution, RetributionActivate);
+            AddExecutor(ExecutorType.Activate, CardId.FusionDuplication, DuplicationActivate);
+
+            AddExecutor(ExecutorType.Activate, CardId.GuardianChimera);
+            AddExecutor(ExecutorType.Activate, CardId.AlbionTheSanctifireDragon);
+            AddExecutor(ExecutorType.Activate, CardId.BorreloadFuriousDragon, FuriousActivate);
+            AddExecutor(ExecutorType.Activate, CardId.MirrorJadeTheIcebladeDragon, MirrorjadeActivate);
+            AddExecutor(ExecutorType.Activate, CardId.PredaplantDRagostapelia, FaceUpEffectNegate);
+            AddExecutor(ExecutorType.Activate, CardId.LubellionSearingDragon);
+            AddExecutor(ExecutorType.Activate, CardId.AlbaLenatusAbyssDragon);
+            AddExecutor(ExecutorType.Activate, CardId.DespianQuaeritis, QuartusActivate);
+            AddExecutor(ExecutorType.Activate, CardId.GranguignolDuskDragon);
+            AddExecutor(ExecutorType.Activate, CardId.TitanikladAshDragon);
+            AddExecutor(ExecutorType.Activate, CardId.AlbionTheBrandedDragon);
+            AddExecutor(ExecutorType.Activate, CardId.RindbrummStrikingDragon, RindbrummActivate);
+
+            AddExecutor(ExecutorType.Activate, CardId.ShadollDragon);
+            AddExecutor(ExecutorType.Activate, CardId.SnatchSteal);
+            AddExecutor(ExecutorType.Activate, CardId.ChangeOfHeart);
+            AddExecutor(ExecutorType.Activate, CardId.BookOfEclipse, EclipseActivate);
+
+            AddExecutor(ExecutorType.Activate, CardId.BrightestBlazingBranded,BlazingBrandedActivate);
+
+
             // Low Priority
 
             // Reactive
@@ -175,15 +231,73 @@ namespace WindBot.Game.AI.Decks
 
 
         #region Generic Spells
-
+        public bool EclipseActivate()
+        {
+            return true;
+        }
         #endregion
 
 
         #region Generic Traps
         #endregion
 
-        #region Labrynth
-      
+        #region Branded
+        public bool CartesiaActivate()
+        {
+            return true;
+        }
+
+        public bool MercourierActivate()
+        {
+            return true;
+        }
+
+        public bool HighSpiritsActivate()
+        {
+            return true;
+        }
+
+        public bool BrandedInRedActivate()
+        {
+            return true;
+        }
+
+        public bool RetributionActivate()
+        {
+            return true;
+        }
+
+        public bool DuplicationActivate()
+        {
+            return true;
+        }
+
+
+        public bool FuriousActivate()
+        {
+            return true;
+        }
+
+        public bool MirrorjadeActivate()
+        {
+            return true;
+        }
+
+        public bool QuartusActivate()
+        {
+            return true;
+        }
+
+        public bool RindbrummActivate()
+        {
+            return true;
+        }
+
+        public bool BlazingBrandedActivate()
+        {
+            return true;
+        }
+
         #endregion
     }
 }

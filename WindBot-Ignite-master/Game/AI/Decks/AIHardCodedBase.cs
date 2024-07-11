@@ -119,6 +119,7 @@ namespace WindBot.Game.AI.Decks
             public const int Kuriphoton = 35112613;
             public const int LordOfHeavelyPrison = 09822220;
             public const int LavaGolemn = 00102380;
+            public const int Pankratops = 82385847;
 
             // Generic Spells
             public const int Bonfire = 85106525;
@@ -129,17 +130,25 @@ namespace WindBot.Game.AI.Decks
             public const int FeatherDuster = 18144507;
             public const int LightningStorm = 14532163;
             public const int Terraforming = 73628505;
-            public const int PotofProsperity = 84211599;
             public const int ForbiddenDroplet = 24299458;
             public const int CosmicCyclone = 8267140;
             public const int HeatWave = 45141013;
             public const int PotOfExtravagance = 49238328;
+            public const int PotofProsperity = 84211599;
             public const int PotOfDuality = 98645731;
+            public const int PotOfDesires = 35261759;
             public const int DarkRulerNoMore = 54693926;
             public const int SuperPoly = 48130397;
             public const int InstantFusion = 01845204;
             public const int UpstartGoblin = 70368879;
             public const int ChickenGame = 67616300;
+            public const int AllureOfDarkness = 01475311;
+            public const int FoolishBurial = 81439173;
+            public const int GoldSarc = 75500286;
+            public const int TripleTacticsThrust = 35269904;
+            public const int SnatchSteal = 45986603;
+            public const int ChangeOfHeart = 04031928;
+            public const int BookOfEclipse = 35480699;
 
             // Generic Traps
             public const int InfiniteImpermanence = 10045474;
@@ -168,6 +177,7 @@ namespace WindBot.Game.AI.Decks
             public const int EvenlyMatched = 1569423;
             public const int SolemnJudgment = 41420027;
             public const int GraveOfTheSuperAncient = 83266092;
+            public const int FusionDuplication = 43331750;
 
             // Generic Synchro
             public const int BlackRoseMoonlightDragon = 33698022;
@@ -183,11 +193,15 @@ namespace WindBot.Game.AI.Decks
             public const int Garura = 11765832;
             public const int MudragonSwamp = 54757758;
             public const int ElderEntityNtss = 80532587;
+            public const int GuardianChimera = 11321089;
+
             // Generic xyz
             public const int TyphonSkyCrisis = 93039339;
             public const int BeatriceLadyOfEnternal = 27552504;
             public const int Bagooska = 90590303;
             public const int ExcitonKnight = 46772449;
+            public const int VarudrasBringerofEndTimes = 70636044;
+            public const int DDDHighKingCaesar = 79559912;
 
             // Generic Links
             public const int RelinquishdAnima = 94259633;
@@ -266,6 +280,8 @@ namespace WindBot.Game.AI.Decks
             public const int BystialMagnamhut = 33854624;
             public const int BystialDruiswurm = 6637331;
             public const int BystialSaronir = 60242223;
+            public const int BystialBaldrake = 72656408;
+            public const int BystialLubellion = 32731036;
 
 
             // Labrynth
@@ -301,6 +317,7 @@ namespace WindBot.Game.AI.Decks
             public const int Yubel11 = 04779091;
             public const int SpiritOfYubel = 90829280;
             public const int SamsaraDLotus = 62318994;
+            public const int GruesumGraveSquirmer = 24215921;
 
             public const int NightmarePain = 65261141;
             public const int MatureChronicle = 92670749;
@@ -330,7 +347,39 @@ namespace WindBot.Game.AI.Decks
             public const int TriBrigadeBucephalus = 10019086;
 
             // Branded
+            public const int AlbionTheShroudedDragon = 25451383;
+            public const int AluberDespia = 62962630;
+            public const int FallenOfAlbaz = 68468459;
+            public const int SpringansKitt = 45484331;
+            public const int BlazingCartesia = 95515789;
+            public const int GuidingQuem = 45883110;
+            public const int TriBrigadeMercourier = 19096726;
+            public const int DespianTragedy = 36577931;
 
+            public const int BrandedLost = 18973184;
+            public const int BrandedFusion = 44362883;
+            public const int FusionDeployment = 06498706;
+            public const int BrandedInHighSpirits = 29948294;
+            public const int BrandedInRed = 82738008;
+            public const int BrandedOpening = 36637374;
+
+            public const int BrandedRetribution = 17751597;
+            public const int BrightestBlazingBranded = 19271881;
+
+            public const int AlbionTheSanctifireDragon = 38811586;
+            public const int BorreloadFuriousDragon = 92892239;
+            public const int MirrorJadeTheIcebladeDragon = 44146295;
+            public const int PredaplantDRagostapelia = 69946549;
+            public const int LubellionSearingDragon = 70534340;
+            public const int AlbaLenatusAbyssDragon = 03410461;
+            public const int DespianQuaeritis = 72272462;
+            public const int GranguignolDuskDragon = 2415933;
+            public const int TitanikladAshDragon = 41373230;
+            public const int AlbionTheBrandedDragon = 87746184;
+            public const int RindbrummStrikingDragon = 51409648;
+
+            //Shaddoll
+            public const int ShadollDragon = 77723643;
             // Runick
             public const int RunickGoldenDroplet = 20618850;
             public const int RunickFreezingCurse = 30430448;
@@ -344,14 +393,20 @@ namespace WindBot.Game.AI.Decks
 
             public const int SleipnirRunick = 74659582;
             public const int FrekiRunick = 47219274;
+            public const int GeriRunick = 28373620;
             public const int MuninRunick = 92385016;
             public const int HuginRunick = 55990317;
 
             public const int CardScanner = 77066768;
             public const int DrawMuscle = 41367003;
+
+            // Gimmick Puppet
+            public const int GimmickPuppetNightmare = 55204071;
+
             // Stun
             public const int MajestyFiend = 33746252;
             public const int AmanoIwato = 32181268;
+            public const int InterdimensionalMatterTransolcator = 60238002;
 
         }
 
@@ -359,6 +414,7 @@ namespace WindBot.Game.AI.Decks
             : base(ai, duel)
         {
             // Reactive
+            AddExecutor(ExecutorType.Activate, CardId.ChickenGame, DefaultChickenGame);
             AddExecutor(ExecutorType.Activate, CardId.EffectVeiler, FaceUpEffectNegate);
             AddExecutor(ExecutorType.Activate, CardId.GhostMourner, FaceUpEffectNegate);
             AddExecutor(ExecutorType.Activate, CardId.GhostOgre, GhostOgreActivate);
@@ -367,6 +423,9 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.Activate, CardId.AshBlossom, AshBlossomActivate);
             AddExecutor(ExecutorType.Activate, CardId.DrollnLockBird, DrollActivate);
             AddExecutor(ExecutorType.Activate, CardId.Nibiru);
+            AddExecutor(ExecutorType.Activate, CardId.FantasticalPhantazmay);
+            AddExecutor(ExecutorType.Activate, CardId.CosmicCyclone, CosmicActivate);
+            AddExecutor(ExecutorType.Activate, CardId.SolemnJudgment, DefaultSolemnJudgment);
         }
 
         protected List<long> HintMsgForEnemy = new List<long>
@@ -868,6 +927,13 @@ namespace WindBot.Game.AI.Decks
             return false;
         }
 
+        public bool GoToBattlePhase()
+        {
+            if (Bot.HasInHand(CardId.EvenlyMatched) && Bot.IsFieldEmpty())
+                return true;
+            return false;
+        }
+
         #endregion
 
 
@@ -939,6 +1005,8 @@ namespace WindBot.Game.AI.Decks
             if (Duel.ChainTargets.Where(x => x.Location == CardLocation.Grave && x.HasAttribute(CardAttribute.Dark | CardAttribute.Light)).Any())
                 return true;
             if (Duel.Phase == DuelPhase.End)
+                return true;
+            if (Card.Location != CardLocation.Hand)
                 return true;
             return false;
         }

@@ -18,19 +18,50 @@ namespace WindBot.Game.AI.Decks
             : base(ai, duel)
         {
             // Basically First Actions
-            
+
             // Normal Priority
-            
+            AddExecutor(ExecutorType.Activate, CardId.UpstartGoblin);
+            AddExecutor(ExecutorType.GoToBattlePhase, GoToBattlePhase);
+            AddExecutor(ExecutorType.SpSummon, CardId.LavaGolemn);
+            AddExecutor(ExecutorType.Summon, CardId.MajestyFiend);
+            AddExecutor(ExecutorType.Summon, CardId.AmanoIwato);
+            AddExecutor(ExecutorType.Activate, CardId.Terraforming);
+            AddExecutor(ExecutorType.Activate, CardId.InstantFusion, InstantFusionActivate);
+
+            AddExecutor(ExecutorType.Activate, CardId.RunickGoldenDroplet, GoldenDropletActivate);
+            AddExecutor(ExecutorType.Activate, CardId.RunickFreezingCurse, FreezingCurseActivate);
+            AddExecutor(ExecutorType.Activate, CardId.RunickTip, TipActivate);
+            AddExecutor(ExecutorType.Activate, CardId.RunickDispelling, DispellingActivate);
+            AddExecutor(ExecutorType.Activate, CardId.RunickSlumber, SlumberActivate);
+            AddExecutor(ExecutorType.Activate, CardId.RunickFlashingFire, FlashingFireActivate);
+            AddExecutor(ExecutorType.Activate, CardId.RunickSmitingStorm, StormActivate);
+            AddExecutor(ExecutorType.Activate, CardId.RunickDestruction, DestructionActivate);
+            AddExecutor(ExecutorType.Activate, CardId.DrawMuscle);
+            AddExecutor(ExecutorType.Activate, CardId.ChickenGame);
+            AddExecutor(ExecutorType.Activate, CardId.CardScanner);
+            AddExecutor(ExecutorType.Activate, CardId.RunickFountain, FountainActivate);
+            AddExecutor(ExecutorType.Activate, CardId.ThereCanBeOnlyOne);
+            AddExecutor(ExecutorType.Activate, CardId.GozenMatch);
+            AddExecutor(ExecutorType.Activate, CardId.SynchroZone);
+            AddExecutor(ExecutorType.Activate, CardId.SkillDrain);
+            AddExecutor(ExecutorType.Activate, CardId.RivalyOfWarlords);
+            AddExecutor(ExecutorType.Activate, CardId.TripleTacticsTalent);
+            AddExecutor(ExecutorType.Activate, CardId.GraveOfTheSuperAncient);
+            AddExecutor(ExecutorType.Activate, CardId.EvenlyMatched);
+            AddExecutor(ExecutorType.Activate, CardId.SolemnJudgment, SolemnJudgmentActivate);
+            AddExecutor(ExecutorType.Summon, CardId.Bagooska);
+            AddExecutor(ExecutorType.Activate, CardId.SleipnirRunick, SleipnirActivate);
+            AddExecutor(ExecutorType.Activate, CardId.FrekiRunick);
+            AddExecutor(ExecutorType.Activate, CardId.GeriRunick);
+            AddExecutor(ExecutorType.Activate, CardId.MuninRunick, MuninActivate);
+            AddExecutor(ExecutorType.Activate, CardId.HuginRunick, HuginActivate);
+
             // Low Priority
 
             // Reactive
-            AddExecutor(ExecutorType.Activate, CardId.CrossoutDesignator, CrossoutActivate);
             AddExecutor(ExecutorType.Activate, CardId.ForbiddenDroplet, DropletActivate);
-            AddExecutor(ExecutorType.Activate, CardId.DimensionalBarrier, DefaultDimensionalBarrier);
-            AddExecutor(ExecutorType.Activate, CardId.CrossoutDesignator, CosmicActivate);
-            AddExecutor(ExecutorType.Activate, CardId.FantasticalPhantazmay);
 
-            AddExecutor(ExecutorType.SpellSet, DefaultSpellSet);
+            AddExecutor(ExecutorType.SpellSet, SpellSet);
 
             AddExecutor(ExecutorType.Repos, DefaultMonsterRepos);
             AddExecutor(ExecutorType.GoToBattlePhase);
@@ -163,27 +194,95 @@ namespace WindBot.Game.AI.Decks
 
 
         #region Generic Actions
-
+        public bool SpellSet()
+        {
+            return DefaultSpellSet();
+        }
         #endregion
 
 
         #region Generic Monsters
-       
+
 
 
         #endregion
 
 
         #region Generic Spells
-
+        public bool InstantFusionActivate()
+        {
+            return true;
+        }
         #endregion
 
 
         #region Generic Traps
+        public bool SolemnJudgmentActivate()
+        {
+            return DefaultSolemnJudgment();
+        }
         #endregion
 
-        #region Labrynth
-      
+        #region Runick
+        public bool GoldenDropletActivate()
+        {
+            return true;
+        }
+
+        public bool FreezingCurseActivate()
+        {
+            return true;
+        }
+
+        public bool TipActivate()
+        {
+            return true;
+        }
+
+        public bool DispellingActivate()
+        {
+            return true;
+        }
+
+        public bool SlumberActivate()
+        {
+            return true;
+        }
+
+        public bool FlashingFireActivate()
+        {
+            return true;
+        }
+
+        public bool StormActivate()
+        {
+            return true;
+        }
+
+        public bool DestructionActivate()
+        {
+            return true;
+        }
+
+        public bool FountainActivate()
+        {
+            return true;
+        }
+
+        public bool SleipnirActivate()
+        {
+            return true;
+        }
+
+        public bool MuninActivate()
+        {
+            return true;
+        }
+
+        public bool HuginActivate()
+        {
+            return true;
+        }
         #endregion
     }
 }

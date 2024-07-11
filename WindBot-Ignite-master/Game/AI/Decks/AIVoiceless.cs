@@ -14,7 +14,7 @@ namespace WindBot.Game.AI.Decks
     public class AIVoicelss : AIHardCodedBase
     {
 
-        public AIVoiceless(GameAI ai, Duel duel)
+        public AIVoicelss(GameAI ai, Duel duel)
             : base(ai, duel)
         {
             // Basically First Actions
@@ -24,11 +24,8 @@ namespace WindBot.Game.AI.Decks
             // Low Priority
 
             // Reactive
-            AddExecutor(ExecutorType.Activate, CardId.CrossoutDesignator, CrossoutActivate);
             AddExecutor(ExecutorType.Activate, CardId.ForbiddenDroplet, DropletActivate);
             AddExecutor(ExecutorType.Activate, CardId.DimensionalBarrier, DefaultDimensionalBarrier);
-            AddExecutor(ExecutorType.Activate, CardId.CrossoutDesignator, CosmicActivate);
-            AddExecutor(ExecutorType.Activate, CardId.FantasticalPhantazmay);
 
             AddExecutor(ExecutorType.SpellSet, DefaultSpellSet);
 

@@ -18,17 +18,65 @@ namespace WindBot.Game.AI.Decks
             : base(ai, duel)
         {
             // Basically First Actions
-            
+
             // Normal Priority
-            
+            AddExecutor(ExecutorType.Activate, CardId.Yubel);
+            AddExecutor(ExecutorType.Activate, CardId.Yubel11);
+            AddExecutor(ExecutorType.Activate, CardId.Yubel12);
+            AddExecutor(ExecutorType.Activate, CardId.SpiritOfYubel);
+            AddExecutor(ExecutorType.Activate, CardId.BystialDruiswurm, BystialActivate);
+            AddExecutor(ExecutorType.Activate, CardId.BystialMagnamhut, BystialActivate);
+
+            AddExecutor(ExecutorType.Summon, CardId.DarkBeckoningBeast);
+            AddExecutor(ExecutorType.Summon, CardId.SamsaraDLotus);
+            AddExecutor(ExecutorType.Summon, CardId.ChaosSummoningBeast);
+
+            AddExecutor(ExecutorType.Activate, CardId.UnchainedSoulSharvara, ShavaraActivate);
+            AddExecutor(ExecutorType.Activate, CardId.TheFiendsmith, TheFiendsmithActivate);
+            AddExecutor(ExecutorType.Activate, CardId.DarkBeckoningBeast);
+            AddExecutor(ExecutorType.Activate, CardId.GruesumGraveSquirmer, GraveSquirmerActivate);
+            AddExecutor(ExecutorType.Activate, CardId.ChaosSummoningBeast);
+            AddExecutor(ExecutorType.Activate, CardId.ChaosSummoningBeast);
+            AddExecutor(ExecutorType.Activate, CardId.Terraforming);
+            AddExecutor(ExecutorType.Activate, CardId.FiendsmithTractus);
+            AddExecutor(ExecutorType.Activate, CardId.NightmarePain, NightmarePainActivate);
+            AddExecutor(ExecutorType.Activate, CardId.OpeningOfTheSpritGates, SpiritGatesActivate);
+            AddExecutor(ExecutorType.Activate, CardId.NightmareThrone);
+            AddExecutor(ExecutorType.Activate, CardId.EscapeOfUnchained, EscapeActivate);
+            AddExecutor(ExecutorType.Activate, CardId.FiendsmithDiesIrae, FiendsmithDiesIraeActivate);
+            AddExecutor(ExecutorType.Activate, CardId.FiendsmithLacrimosa);
+            AddExecutor(ExecutorType.Activate, CardId.PhantomOfYubel, PhantomActivate);
+            AddExecutor(ExecutorType.Activate, CardId.BeatriceLadyOfEnternal, BeatriceActivate);
+            AddExecutor(ExecutorType.Activate, CardId.PhantomOfYubel, PhantomActivate);
+            AddExecutor(ExecutorType.Activate, CardId.VarudrasBringerofEndTimes, VarudrasActivate);
+            AddExecutor(ExecutorType.Activate, CardId.BeatriceLadyOfEnternal, BeatriceActivate);
+            AddExecutor(ExecutorType.Activate, CardId.DDDHighKingCaesar, CaesarActivate);
+            AddExecutor(ExecutorType.Activate, CardId.UnchainedSoulYama);
+            AddExecutor(ExecutorType.Activate, CardId.KnightmarePhoenix);
+            AddExecutor(ExecutorType.SpSummon, CardId.UnchainedSoulRage, RageActivate);
+            AddExecutor(ExecutorType.Activate, CardId.SPLittleKnight, SPActivate);
+            AddExecutor(ExecutorType.Activate, CardId.FiendsmithSequentia, FiendsmithSequentiaActivate);
+            AddExecutor(ExecutorType.Activate, CardId.Muckracker, MuckrackerActivate);
+            AddExecutor(ExecutorType.Activate, CardId.FiendsmithRequiem, FiendsmithRequiemActivate);
+
+            AddExecutor(ExecutorType.SpSummon, CardId.BeatriceLadyOfEnternal, BeatriceSummon);
+            AddExecutor(ExecutorType.SpSummon, CardId.PhantomOfYubel, PhantomSummon);
+            AddExecutor(ExecutorType.SpSummon, CardId.VarudrasBringerofEndTimes);
+            AddExecutor(ExecutorType.SpSummon, CardId.BeatriceLadyOfEnternal, BeatriceSummon);
+            AddExecutor(ExecutorType.SpSummon, CardId.DDDHighKingCaesar);
+            AddExecutor(ExecutorType.SpSummon, CardId.UnchainedSoulYama, YamaSummon);
+            AddExecutor(ExecutorType.SpSummon, CardId.KnightmarePhoenix, PhoenixSummon);
+            AddExecutor(ExecutorType.SpSummon, CardId.UnchainedSoulRage);
+            AddExecutor(ExecutorType.SpSummon, CardId.SPLittleKnight, SPSummon);
+            AddExecutor(ExecutorType.SpSummon, CardId.FiendsmithSequentia, FiendsmithSequentiaSummon);
+            AddExecutor(ExecutorType.SpSummon, CardId.MoonOfTheClosedHeaven, ClosedHeavenSummon);
+            AddExecutor(ExecutorType.SpSummon, CardId.Muckracker, MuckrackerSummon);
+            AddExecutor(ExecutorType.SpSummon, CardId.FiendsmithRequiem, FiendSmithRequiemSummon);
+
+
             // Low Priority
 
             // Reactive
-            AddExecutor(ExecutorType.Activate, CardId.CrossoutDesignator, CrossoutActivate);
-            AddExecutor(ExecutorType.Activate, CardId.ForbiddenDroplet, DropletActivate);
-            AddExecutor(ExecutorType.Activate, CardId.DimensionalBarrier, DefaultDimensionalBarrier);
-            AddExecutor(ExecutorType.Activate, CardId.CrossoutDesignator, CosmicActivate);
-            AddExecutor(ExecutorType.Activate, CardId.FantasticalPhantazmay);
 
             AddExecutor(ExecutorType.SpellSet, DefaultSpellSet);
 
@@ -96,6 +144,35 @@ namespace WindBot.Game.AI.Decks
             AddCardsToList(_side, pool, sideCount);
 
             postSide = true;
+        }
+
+        /// <summary>
+        /// Decide which card should the attacker attack.
+        /// </summary>
+        /// <param name="attacker">Card that attack.</param>
+        /// <param name="defenders">Cards that defend.</param>
+        /// <returns>BattlePhaseAction including the target, or null (in this situation, GameAI will check the next attacker)</returns>
+        public override BattlePhaseAction OnSelectAttackTarget(ClientCard attacker, IList<ClientCard> defenders)
+        {
+            // Attack with yubels
+            int[] yubels =
+            {
+                CardId.Yubel,
+                CardId.Yubel11,
+                CardId.Yubel12,
+                CardId.SpiritOfYubel,
+                CardId.PhantomOfYubel
+            };
+            if (yubels.Any(x => x == attacker.Id) && !attacker.IsDisabled())
+            {
+                ClientCard toAttack = null;
+                if (defenders.Count > 0)
+                    toAttack = defenders.OrderByDescending(x => x.GetDefensePower()).FirstOrDefault();
+
+                return AI.Attack(attacker, toAttack);
+            }
+
+            return base.OnSelectAttackTarget(attacker, defenders);
         }
 
         public override bool OnSelectYesNo(long desc)
@@ -168,8 +245,70 @@ namespace WindBot.Game.AI.Decks
 
 
         #region Generic Monsters
-       
+        public bool ShavaraActivate()
+        {
+            return true;
+        }
 
+        public bool BeatriceActivate()
+        {
+            return true;
+        }
+
+        public bool BeatriceSummon()
+        {
+            return true;
+        }
+
+        public bool VarudrasActivate()
+        {
+            return true;
+        }
+
+        public bool CaesarActivate()
+        {
+            return true;
+        }
+
+        public bool RageActivate()
+        {
+            return true;
+        }
+
+        public bool SPActivate()
+        {
+            return true;
+        }
+
+        public bool SPSummon()
+        {
+            return true;
+        }
+
+        public bool MuckrackerActivate()
+        {
+            return true;
+        }
+
+        public bool MuckrackerSummon()
+        {
+            return true;
+        }
+
+        public bool YamaSummon()
+        {
+            return true;
+        }
+
+        public bool PhoenixSummon()
+        {
+            return true;
+        }
+
+        public bool ClosedHeavenSummon()
+        {
+            return true;
+        }
 
         #endregion
 
@@ -180,10 +319,37 @@ namespace WindBot.Game.AI.Decks
 
 
         #region Generic Traps
+        public bool EscapeActivate()
+        {
+            return true;
+        }
         #endregion
 
-        #region Labrynth
-      
+        #region Yubel
+        public bool GraveSquirmerActivate()
+        {
+            return true;
+        }
+
+        public bool NightmarePainActivate()
+        {
+            return true;
+        }
+
+        public bool SpiritGatesActivate()
+        {
+            return true;
+        }
+
+        public bool PhantomActivate()
+        {
+            return true;
+        }
+
+        public bool PhantomSummon()
+        {
+            return true;
+        }
         #endregion
     }
 }

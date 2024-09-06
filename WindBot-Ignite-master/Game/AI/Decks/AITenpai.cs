@@ -615,7 +615,7 @@ namespace WindBot.Game.AI.Decks
 
         public bool SpheresActivate()
         {
-            if (Enemy.HasInHandOrInSpellZone(FIELD_TARGETS))
+            if (Enemy.HasInHandOrInSpellZone(MONSTER_FIELD_TARGETS))
                 return true;
             if (Duel.ChainTargets.Any(x => x.IsCode(CardId.HieraticSealsOfSpheres)))
                 return true;

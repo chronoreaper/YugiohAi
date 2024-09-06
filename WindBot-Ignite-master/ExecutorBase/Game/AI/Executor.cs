@@ -50,7 +50,7 @@ namespace WindBot.Game.AI
             return Rand.Next(2) > 0;
         }
 
-        public virtual void OnWin(int result, List<string> deck)
+        public virtual void OnWin(int result, List<int> _deck, List<int> _extra, List<int> _side, Dictionary<int, string> idToName)
         {
             //For overriding 
         }

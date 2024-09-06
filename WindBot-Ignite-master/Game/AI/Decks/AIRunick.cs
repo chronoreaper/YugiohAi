@@ -13,19 +13,35 @@ namespace WindBot.Game.AI.Decks
     [Deck("Runick", "AI_Runick")]
     public class AIRunick : AIHardCodedBase
     {
-
+        int[] RunickSpells =
+        {
+            CardId.RunickTip,
+            CardId.RunickFreezingCurse,
+            CardId.RunickGoldenDroplet,
+            CardId.RunickSlumber,
+            CardId.RunickSmitingStorm,
+            CardId.RunickFlashingFire,
+            CardId.RunickDestruction,
+            CardId.RunickDispelling
+        };
         public AIRunick(GameAI ai, Duel duel)
             : base(ai, duel)
         {
             // Basically First Actions
-
+            AddExecutor(ExecutorType.Activate, CardId.HeatWave);
             // Normal Priority
+            AddExecutor(ExecutorType.Activate, CardId.PotOfDuality);
+            AddExecutor(ExecutorType.Activate, CardId.DimensonalFissure);
             AddExecutor(ExecutorType.Activate, CardId.UpstartGoblin);
+            AddExecutor(ExecutorType.Activate, CardId.TimeTearingMorganite);
+            AddExecutor(ExecutorType.Activate, CardId.OneDayOfPeace);
             AddExecutor(ExecutorType.GoToBattlePhase, GoToBattlePhase);
+            AddExecutor(ExecutorType.Activate, CardId.EvenlyMatched);
             AddExecutor(ExecutorType.SpSummon, CardId.LavaGolemn);
             AddExecutor(ExecutorType.Summon, CardId.MajestyFiend);
             AddExecutor(ExecutorType.Summon, CardId.AmanoIwato);
             AddExecutor(ExecutorType.Activate, CardId.Terraforming);
+            AddExecutor(ExecutorType.Activate, CardId.MessengerOfPeace);
             AddExecutor(ExecutorType.Activate, CardId.InstantFusion, InstantFusionActivate);
 
             AddExecutor(ExecutorType.Activate, CardId.RunickGoldenDroplet, GoldenDropletActivate);
@@ -47,7 +63,6 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.Activate, CardId.RivalyOfWarlords);
             AddExecutor(ExecutorType.Activate, CardId.TripleTacticsTalent);
             AddExecutor(ExecutorType.Activate, CardId.GraveOfTheSuperAncient);
-            AddExecutor(ExecutorType.Activate, CardId.EvenlyMatched);
             AddExecutor(ExecutorType.Activate, CardId.SolemnJudgment, SolemnJudgmentActivate);
             AddExecutor(ExecutorType.Summon, CardId.Bagooska);
             AddExecutor(ExecutorType.Activate, CardId.SleipnirRunick, SleipnirActivate);
@@ -55,11 +70,15 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.Activate, CardId.GeriRunick);
             AddExecutor(ExecutorType.Activate, CardId.MuninRunick, MuninActivate);
             AddExecutor(ExecutorType.Activate, CardId.HuginRunick, HuginActivate);
+            AddExecutor(ExecutorType.Activate, CardId.InterdimensionalMatterTransolcator);
+            AddExecutor(ExecutorType.Activate, CardId.PotOfDesires);
+            AddExecutor(ExecutorType.Activate, CardId.CardOfDemise);
 
             // Low Priority
 
             // Reactive
             AddExecutor(ExecutorType.Activate, CardId.ForbiddenDroplet, DropletActivate);
+            AddExecutor(ExecutorType.Activate, CardId.BattleFader);
 
             AddExecutor(ExecutorType.SpellSet, SpellSet);
 
@@ -87,16 +106,49 @@ namespace WindBot.Game.AI.Decks
             _main.Clear();
             _side.Clear();
 
-            Archetypes enemyDeck = GetEnemyDeckType();
-
             {
                 int[] minMain =
                 {
-               
+                    CardId.Terraforming,
+                    CardId.RunickDestruction,
+                    CardId.RunickDestruction,
+                    CardId.RunickDestruction,
+                    CardId.RunickFlashingFire,
+                    CardId.RunickFlashingFire,
+                    CardId.RunickFlashingFire,
+                    CardId.RunickFountain,
+                    CardId.RunickFountain,
+                    CardId.RunickFreezingCurse,
+                    CardId.RunickFreezingCurse,
+                    CardId.RunickFreezingCurse,
+                    CardId.RunickSlumber,
+                    CardId.RunickSlumber,
+                    CardId.RunickSlumber,
+                    CardId.RunickSmitingStorm,
+                    CardId.RunickSmitingStorm,
+                    CardId.RunickSmitingStorm,
+                    CardId.RunickTip,
+                    CardId.RunickTip,
+                    CardId.RunickTip,
+                    CardId.SkillDrain,
+                    CardId.SkillDrain,
+                    CardId.SkillDrain,
+                    CardId.MessengerOfPeace,
+                    CardId.MessengerOfPeace,
+                    CardId.PotOfDuality,
+                    CardId.PotOfDuality,
+                    CardId.PotOfDuality,
+                    CardId.PotOfDesires,
+                    CardId.TimeTearingMorganite,
+                    CardId.CardOfDemise,
+                    CardId.CardScanner,
+                    CardId.InterdimensionalMatterTransolcator,
                 };
 
                 AddCardsToList(_main, pool, mainCount, minMain);
             }
+
+            Archetypes enemyDeck = GetEnemyDeckType();
 
             switch(enemyDeck)
             {
@@ -105,7 +157,21 @@ namespace WindBot.Game.AI.Decks
                     {
                         int[] toAdd =
                         {
-                         
+                            CardId.LavaGolemn,
+                            CardId.LavaGolemn,
+                            CardId.LavaGolemn,
+                            CardId.SphereMode,
+                            CardId.SphereMode,
+                            CardId.SphereMode,
+                            CardId.EvenlyMatched,
+                            CardId.EvenlyMatched,
+                            CardId.EvenlyMatched,
+                            CardId.TripleTacticsTalent,
+                            CardId.RivalyOfWarlords,
+                            CardId.GozenMatch,
+                            CardId.DimensonalFissure,
+                            CardId.DimensonalFissure,
+                            CardId.DimensonalFissure,
                         };
                         AddCardsToList(_main, pool, mainCount, toAdd);
                     }
@@ -113,7 +179,20 @@ namespace WindBot.Game.AI.Decks
                     {
                         int[] toAdd =
                         {
-
+                            CardId.AmanoIwato,
+                            CardId.AmanoIwato,
+                            CardId.MajestyFiend,
+                            CardId.MajestyFiend,
+                            CardId.MajestyFiend,
+                            CardId.SolemnJudgment,
+                            CardId.SolemnJudgment,
+                            CardId.SolemnJudgment,
+                            CardId.RivalyOfWarlords,
+                            CardId.ThereCanBeOnlyOne,
+                            CardId.GozenMatch,
+                            CardId.DimensonalFissure,
+                            CardId.DimensonalFissure,
+                            CardId.DimensonalFissure,
                         };
                         AddCardsToList(_main, pool, mainCount, toAdd);
                     }
@@ -147,7 +226,85 @@ namespace WindBot.Game.AI.Decks
             #region AI Selected
             if (currentCard != null)
             {
-                
+                if (hint == HintMsg.SpSummon)
+                {
+                    if (!Bot.HasInHandOrInSpellZone(CardId.RunickFountain))
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.HuginRunick));
+                    if (Duel.Phase.HasFlag(DuelPhase.BattleStep))
+                    {
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.GeriRunick));
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.FrekiRunick));
+                    }
+                    selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.SleipnirRunick));
+                    selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.MuninRunick));
+                }
+                else if (CardId.RunickFreezingCurse == currentCard.Id)
+                {
+                    if (hint == HintMsg.Target)
+                    {
+                        if (Duel.CurrentChain.Count() >= 2)
+                        {
+                            if (CardId.InfiniteImpermanence == Card.Id ||
+                                CardId.EffectVeiler == Card.Id ||
+                                CardId.GhostMourner == Card.Id)
+                                selected.Add(_cards.FirstOrDefault(x => Duel.CurrentChain.Any(y => y.Equals(x))));
+                        }
+                    }
+                }
+                else if (CardId.RunickTip == currentCard.Id)
+                {
+                    if (!Bot.HasInHandOrInSpellZone(CardId.RunickFountain))
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.RunickFountain));
+                    if (!Bot.HasInHandOrInSpellZone(CardId.RunickFreezingCurse))
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.RunickFreezingCurse));
+                    if (!Bot.HasInHandOrInSpellZone(CardId.RunickFlashingFire))
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.RunickFlashingFire));
+                    if (!Bot.HasInHandOrInSpellZone(CardId.RunickFountain))
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.RunickFountain));
+                    if (!Bot.HasInHandOrInSpellZone(CardId.RunickSlumber))
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.RunickSlumber));
+                }
+                else if (CardId.RunickDestruction == currentCard.Id)
+                {
+                    foreach (var target in SPELL_FIELD_TARGETS)
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == target));
+                }
+                else if (CardId.RunickFlashingFire == currentCard.Id)
+                {
+                    foreach (var target in MONSTER_FIELD_TARGETS)
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == target));
+                }
+                else if (CardId.InterdimensionalMatterTransolcator == currentCard.Id)
+                {
+                    selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.MajestyFiend));
+                    selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.AmanoIwato));
+                    foreach (var card in _cards)
+                        if (card.Controller == 0)
+                            selected.Add(card);
+                }
+                else if (CardId.PotOfDuality == currentCard.Id)
+                {
+                    if (!Bot.HasInHandOrInSpellZone(CardId.SolemnJudgment))
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.SolemnJudgment));
+                    if (!Bot.HasInHandOrInSpellZone(CardId.SkillDrain))
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.SkillDrain));
+                    if (!Bot.HasInHandOrInSpellZone(CardId.GozenMatch))
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.GozenMatch));
+                    if (!Bot.HasInHandOrInSpellZone(CardId.RivalyOfWarlords))
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.RivalyOfWarlords));
+                    if (!Bot.HasInHandOrInSpellZone(CardId.RunickTip))
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.RunickTip));
+                    if (!Bot.HasInHandOrInSpellZone(CardId.RunickFountain))
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.RunickFountain));
+                    if (!Bot.HasInHandOrInSpellZone(CardId.RunickFreezingCurse))
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.RunickFreezingCurse));
+                    if (!Bot.HasInHandOrInSpellZone(CardId.RunickFlashingFire))
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.RunickFlashingFire));
+                    if (!Bot.HasInHandOrInSpellZone(CardId.RunickFountain))
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.RunickFountain));
+                    if (!Bot.HasInHandOrInSpellZone(CardId.RunickSlumber))
+                        selected.Add(_cards.FirstOrDefault(x => x.Id == CardId.RunickSlumber));
+                }
             }
             else
             {
@@ -166,6 +323,8 @@ namespace WindBot.Game.AI.Decks
 
         public override int OnSelectOption(IList<long> options)
         {
+            if (Card.Id == CardId.CardScanner)
+                return 1;
             foreach(long desc in options)
             {
                 var option = Util.GetOptionFromDesc(desc);
@@ -174,9 +333,18 @@ namespace WindBot.Game.AI.Decks
 
             if (options.Count == 2)
             {
-                var hint = options[0];
-                var cardId = Util.GetCardIdFromDesc(options[1]);
+                var cardId = Util.GetCardIdFromDesc(options[0]);
+                if (RunickSpells.Any(x => x == cardId))
+                {
+                    if (SpecialRunick() && cardId != CardId.RunickTip)
+                        return 1;
+                    else
+                        return 0;
+                }
 
+
+                var hint = options[0];
+                cardId = Util.GetCardIdFromDesc(options[1]);
             }
 
             return base.OnSelectOption(options);
@@ -196,7 +364,10 @@ namespace WindBot.Game.AI.Decks
         #region Generic Actions
         public bool SpellSet()
         {
-            return DefaultSpellSet();
+            if (RunickSpells.Any(x => x == Card.Id) && Bot.GetFieldSpellCard()?.Id == CardId.RunickFountain)
+                return false;
+
+            return (Card.IsTrap() || Card.HasType(CardType.QuickPlay) || DefaultSpellMustSetFirst()) && Bot.GetSpellCountWithoutField() < 4;
         }
         #endregion
 
@@ -226,47 +397,93 @@ namespace WindBot.Game.AI.Decks
         #region Runick
         public bool GoldenDropletActivate()
         {
-            return true;
+            if (SpecialRunick())
+                return true;
+            if (Enemy.Deck.Count < 15)
+                return true;
+            return false;
         }
 
         public bool FreezingCurseActivate()
         {
-            return true;
+            if (SpecialRunick())
+                return true;
+            if (FaceUpEffectNegate())
+                return true;
+            if (Bot.GetMonstersInExtraZone() != null && Duel.Phase == DuelPhase.End)
+                return true;
+            return false;
         }
 
         public bool TipActivate()
         {
+            if (SpecialRunick())
+                return true;
+            if (Duel.LastChainPlayer == 0)
+                return false;
             return true;
         }
 
         public bool DispellingActivate()
         {
-            return true;
+            if (SpecialRunick())
+                return true;
+            if (Bot.GetMonstersInExtraZone() != null)
+                return true;
+            return false;
         }
 
         public bool SlumberActivate()
         {
-            return true;
+            if (SpecialRunick())
+                return true;
+            if (Duel.Player == 1 && Duel.Phase.HasFlag(DuelPhase.BattleStep))
+                return true;
+            if (Bot.GetMonstersInExtraZone() != null && Duel.Phase == DuelPhase.End)
+                return true;
+            return false;
         }
 
         public bool FlashingFireActivate()
         {
-            return true;
+            if (SpecialRunick())
+                return true;
+            if (Enemy.GetMonsters().Any(x => MONSTER_FIELD_TARGETS.Any(y => y == x.Id)))
+                return true;
+            if (Bot.GetMonstersInExtraZone() != null && Duel.Phase == DuelPhase.End)
+                return true;
+            return false;
         }
 
         public bool StormActivate()
         {
-            return true;
+            if (SpecialRunick())
+                return true;
+            if (Enemy.GetFieldCount() >= 4)
+                return true;
+            return false;
         }
 
         public bool DestructionActivate()
         {
-            return true;
+            if (SpecialRunick())
+                return true;
+            if (Enemy.GetSpells().Any(x => SPELL_FIELD_TARGETS.Any(y => y == x.Id)))
+                return true;
+            if (CosmicActivate())
+                return true;
+            if (Bot.GetMonstersInExtraZone() != null && Duel.Phase == DuelPhase.End)
+                return true;
+            return false;
         }
 
         public bool FountainActivate()
         {
-            return true;
+            if (!Bot.HasInHand(RunickSpells))
+                return true;
+            if (Bot.GetGraveyardSpells().Count(x => RunickSpells.Any(y => y == x.Id)) >= 2)
+                return true;
+            return false;
         }
 
         public bool SleipnirActivate()
@@ -282,6 +499,28 @@ namespace WindBot.Game.AI.Decks
         public bool HuginActivate()
         {
             return true;
+        }
+
+        public bool SpecialRunick()
+        {
+            if (Duel.LastChainPlayer == 0)
+                return false;
+
+            int[] protectAgainst =
+            {
+                CardId.KnightmarePhoenix,
+                CardId.FeatherDuster,
+                CardId.LightningStorm,
+            };
+
+            if (Duel.CurrentChain.Count >= 1 && Duel.CurrentChain.Any(x => x.Controller == 1 && protectAgainst.Any(y => y == x.Id)))
+                return true;
+            if (!Bot.HasInHandOrInSpellZone(CardId.RunickFountain))
+                return true;
+            if (Duel.Phase.HasFlag(DuelPhase.BattleStep) && Bot.GetMonstersInExtraZone() == null)
+                return true;
+
+            return false;
         }
         #endregion
     }

@@ -13,6 +13,15 @@ namespace WindBot.Game.AI.Decks
     [Deck("Yubel", "AI_Yubel")]
     public class AIYubel : AIHardCodedBase
     {
+        int[] dont_use_as_link_mat =
+        {
+            CardId.UnchainedSoulRage,
+            CardId.SPLittleKnight,
+            CardId.FiendsmithDiesIrae,
+            CardId.PhantomOfYubel,
+            CardId.VarudrasBringerofEndTimes,
+            CardId.DDDHighKingCaesar
+        };
 
         public AIYubel(GameAI ai, Duel duel)
             : base(ai, duel)
@@ -27,51 +36,51 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.Activate, CardId.BystialDruiswurm, BystialActivate);
             AddExecutor(ExecutorType.Activate, CardId.BystialMagnamhut, BystialActivate);
 
+            AddExecutor(ExecutorType.Activate, CardId.TheFiendsmith, TheFiendsmithActivate);
+            AddExecutor(ExecutorType.SpSummon, CardId.FiendsmithRequiem, FiendSmithRequiemSummon);
+            AddExecutor(ExecutorType.SpSummon, CardId.FiendsmithSequentia, FiendsmithSequentiaSummon);
+            AddExecutor(ExecutorType.SpSummon, CardId.VarudrasBringerofEndTimes);
+            AddExecutor(ExecutorType.SpSummon, CardId.BeatriceLadyOfEnternal, BeatriceSummon);
+            AddExecutor(ExecutorType.SpSummon, CardId.DDDHighKingCaesar);
+            AddExecutor(ExecutorType.Activate, CardId.Terraforming);
+            AddExecutor(ExecutorType.Activate, CardId.FiendsmithTractus);
+            AddExecutor(ExecutorType.Activate, CardId.FiendsmithDiesIrae, FiendsmithDiesIraeActivate);
+            AddExecutor(ExecutorType.Activate, CardId.FiendsmithLacrimosa);
+            AddExecutor(ExecutorType.Activate, CardId.FiendsmithSequentia, FiendsmithSequentiaActivate);
+            AddExecutor(ExecutorType.Activate, CardId.FiendsmithRequiem, FiendsmithRequiemActivate);
+            AddExecutor(ExecutorType.Activate, CardId.BeatriceLadyOfEnternal, BeatriceActivate);
+            //AddExecutor(ExecutorType.SpSummon, CardId.MoonOfTheClosedHeaven, ClosedHeavenSummon);
+
+            AddExecutor(ExecutorType.Activate, CardId.NightmarePain, NightmarePainActivate);
+            AddExecutor(ExecutorType.Activate, CardId.OpeningOfTheSpritGates, SpiritGatesActivate);
+            AddExecutor(ExecutorType.Activate, CardId.NightmareThrone);
+
             AddExecutor(ExecutorType.Summon, CardId.DarkBeckoningBeast);
             AddExecutor(ExecutorType.Summon, CardId.SamsaraDLotus);
             AddExecutor(ExecutorType.Summon, CardId.ChaosSummoningBeast);
 
             AddExecutor(ExecutorType.Activate, CardId.UnchainedSoulSharvara, ShavaraActivate);
-            AddExecutor(ExecutorType.Activate, CardId.TheFiendsmith, TheFiendsmithActivate);
             AddExecutor(ExecutorType.Activate, CardId.DarkBeckoningBeast);
             AddExecutor(ExecutorType.Activate, CardId.GruesumGraveSquirmer, GraveSquirmerActivate);
             AddExecutor(ExecutorType.Activate, CardId.ChaosSummoningBeast);
             AddExecutor(ExecutorType.Activate, CardId.ChaosSummoningBeast);
-            AddExecutor(ExecutorType.Activate, CardId.Terraforming);
-            AddExecutor(ExecutorType.Activate, CardId.FiendsmithTractus);
-            AddExecutor(ExecutorType.Activate, CardId.NightmarePain, NightmarePainActivate);
-            AddExecutor(ExecutorType.Activate, CardId.OpeningOfTheSpritGates, SpiritGatesActivate);
-            AddExecutor(ExecutorType.Activate, CardId.NightmareThrone);
             AddExecutor(ExecutorType.Activate, CardId.EscapeOfUnchained, EscapeActivate);
-            AddExecutor(ExecutorType.Activate, CardId.FiendsmithDiesIrae, FiendsmithDiesIraeActivate);
-            AddExecutor(ExecutorType.Activate, CardId.FiendsmithLacrimosa);
-            AddExecutor(ExecutorType.Activate, CardId.PhantomOfYubel, PhantomActivate);
-            AddExecutor(ExecutorType.Activate, CardId.BeatriceLadyOfEnternal, BeatriceActivate);
             AddExecutor(ExecutorType.Activate, CardId.PhantomOfYubel, PhantomActivate);
             AddExecutor(ExecutorType.Activate, CardId.VarudrasBringerofEndTimes, VarudrasActivate);
-            AddExecutor(ExecutorType.Activate, CardId.BeatriceLadyOfEnternal, BeatriceActivate);
             AddExecutor(ExecutorType.Activate, CardId.DDDHighKingCaesar, CaesarActivate);
             AddExecutor(ExecutorType.Activate, CardId.UnchainedSoulYama);
             AddExecutor(ExecutorType.Activate, CardId.KnightmarePhoenix);
             AddExecutor(ExecutorType.SpSummon, CardId.UnchainedSoulRage, RageActivate);
             AddExecutor(ExecutorType.Activate, CardId.SPLittleKnight, SPActivate);
-            AddExecutor(ExecutorType.Activate, CardId.FiendsmithSequentia, FiendsmithSequentiaActivate);
-            AddExecutor(ExecutorType.Activate, CardId.Muckracker, MuckrackerActivate);
-            AddExecutor(ExecutorType.Activate, CardId.FiendsmithRequiem, FiendsmithRequiemActivate);
 
-            AddExecutor(ExecutorType.SpSummon, CardId.BeatriceLadyOfEnternal, BeatriceSummon);
             AddExecutor(ExecutorType.SpSummon, CardId.PhantomOfYubel, PhantomSummon);
-            AddExecutor(ExecutorType.SpSummon, CardId.VarudrasBringerofEndTimes);
-            AddExecutor(ExecutorType.SpSummon, CardId.BeatriceLadyOfEnternal, BeatriceSummon);
-            AddExecutor(ExecutorType.SpSummon, CardId.DDDHighKingCaesar);
+
+            AddExecutor(ExecutorType.Activate, CardId.Muckracker, MuckrackerActivate);
             AddExecutor(ExecutorType.SpSummon, CardId.UnchainedSoulYama, YamaSummon);
             AddExecutor(ExecutorType.SpSummon, CardId.KnightmarePhoenix, PhoenixSummon);
             AddExecutor(ExecutorType.SpSummon, CardId.UnchainedSoulRage);
             AddExecutor(ExecutorType.SpSummon, CardId.SPLittleKnight, SPSummon);
-            AddExecutor(ExecutorType.SpSummon, CardId.FiendsmithSequentia, FiendsmithSequentiaSummon);
-            AddExecutor(ExecutorType.SpSummon, CardId.MoonOfTheClosedHeaven, ClosedHeavenSummon);
             AddExecutor(ExecutorType.SpSummon, CardId.Muckracker, MuckrackerSummon);
-            AddExecutor(ExecutorType.SpSummon, CardId.FiendsmithRequiem, FiendSmithRequiemSummon);
 
 
             // Low Priority
@@ -193,11 +202,39 @@ namespace WindBot.Game.AI.Decks
             #region AI Selected
             if (currentCard != null)
             {
-                
+                if (CardId.BeatriceLadyOfEnternal == currentCard.Id)
+                {
+                    selected.Add(_cards.Where(x => x.Id == CardId.SamsaraDLotus).FirstOrDefault());
+                }
             }
             else
             {
+                if (hint == HintMsg.LinkMaterial)
+                {
+                    IList<ClientCard> highPriority = new List<ClientCard>();
+                    IList<ClientCard> lowPriority = new List<ClientCard>();
 
+                    int[] highList =
+                    {
+                        CardId.DarkBeckoningBeast,
+                        CardId.SamsaraDLotus,
+                        CardId.FabledLurrie,
+                        CardId.ChaosSummoningBeast,
+                    };
+                    int[] lowList = dont_use_as_link_mat;
+
+                    _cards = _cards
+                        .OrderBy(x => highList.Contains(x.Id) ? 0 : 1)
+                        .ThenBy(x => x.HasType(CardType.Link) ? -x.LinkCount : 0) // Use the highest link monster first
+                        .ThenBy(x => lowList.Contains(x.Id) ? 1 : 0)
+                        .ToList();
+
+                    // Stop selecting if using low priorty cards
+                    if (materialSelected > 0 && cancelable && _cards.Where(x => lowList.Contains(x.Id)).Count() == _cards.Count())
+                        return null;
+
+                    materialSelected += 1;
+                }
             }
             #endregion
 
@@ -282,6 +319,8 @@ namespace WindBot.Game.AI.Decks
 
         public bool SPSummon()
         {
+            if (Bot.GetLinkMaterialWorth(dont_use_as_link_mat) < 2)
+                return false;
             return true;
         }
 
@@ -292,17 +331,25 @@ namespace WindBot.Game.AI.Decks
 
         public bool MuckrackerSummon()
         {
-            return true;
+            if (Bot.GetLinkMaterialWorth(dont_use_as_link_mat) < 2)
+                return false;
+            if (Enemy.HasInSpellZone(CardId.AntiSpellFragrance))
+                return true;
+            return false;
         }
 
         public bool YamaSummon()
         {
+            if (Bot.GetLinkMaterialWorth(dont_use_as_link_mat) < 2)
+                return false;
             return true;
         }
 
         public bool PhoenixSummon()
         {
-            return true;
+            if (Enemy.GetSpells().Any(x => SPELL_FIELD_TARGETS.Any(y => y.Equals(x))))
+                return true;
+            return false;
         }
 
         public bool ClosedHeavenSummon()
@@ -321,7 +368,11 @@ namespace WindBot.Game.AI.Decks
         #region Generic Traps
         public bool EscapeActivate()
         {
-            return true;
+            if (Enemy.GetMonsters().Any(x => MONSTER_FIELD_TARGETS.Any(y => y == x.Id)))
+                return true;
+            if (Enemy.GetSpells().Any(x => SPELL_FIELD_TARGETS.Any(y => y == x.Id)))
+                return true;
+            return false;
         }
         #endregion
 

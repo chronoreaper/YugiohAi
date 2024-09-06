@@ -81,27 +81,27 @@ class Network(nn.Module):
     return x
 
 # x_train = [[1,1],[1,0],[0,1],[0,0]]
-# y_train = [[0,0,1],[1,0,0],[0,1,0],[0,0,0]]
+# y_train = [[1,1],[1,0],[-1,0],[-1,-1]]
 
 # x_train = [[1,1],  [1,0],  [1,0],  [0,1],  [0,0]]
 # y_train = [[-1,-1,1],[1,-1,-1],[-1,1,-1],[-1,1,-1],[-1,0,-1]]
 
-x_train = [[1,1],    [1,1],    [1,0],    [1,0],  [0,1],  [0,1],     [0,0]]
-y_train = [[-1,-1,1],[-1,0,-1],[1,-1,0],[-1,1,0],[-1,1,-1],[-1,0,-1],[-1,0,-1]]
+# x_train = [[1,1],    [1,1],    [1,0],    [1,0],  [0,1],  [0,1],     [0,0]]
+# y_train = [[-1,-1,1],[-1,0,-1],[1,-1,0],[-1,1,0],[-1,1,-1],[-1,0,-1],[-1,0,-1]]
 
 
-# x_train = [[1,1],  [1,0],  [0,1],  [0,1],  [0,1],  [0,0]]
-# y_train = [[1,0,0],[0,1,0],[0,0,1],[0,0,1],[0,1,0],[0,0,0]]
+x_train = [[1,1,1], [1,1,0], [0,1,1], [1,0,1], [1,0,0], [0,1,0], [0,0,1], [0,0,0]]
+y_train = [[1,1,1], [1,1,0], [-1,0,0], [1,-1,1], [1,-1,-1], [-1,1,-1], [-1,-1,0], [-1,-1,-1]]
 
 traindata = Data(np.array(x_train), np.array(y_train))
 batch_size = min(40, len(y_train))#len(y_train)
 trainloader = DataLoader(traindata, batch_size=batch_size, shuffle=True, collate_fn=lambda x: tuple(x_.to(device) for x_ in default_collate(x)))
-clf = Network(2, 3)
+clf = Network(3, 3)
 #clf = Network(input_length + output_length, 1, bias)
 clf.to(device)
 
 
-criterion = nn.BCELoss().cuda()
+criterion = nn.BCEWithLogitsLoss().cuda()
 #criterion = nn.BCEWithLogitsLoss().cuda()
 #criterion = nn.CrossEntropyLoss().cuda()
 optimizer = torch.optim.Adam(clf.parameters(), lr=0.01)
@@ -159,11 +159,11 @@ for epoch in range(epochs):
   #print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / (i + 1):.5f}')
 
 clf.eval()
-print([1,1])
-print(clf(torch.from_numpy(np.array([1,1])).to(device).float()))
-print([1,0])
-print(clf(torch.from_numpy(np.array([1,0])).to(device).float()))
-print([0,1])
-print(clf(torch.from_numpy(np.array([0,1])).to(device).float()))
-print([0,0])
-print(clf(torch.from_numpy(np.array([0,0])).to(device).float()))
+print([0,0,1])
+print(clf(torch.from_numpy(np.array([0,0,1])).to(device).float()))
+print([0,1,0])
+print(clf(torch.from_numpy(np.array([0,1,0])).to(device).float()))
+print([1,0,0])
+print(clf(torch.from_numpy(np.array([1,0,0])).to(device).float()))
+print([0,0,0])
+print(clf(torch.from_numpy(np.array([0,0,0])).to(device).float()))

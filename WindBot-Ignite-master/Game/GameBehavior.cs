@@ -76,9 +76,9 @@ namespace WindBot.Game
                 Logger.WriteLine("Custom deck provided, loading: " + Game.DeckFile + ".");
             Deck = Deck.Load(Game.DeckFile ?? _ai.Executor.Deck);
 
-            _ai.Deck.Clear();
+            /*_ai.Deck.Clear();
             _ai.Deck.AddRange(Deck.Cards);
-            _ai.Deck.AddRange(Deck.ExtraCards);
+            _ai.Deck.AddRange(Deck.ExtraCards);*/
 
             _select_hint = 0;
         }
@@ -255,8 +255,11 @@ namespace WindBot.Game
                 deck.Write(card);
 
             _ai.Deck.Clear();
+            _ai.Extra.Clear();
+            _ai.Side.Clear();
             _ai.Deck.AddRange(Deck.Cards);
-            _ai.Deck.AddRange(Deck.ExtraCards);
+            _ai.Extra.AddRange(Deck.ExtraCards);
+            _ai.Side.AddRange(Deck.SideCards);
 
             Connection.Send(deck);
             _ai.OnJoinGame();
@@ -265,7 +268,7 @@ namespace WindBot.Game
         private void OnRematch(BinaryReader packet)
         {
             double winRate = (double)SQLComm.PastXWins / (double)SQLComm.PreviousWins.Count * 100;
-            Logger.WriteLine($"{SQLComm.Name}:{SQLComm.IsTraining}:First={SQLComm.IsFirst},Update={SQLComm.ShouldUpdate}| Total Games Played: {++SQLComm.GamesPlayed} / {SQLComm.TotalGames} | Win Rate: {Math.Round((double)SQLComm.Wins / SQLComm.GamesPlayed * 1000) / 10}% Past {SQLComm.PastWinsLimit} Games: {Math.Round(winRate * 10) / 10}%");
+            Logger.WriteLine($"{SQLComm.Name}:{SQLComm.IsTraining}:First={SQLComm.IsFirst},Update={SQLComm.ShouldUpdate}| Total Games Played: {++SQLComm.GamesPlayed} / {SQLComm.TotalGames} | Win Rate: {Math.Round((double)SQLComm.Wins / Math.Min(1,SQLComm.GamesPlayed * 1000)) / 10}% Past {SQLComm.PastWinsLimit} Games: {Math.Round(winRate * 10) / 10}%");
 
             try
             {
@@ -510,8 +513,9 @@ namespace WindBot.Game
                 if (_room.Names[i] != SQLComm.Name && _room.Names[i] != null)
                 {
                     SQLComm.Opp = _room.Names[i];
-                    break;
                 }
+            if (SQLComm.Opp == "Enemy")
+                SQLComm.Opp = SQLComm.Name;
 
             _ai.OnWin(result);
         }

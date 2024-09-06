@@ -42,7 +42,9 @@ namespace WindBot
         public class CardQuant
         {
             public string Name;
+            public string Id;
             public int Quant;
+            public int Location;
         }
 
         private static SqliteConnection ConnectToDatabase()
@@ -613,7 +615,7 @@ namespace WindBot
                 foreach(CardQuant card in allCards)
                 {
                     bool played = playedCards.Contains(card.Name);
-                    sql = $"INSERT INTO GameStats (GameId, CardId, Played, Quant) VALUES (\"{rowid}\", \"{card.Name}\", \"{played}\", \"{card.Quant}\")";
+                    sql = $"INSERT INTO GameStats (GameId, CardName, CardId, Played, Quant, DeckLocation) VALUES (\"{rowid}\", \"{card.Name}\",\"{card.Id}\", \"{played}\", \"{card.Quant}\", \"{card.Location}\")";
                     using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                     {
                         cmd2.ExecuteNonQuery();

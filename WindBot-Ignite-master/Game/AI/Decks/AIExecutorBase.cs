@@ -869,7 +869,7 @@ namespace WindBot.Game.AI.Decks
             }
         }
 
-        public override void OnWin(int result, List<string> deck)
+        public override void OnWin(int result, List<int> _deck, List<int> _extra, List<int> _side, Dictionary<int, string> _idToName)
         {
             if (SQLComm.IsMCTS)
             {

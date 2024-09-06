@@ -20,6 +20,8 @@ namespace WindBot.Game
         public Dialogs _dialogs;
 
         public List<int> Deck { get; set; } = new List<int>();
+        public List<int> Extra { get; set; } = new List<int>();
+        public List<int> Side { get; set; } = new List<int>();
 
         private System.Action<string, int> _log;
 
@@ -71,9 +73,27 @@ namespace WindBot.Game
         public void OnWin(int result)
         {
             List<string> namedDeck = new List<string>();
+            Dictionary<int, string> idToName = new Dictionary<int, string>();
             foreach (int id in Deck)
+            {
                 namedDeck.Add(NamedCardsManager.GetCard(id).Name);
-            Executor.OnWin(result, namedDeck);
+                if (!idToName.ContainsKey(id))
+                    idToName.Add(id, NamedCardsManager.GetCard(id).Name);
+            }
+            foreach (int id in Extra)
+            {
+                namedDeck.Add(NamedCardsManager.GetCard(id).Name);
+                if (!idToName.ContainsKey(id))
+                    idToName.Add(id, NamedCardsManager.GetCard(id).Name);
+            }
+            foreach (int id in Side)
+            {
+                namedDeck.Add(NamedCardsManager.GetCard(id).Name);
+                if (!idToName.ContainsKey(id))
+                    idToName.Add(id, NamedCardsManager.GetCard(id).Name);
+            }
+
+            Executor.OnWin(result, Deck, Extra, Side, idToName);
         }
 
         /// <summary>

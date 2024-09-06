@@ -750,7 +750,7 @@ namespace WindBot.Game.AI
 
             if (Card.Attack < 1000)
             {
-                if (Card.IsFaceup() && Card.IsAttack())
+                if (Card.IsFaceup() && (Card.IsAttack() && Enemy.GetMonsterCount() > 0 || Card.IsDefense() && Enemy.GetMonsterCount() == 0))
                     return true;
                 if (Card.IsFaceup() && Card.IsDefense())
                     return false;

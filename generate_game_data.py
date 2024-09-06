@@ -22,6 +22,7 @@ import psutil
 
 import multiprocessing
 from export_database import export_database
+from make_deck import MakeDeckRandom, MakeDeckPytorch
 import read_game_data as read_game_data
 import get_action_weights as get_action_weights
 
@@ -36,8 +37,9 @@ AI2Deck =  'Tenpai'
 # deck2 = os.getcwd() +'/edopro_bin/deck/AI_Tenpai.ydk'
 
 reset = False
+generations = 10
 totalGames = 1
-parallelGames = 1
+parallelGames = 3
 
 def isrespondingPID(PID):
   #if platform == "linux" or platform == "linux2":
@@ -181,7 +183,7 @@ def shuffle_deck(deck_name):
   f.close()
 
 
-def main_game_runner(pool, totalGames, Id1, Id2, Deck1, Deck2, DeckFile1, DeckFile2, port):
+def main_game_runner(pool, totalGames, Name1, Name2, Deck1, Deck2, DeckFile1, DeckFile2, port):
   start = time.time()
 
   #subprocess.Popen - does not wait to finish
@@ -199,20 +201,20 @@ def main_game_runner(pool, totalGames, Id1, Id2, Deck1, Deck2, DeckFile1, DeckFi
 
   time.sleep(8)
   
-  print("	runningAi1 " + str(Id1) + ":" + Deck1)
+  print("	runningAi1 " + str(Name1) + ":" + Deck1)
 
   p1 = runAi( Deck = Deck1, 
               DeckFile = DeckFile1,
-              Name = Id1,
+              Name = Name1,
               TotalGames = totalGames,
               Id = pool,
               Port = port,
             )
   time.sleep(1)
-  print("	runningAi2 "+ str(Id2) + ":" + Deck2)
+  print("	runningAi2 "+ str(Name2) + ":" + Deck2)
   p2 = runAi(Deck = Deck2, 
               DeckFile = DeckFile2,
-              Name = Id2,
+              Name = Name2,
               TotalGames = totalGames,
               Id = pool,
               Port = port,
@@ -251,53 +253,75 @@ def main_game_runner(pool, totalGames, Id1, Id2, Deck1, Deck2, DeckFile1, DeckFi
 
 def main():
   global totalGames
-  parseArg()
 
-  if reset:
-    resetDB()
-    resetYgoPro()
+  start = time.time()
+  parseArg()
   
   pool = getPool()
 
   proc = multiprocessing.Process(target=get_action_weights.run_server, args=())
   proc.start()
 
-  decks = ["SnakeEyes", "Tenpai", "Labrynth", "Branded", "Runick", "Yubel" ]
-  deck1index = 0
-  deck2index = 0
+  decks = ["SnakeEyes", "Tenpai", "Labrynth", "Labrynth2", "Branded", "Runick", "Runick2", "Runick3", "Yubel" ]
+  decks1 = ["SnakeEyes","SnakeEyes2", "Labrynth", "Labrynth2"] #["Labrynth", "Labrynth2",
+  decks2 = decks1
+  #decks1 = ["SnakeEyes", "Tenpai", "Labrynth", "Labrynth2", "Branded", "Runick", "Runick2", "Runick3", "Yubel" ]
+  #decks2 = ["SnakeEyes", "Tenpai", "Labrynth", "Labrynth2", "Branded", "Runick", "Runick2", "Runick3", "Yubel" ]
 
+  if reset:
+    resetDB()
+    resetYgoPro()
+    MakeDeckRandom()
+  for g in range(generations):
+    print("running generation " + str(g))
 
-  jobs = []
-  pairs = []
+    jobs = []
+    pairs = []
+    deck1index = 0
+    deck2index = 0
 
-  while deck2index < len(decks):
-    for _ in range(parallelGames):
-      if deck2index >= len(decks):
-        break
-      name1 = decks[deck1index]
-      name2 = decks[deck2index]
-      deck1 = os.getcwd() +'/edopro_bin/deck/AI_' + name1 + '.ydk'
-      deck2 = os.getcwd() +'/edopro_bin/deck/AI_' + name2 + '.ydk'
+    while deck2index < len(decks2):
+      while len(jobs) < parallelGames:
+        if deck2index >= len(decks2):
+          break
+        
+        name1 = decks1[deck1index]
+        name2 = decks2[deck2index]
 
-      print("running game " + str(0) + ":" + str(name1) + "vs" + str(name2) + ": Total games " + str(totalGames))
-      port = 7911 + 0
-      p = multiprocessing.Process(target=main_game_runner, args=(pool, totalGames, str(name1), str(name2), name1, name2, deck1, deck2, port))
-      #psutil.Process(p.pid).nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
-      jobs.append(p)
-      p.start()
+        if not (deck1index > 0 and name2 in decks1[:deck1index - 1] and deck1 == deck2):
+          
+          deck1 = os.getcwd() +'/edopro_bin/deck/AI_' + name1 + '.ydk'
+          deck2 = os.getcwd() +'/edopro_bin/deck/AI_' + name2 + '.ydk'
 
-      deck1index += 1
-      if deck1index >= len(decks):
-        deck1index = 0
-        deck2index += 1
+          print("running game:" + str(name1) + "vs" + str(name2) + ": Total games " + str(totalGames))
+          bot1 = name1.rstrip(string.digits)
+          bot2 = name2.rstrip(string.digits)
 
-    for job in jobs:
-      job.join()
-    jobs.clear()
-    
-    proc.terminate()  # sends a SIGTERM
-  print("done cycle")
-  export_database()
+          port = 7911 + len(jobs)
+          p = multiprocessing.Process(target=main_game_runner, args=(pool, totalGames, str(name1), str(name2), bot1, bot2, deck1, deck2, port))
+          #psutil.Process(p.pid).nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+          jobs.append(p)
+          p.start()
+
+        deck1index += 1
+        if deck1index >= len(decks1):
+          deck1index = 0
+          deck2index += 1
+
+      for job in jobs:
+        job.join()
+      jobs.clear()
+      
+      proc.terminate()  # sends a SIGTERM
+    print("done cycle")
+    export_database()
+
+    end = time.time()
+    print("Total Time Past:" + str(datetime.timedelta(seconds=int(end - start))))
+    print("Total Average Game Time:"+str(datetime.timedelta(seconds=int((end - start)/(len(decks1) * len(deck2) * totalGames)))))
+
+    MakeDeckRandom()
+    #MakeDeckPytorch(5)
 
 if __name__ == "__main__":
   torch.multiprocessing.set_start_method('spawn')

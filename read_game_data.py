@@ -58,8 +58,6 @@ class Data(Dataset):
   def __len__(self):
     return self.len
 
-import torch.nn as nn
-
 class CustomLoss(nn.Module):
     def __init__(self):
         super(CustomLoss, self).__init__()
@@ -598,6 +596,9 @@ def showGameHistory():
       ind = np.argpartition(res, -nth)[-nth:]
       index = ind[np.argsort(res[ind])]
       index = index[::-1]
+
+      # index = sorted(range(len(output)), key=lambda k: output[k])
+		  # index = index[::-1]
       for i in index:
         if i in possibleActions:
           text += "[" + str(i) + "]" + ":" + str(round(res[i]*100)) + ","
@@ -858,6 +859,8 @@ def showDataPredictionPercentage():
       ind = np.argpartition(result, -4)[-4:]
       index = ind[np.argsort(result[ind])]
       index = index[::-1]
+      # index = sorted(range(len(output)), key=lambda k: output[k])
+		  # index = index[::-1]
 
       result_type = 0
         

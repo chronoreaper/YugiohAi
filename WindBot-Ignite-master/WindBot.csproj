@@ -67,8 +67,9 @@
     <Compile Include="Game\AI\Decks\AIBranded.cs" />
     <Compile Include="Game\AI\Decks\AILabrynth.cs" />
     <Compile Include="Game\AI\Decks\AIRunick.cs" />
-    <Compile Include="Game\AI\Decks\AITenpai.cs" />
     <Compile Include="Game\AI\Decks\AISnakeEyes.cs" />
+    <Compile Include="Game\AI\Decks\AITenpai.cs" />
+    <Compile Include="Game\AI\Decks\AICombined.cs" />
     <Compile Include="Game\AI\Decks\AIHardCodedBase.cs" />
     <Compile Include="Game\AI\Deck.cs" />
     <Compile Include="Game\AI\Decks\AIVoiceless.cs" />

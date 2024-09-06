@@ -27,15 +27,47 @@ namespace WindBot.Game.AI.Decks
         protected List<int> seenCards = new List<int>();
 
         // Try and take out dangerous targets
-        public int[] FIELD_TARGETS = {
+        public int[] MONSTER_FIELD_TARGETS = {
             CardId.SnakeEyeFlamberge,
             CardId.PromethianPrincess,
             CardId.SalamangreatRagingPhoenix,
             CardId.AccesscodeTalker,
             CardId.WorldseadragonZealantis,
-            CardId.FiendsmithSequentia
+            CardId.FiendsmithSequentia,
+            CardId.Apollusa,
+            CardId.PhantomOfYubel,
+            CardId.LovelyLabrynth,
+            CardId.MirrorJadeTheIcebladeDragon,
+            CardId.MajestyFiend,
+            CardId.PredaplantDRagostapelia,
+            CardId.BorreloadFuriousDragon
         };
 
+        public int[] DONT_DESTROY =
+        {
+            CardId.GeriRunick,
+            CardId.SnakeEyeFlamberge,
+            CardId.SnakeEyePoplar,
+        };
+
+        public int[] SPELL_FIELD_TARGETS =
+        {
+            CardId.SkillDrain,
+            CardId.GozenMatch,
+            CardId.RivalyOfWarlords,
+            CardId.ThereCanBeOnlyOne,
+            CardId.RunickFountain,
+            CardId.GraveOfTheSuperAncient,
+            CardId.SynchroZone,
+            CardId.SangenSummoning,
+            CardId.BrandedLost,
+            CardId.MessengerOfPeace,
+            CardId.DimensonalFissure,
+            CardId.AntiSpellFragrance,
+            CardId.DivineTempleSnakeEyes,
+        };
+
+        // Effect negate
         public int[] reactiveEnemyTurn =
         {
                 CardId.SnakeEyeAsh,
@@ -51,10 +83,28 @@ namespace WindBot.Game.AI.Decks
                 CardId.AccesscodeTalker,
         };
 
+        public int[] proactivePlayerTurn =
+        {
+            CardId.AmanoIwato,
+            CardId.MajestyFiend
+        };
+
         public int[] reactivePlayerTurn =
         {
                 CardId.Apollusa,
                 CardId.IPMasquerena,
+        };
+
+        public int[] faceupSpellTrapNegate =
+        {
+            CardId.HeatWave,
+            CardId.RunickFountain,
+            CardId.RunickDestruction,
+            CardId.DarumaCannon,
+            CardId.SimultaneousCannon,
+            CardId.EvenlyMatched,
+            CardId.DarkRulerNoMore,
+            CardId.ForbiddenDroplet
         };
 
         public int[] dontUseAsMaterial =
@@ -63,17 +113,14 @@ namespace WindBot.Game.AI.Decks
             CardId.WorldseadragonZealantis,
             CardId.UnderworldGoddess,
             CardId.Apollusa,
-            CardId.SalamangreatRagingPhoenix
+            CardId.SalamangreatRagingPhoenix,
+            CardId.FiendsmithDiesIrae,
+            CardId.PhantomOfYubel,
+            CardId.SalamangreatRagingPhoenix,
+            CardId.AccesscodeTalker,
+            CardId.SnakeEyeFlamberge
         };
 
-        public int[] removeSpellTrap =
-        {
-            CardId.SkillDrain,
-            CardId.SangenSummoning,
-            CardId.AntiSpellFragrance,
-            CardId.DivineTempleSnakeEyes,
-            CardId.SnakeEyeDiabellstar
-        };
 
         public enum ActivatedEffect
         {
@@ -120,6 +167,8 @@ namespace WindBot.Game.AI.Decks
             public const int LordOfHeavelyPrison = 09822220;
             public const int LavaGolemn = 00102380;
             public const int Pankratops = 82385847;
+            public const int SphereMode = 10000080;
+            public const int DDCrow = 24508238;
 
             // Generic Spells
             public const int Bonfire = 85106525;
@@ -149,6 +198,7 @@ namespace WindBot.Game.AI.Decks
             public const int SnatchSteal = 45986603;
             public const int ChangeOfHeart = 04031928;
             public const int BookOfEclipse = 35480699;
+            public const int CardOfDemise = 59750328;
 
             // Generic Traps
             public const int InfiniteImpermanence = 10045474;
@@ -178,6 +228,7 @@ namespace WindBot.Game.AI.Decks
             public const int SolemnJudgment = 41420027;
             public const int GraveOfTheSuperAncient = 83266092;
             public const int FusionDuplication = 43331750;
+            public const int SolemnStrike = 40605147;
 
             // Generic Synchro
             public const int BlackRoseMoonlightDragon = 33698022;
@@ -270,6 +321,8 @@ namespace WindBot.Game.AI.Decks
 
             public const int FiendsmithRequiem = 02463794;
             public const int FiendsmithSequentia = 49867899;
+
+            public const int NecroqiopPrincess =  93860227;
 
 
             // Fabled
@@ -407,7 +460,11 @@ namespace WindBot.Game.AI.Decks
             public const int MajestyFiend = 33746252;
             public const int AmanoIwato = 32181268;
             public const int InterdimensionalMatterTransolcator = 60238002;
-
+            public const int MessengerOfPeace = 44656491;
+            public const int OneDayOfPeace = 33782437;
+            public const int TimeTearingMorganite = 19403423;
+            public const int DimensonalFissure = 81674782;
+            public const int BattleFader = 19665973;
         }
 
         public AIHardCodedBase(GameAI ai, Duel duel)
@@ -422,10 +479,22 @@ namespace WindBot.Game.AI.Decks
             AddExecutor(ExecutorType.Activate, CardId.InfiniteImpermanence, FaceUpEffectNegate);
             AddExecutor(ExecutorType.Activate, CardId.AshBlossom, AshBlossomActivate);
             AddExecutor(ExecutorType.Activate, CardId.DrollnLockBird, DrollActivate);
+            AddExecutor(ExecutorType.Activate, CardId.DDCrow, DDCrowActivate);
             AddExecutor(ExecutorType.Activate, CardId.Nibiru);
             AddExecutor(ExecutorType.Activate, CardId.FantasticalPhantazmay);
+            AddExecutor(ExecutorType.Activate, CardId.DimensionShifter);
             AddExecutor(ExecutorType.Activate, CardId.CosmicCyclone, CosmicActivate);
             AddExecutor(ExecutorType.Activate, CardId.SolemnJudgment, DefaultSolemnJudgment);
+
+            AddExecutor(ExecutorType.Activate, CardId.SkillDrain);
+            AddExecutor(ExecutorType.Activate, CardId.GozenMatch);
+            AddExecutor(ExecutorType.Activate, CardId.RivalyOfWarlords);
+            AddExecutor(ExecutorType.Activate, CardId.ThereCanBeOnlyOne);
+            AddExecutor(ExecutorType.Activate, CardId.AntiSpellFragrance);
+            AddExecutor(ExecutorType.Activate, CardId.GraveOfTheSuperAncient);
+            AddExecutor(ExecutorType.Activate, CardId.SynchroZone);
+            AddExecutor(ExecutorType.Activate, CardId.DifferentDimensionGround);
+            AddExecutor(ExecutorType.Activate, CardId.DimensionalBarrier);
         }
 
         protected List<long> HintMsgForEnemy = new List<long>
@@ -516,7 +585,7 @@ namespace WindBot.Game.AI.Decks
                         if (CardId.InfiniteImpermanence == Card.Id ||
                             CardId.EffectVeiler == Card.Id ||
                             CardId.GhostMourner == Card.Id)
-                            selected.Add(_cards.Where(x => x.Id == Duel.CurrentChain[Duel.CurrentChain.Count - 2].Id).FirstOrDefault());
+                            selected.Add(_cards.FirstOrDefault(x => Duel.CurrentChain.Any(y => y.Equals(x))));
                     }
                     if (CardId.CalledByTheGrave == currentCard.Id)
                     {
@@ -524,12 +593,12 @@ namespace WindBot.Game.AI.Decks
                     }
                     int[] GYBanish =
                     {
-                    CardId.BystialMagnamhut,
-                    CardId.BystialDruiswurm,
-                    CardId.BystialSaronir
-                };
+                        CardId.BystialMagnamhut,
+                        CardId.BystialDruiswurm,
+                        CardId.BystialSaronir
+                    };
                     if (GYBanish.Any(x => x == currentCard.Id))
-                        selected.Add(_cards.Where(x => x.Location == CardLocation.Grave && x.HasAttribute(CardAttribute.Dark | CardAttribute.Light) && Duel.ChainTargets.Any(y => y.Id == x.Id))
+                        selected.Add(_cards.Where(x => x.Location == CardLocation.Grave && x.HasAttribute(CardAttribute.Dark | CardAttribute.Light) && Duel.ChainTargets.Any(y => y.Equals(x)))
                                             .OrderBy(x => x.Owner == 1 ? 0 : 1)
                                             .FirstOrDefault()
                                      );
@@ -550,6 +619,9 @@ namespace WindBot.Game.AI.Decks
                         }
                         else if (Duel.Player == 0)
                         {
+                            foreach (int id in proactivePlayerTurn)
+                                count += Enemy.GetMonsters().Where(x => x.Id == id).Count();
+
                             foreach (int id in reactivePlayerTurn)
                                 count += Enemy.GetMonsters().Where(x => x.Id == id).Count();
                         }
@@ -578,10 +650,20 @@ namespace WindBot.Game.AI.Decks
                         }
                         else if (Duel.Player == 0)
                         {
+                            foreach (int id in proactivePlayerTurn)
+                                selected.Add(_cards.Where(x => x.Id == id).FirstOrDefault());
+
                             foreach (int id in reactivePlayerTurn)
                                 selected.Add(_cards.Where(x => x.Id == id).FirstOrDefault());
                         }
                     }
+                }
+                else if (CardId.SPLittleKnight == currentCard.Id)
+                {
+                    _cards.OrderBy(x => MONSTER_FIELD_TARGETS.Any(y => y.Equals(x)) ? 0 : 1)
+                          .ThenBy(x => SPELL_FIELD_TARGETS.Any(y => y.Equals(x)) ? 0 : 1)
+                          .ThenBy(x => x.Location == CardLocation.MonsterZone ? 0 : 1)
+                          .ThenBy(x => x.Location == CardLocation.SpellZone ? 0 : 1);
                 }
 
                 #region Fiendsmith Selection
@@ -615,36 +697,74 @@ namespace WindBot.Game.AI.Decks
                 }
                 else if (CardId.FiendsmithSequentia == currentCard.Id)
                 {
-                    if (hint == HintMsg.FusionMaterial)
-                    {
-                        IList<ClientCard> highPriority = new List<ClientCard>();
-                        IList<ClientCard> lowPriority = new List<ClientCard>();
-
-                        int[] highList =
-                        {
-                        };
-                        int[] lowList =
-                        {
-                            CardId.TheFiendsmith,
-                        };
-
-                        _cards = _cards
-                            .OrderBy(x => highList.Contains(x.Id) ? 0 : 1)
-                            .ThenBy(x => x.HasType(CardType.Link) ? -x.LinkCount : 0) // Use the highest link monster first
-                            .ThenBy(x => lowList.Contains(x.Id) ? 1 : 0)
-                            .ToList();
-
-                        // Stop selecting if using low priorty cards
-                        if (materialSelected > 0 && _cards.Where(x => lowList.Contains(x.Id)).Count() == _cards.Count())
-                            return null;
-
-                        materialSelected += 1;
-                    }
-                    else if (hint == HintMsg.SpSummon)
+                    if (hint == HintMsg.SpSummon)
                     {
                         selected.Add(_cards.Where(x => x.Id == CardId.FiendsmithLacrimosa).FirstOrDefault());
                     }
                 }
+                else if (CardId.FiendsmithDiesIrae == currentCard.Id)
+                {
+                    if (Card.Location == CardLocation.Grave) // Send to grave effect
+                    {
+                        _cards.OrderBy(x => MONSTER_FIELD_TARGETS.Any(y => y.Equals(x)) ? 0 : 1)
+                                  .ThenBy(x => SPELL_FIELD_TARGETS.Any(y => y.Equals(x)) ? 0 : 1)
+                                  .ThenBy(x => x.Location == CardLocation.MonsterZone ? 0 : 1)
+                                  .ThenBy(x => x.Location == CardLocation.SpellZone ? 0 : 1);
+                    }
+                    else
+                    {
+                        foreach (int id in faceupSpellTrapNegate)
+                            selected.Add(_cards.Where(x => x.Id == id).FirstOrDefault());
+
+                        if (Duel.Player == 1)
+                        {
+                            foreach (int id in protactiveEnemyTurn)
+                                selected.Add(_cards.Where(x => x.Id == id).FirstOrDefault());
+
+                            foreach (int id in reactiveEnemyTurn)
+                                selected.Add(_cards.Where(x => x.Id == id).FirstOrDefault());
+
+                        }
+                        else if (Duel.Player == 0)
+                        {
+                            foreach (int id in proactivePlayerTurn)
+                                selected.Add(_cards.Where(x => x.Id == id).FirstOrDefault());
+
+                            foreach (int id in reactivePlayerTurn)
+                                selected.Add(_cards.Where(x => x.Id == id).FirstOrDefault());
+                        }
+                    }
+                }
+                else if (CardId.DDCrow == currentCard.Id)
+                {
+                    selected.Add(_cards.Where(x => x.Id == DDCrowTargets()).FirstOrDefault());
+                }
+            }
+            else if (hint == HintMsg.FusionMaterial)
+            {
+                IList<ClientCard> highPriority = new List<ClientCard>();
+                IList<ClientCard> lowPriority = new List<ClientCard>();
+
+                int[] highList =
+                {
+                    CardId.FiendsmithSequentia
+                };
+                int[] lowList =
+                {
+                    CardId.TheFiendsmith,
+                    CardId.FiendsmithDiesIrae
+                };
+
+                _cards = _cards
+                    .OrderBy(x => highList.Contains(x.Id) ? 0 : 1)
+                    .ThenBy(x => lowList.Contains(x.Id) ? 1 : 0)
+                    .ToList();
+
+                // Stop selecting if using low priorty cards
+                if (materialSelected > 0 && _cards.Where(x => lowList.Contains(x.Id)).Count() == _cards.Count())
+                    return null;
+
+                materialSelected += 1;
             }
             #endregion
 
@@ -830,9 +950,15 @@ namespace WindBot.Game.AI.Decks
             {
                 if (Duel.CurrentChain.Count >= 2)
                 {
-                    int crossoutTarget = Duel.CurrentChain[Duel.CurrentChain.Count - 2].Id;
-                    if (avail.Contains(crossoutTarget))
-                        return (crossoutTarget);
+                    foreach(var card in Duel.CurrentChain)
+                        if (avail.Contains(card.Id) && card.Controller == 1)
+                            return (card.Id);
+                    foreach (var card in Enemy.GetSpells())
+                        if (avail.Contains(card.Id))
+                            return card.Id;
+                    foreach (var card in Enemy.GetMonsters())
+                        if (avail.Contains(card.Id))
+                            return card.Id;
 
                 }
             }
@@ -853,19 +979,35 @@ namespace WindBot.Game.AI.Decks
             });
         }
 
-        public override void OnWin(int result, List<string> _deck)
+        public override void OnWin(int result, List<int> _deck, List<int> _extra, List<int> _side, Dictionary<int, string> _idToName)
         {
             winResult = result;
 
             List<SQLComm.CardQuant> deckQuant = new List<SQLComm.CardQuant>();
-            List<string> deck = new List<string>(_deck);
-            while(deck.Count > 0)
+            List<int> deck = new List<int>(_deck);
+            List<int> extra = new List<int>(_extra);
+            List<int> side = new List<int>(_side);
+            while (deck.Count > 0)
             {
-                string name = deck[0];
-                int quant = deck.Where(x => x == name).Count();
-                deck.RemoveAll(x => x == name);
-                deckQuant.Add(new SQLComm.CardQuant() { Name = name, Quant = quant });
+                int id = deck[0];
+                int quant = deck.Where(x => x == id).Count();
+                deck.RemoveAll(x => x == id);
+                deckQuant.Add(new SQLComm.CardQuant() { Name = _idToName[id], Id = id.ToString(), Quant = quant, Location = 0 });
             }
+            while (extra.Count > 0)
+            {
+                int id = extra[0];
+                int quant = extra.Where(x => x == id).Count();
+                extra.RemoveAll(x => x == id);
+                deckQuant.Add(new SQLComm.CardQuant() { Name = _idToName[id], Id = id.ToString(), Quant = quant, Location = 1 });
+            }
+            /*while (side.Count > 0)
+            {
+                int id = side[0];
+                int quant = side.Where(x => x == id).Count();
+                side.RemoveAll(x => x == id);
+                deckQuant.Add(new SQLComm.CardQuant() { Name = _idToName[id], Id = id.ToString(), Quant = quant, Location = 2 });
+            }*/
 
 
             SQLComm.SavePlayedCards(Duel.IsFirst, postSide, result, used, deckQuant);
@@ -911,6 +1053,10 @@ namespace WindBot.Game.AI.Decks
                 if (Duel.Player == 1 && Enemy.GetMonsters().Where(x => x.Id == id && !x.IsDisabled()).Any())
                     return true;
 
+            foreach (int id in proactivePlayerTurn)
+                if (Duel.Player == 0 && Enemy.GetMonsters().Where(x => x.Id == id && !x.IsDisabled()).Any())
+                    return true;
+
             if (!DefaultNegate())
                 return false;
 
@@ -924,6 +1070,14 @@ namespace WindBot.Game.AI.Decks
                     if (Duel.CurrentChain.Where(x => x.Id == id && !x.IsDisabled() && !Util.IsChainTarget(x)).Any())
                         return true;
 
+            return false;
+        }
+
+        public bool FaceUpSpellNegate()
+        {
+            foreach (int id in faceupSpellTrapNegate)
+                if (Enemy.GetSpells().Where(x => x.Id == id && !x.IsDisabled()).Any())
+                    return true;
             return false;
         }
 
@@ -1011,6 +1165,41 @@ namespace WindBot.Game.AI.Decks
             return false;
         }
 
+        public bool DDCrowActivate()
+        {
+            if (Duel.CurrentChain.ContainsCardWithId(CardId.DDCrow))
+                return false;
+            return DDCrowTargets() != -1;
+        }
+
+        public int DDCrowTargets()
+        {
+            if (Duel.ChainTargets.Any(x => x.Location == CardLocation.Grave))
+                return Duel.ChainTargets.FirstOrDefault(x => x.Location == CardLocation.Grave).Id;
+
+            if (Duel.CurrentChain.Any(x => x.Id == CardId.SnakeEyeFlamberge && x.Location == CardLocation.Grave) && Enemy.Graveyard.Where(x => x.Level == 1 && x.HasAttribute(CardAttribute.Fire)).Count() == 2)
+                return Enemy.Graveyard.FirstOrDefault(x => x.Level == 1 && x.HasAttribute(CardAttribute.Fire)).Id;
+
+            if (Duel.Player == 0 && Enemy.Graveyard.ContainsCardWithId(CardId.PromethianPrincess))
+                return CardId.PromethianPrincess;
+
+            if (Duel.Player == 0 && Enemy.Graveyard.ContainsCardWithId(CardId.SalamangreatRagingPhoenix))
+                return CardId.SalamangreatRagingPhoenix;
+
+            if (Duel.Player == 0 && Enemy.Graveyard.ContainsCardWithId(CardId.UnchainedSoulYama))
+                return CardId.UnchainedSoulYama;
+
+            if (Duel.CurrentChain.Any(x => x.Id == CardId.TheFiendsmith && x.Location == CardLocation.Grave))
+                return CardId.TheFiendsmith;
+
+            if (Duel.CurrentChain.Any(x => x.Id == CardId.SangenpaiBidentDragion && x.Location == CardLocation.Grave))
+                return CardId.SangenpaiBidentDragion;
+            if (Duel.CurrentChain.Any(x => x.Id == CardId.SangenpaiTranscendentDragion && x.Location == CardLocation.Grave))
+                return CardId.SangenpaiTranscendentDragion;
+
+            return -1;
+        }
+
         #endregion
 
 
@@ -1026,7 +1215,11 @@ namespace WindBot.Game.AI.Decks
                 return false;
             if (Duel.CurrentChain.Count() <= 0)
                 return false;
-            if (Bot.Deck.Where(x => x.Name == Duel.CurrentChain.LastOrDefault()?.Name).Any())
+            if (Bot.Deck.Where(x => x.Name == Duel.CurrentChain.LastOrDefault()?.Name && x.Controller == 1).Any())
+                return true;
+            if (Bot.Deck.Where(x => x.Name == Enemy.GetSpells().LastOrDefault()?.Name).Any())
+                return true;
+            if (Bot.Deck.Where(x => x.Name == Enemy.GetMonsters().LastOrDefault()?.Name).Any())
                 return true;
             return false;
         }
@@ -1040,11 +1233,11 @@ namespace WindBot.Game.AI.Decks
 
         public bool CosmicActivate()
         {
-            if (Duel.CurrentChain.Any(x => removeSpellTrap.Contains(x.Id) && !Duel.ChainTargets.Any()))
+            if (Duel.CurrentChain.Any(x => SPELL_FIELD_TARGETS.Contains(x.Id) && !Duel.ChainTargets.Any()))
                 return true;
-            if (Duel.Player == 1 && Enemy.SpellZone.Any(x => x.HasPosition(CardPosition.FaceDown)))
+            if (Duel.Player == 1 && Enemy.GetSpells().Any(x => x.HasPosition(CardPosition.FaceDown)))
                 return true;
-            if (Duel.Player == 0 && Enemy.SpellZone.Count(x => x.HasPosition(CardPosition.FaceDown)) == 1)
+            if (Duel.Player == 0 && Enemy.GetSpells().Count(x => x.HasPosition(CardPosition.FaceDown)) == 1)
                 return true;
 
             return false;
@@ -1087,13 +1280,23 @@ namespace WindBot.Game.AI.Decks
         {
             if (Card.Location != CardLocation.Grave)
                 return true;
+            else if (Bot.GetMonsters().Count(x => x.HasAttribute(CardAttribute.Light) && x.HasRace(CardRace.Fiend)) >= 3)
+                return true;
             return false;
+        }
+
+        public bool FiendsmithLacrimosaActivate()
+        {
+            if (Bot.HasInMonstersZone(CardId.FiendsmithDiesIrae))
+                return false;
+            return true;
         }
 
         public bool FiendsmithDiesIraeActivate()
         {
-            return FaceUpEffectNegate();
-            // TODO add faceup spell trap negate as well
+            if (Card.Location == CardLocation.Grave)
+                return true;
+            return FaceUpEffectNegate() || FaceUpSpellNegate();
         }
 
         public bool FiendsmithRequiemActivate()
@@ -1137,6 +1340,12 @@ namespace WindBot.Game.AI.Decks
             return true;
         }
 
+        public bool NecroquipPrincessSummon()
+        {
+            if (Bot.HasInMonstersZone(CardId.TheFiendsmith))
+                return true;
+            return false;
+        }
 
         #endregion
 
@@ -1237,6 +1446,48 @@ namespace WindBot.Game.AI.Decks
             return Archetypes.Unknown;
         }
 
+        protected Archetypes GetPlayerDeckType()
+        {
+            int[] SnakeEyes =
+{
+                CardId.SnakeEyeAsh,
+                CardId.SnakeEyeOak,
+                CardId.SnakeEyePoplar,
+                CardId.SnakeEyeDiabellstar,
+                CardId.SnakeEyeFlamberge,
+                CardId.OriginalSinfulSpoilsSnakeEyes,
+                CardId.DiabellstarBlackWitch,
+                CardId.WANTEDSinfulSpoils,
+                CardId.DivineTempleSnakeEyes
+            };
+
+            // if (SnakeEyes.Any(x => Util.Bot.Deck.Any(y => y.Alias == x)))
+            //     return Archetypes.SnakeEyes;
+
+            int[] Labrynth =
+            {
+
+            };
+
+            int[] Branded =
+            {
+
+            };
+
+            int[] Tenpai =
+            {
+                CardId.TenpaiChundra,
+                CardId.TenpaiFadra,
+                CardId.TenpaiPaidra,
+                CardId.SangenKaimen,
+                CardId.SangenSummoning,
+            };
+            // if (Tenpai.Any(x => Util.Bot.Deck.Any(y => y.Alias == x)))
+            //     return Archetypes.Tenpai;
+
+            return Archetypes.Unknown;
+        }
+
         /// <summary>
         /// Add as many of the given cards from the main/side list to the cards to add list
         /// </summary>
@@ -1265,6 +1516,30 @@ namespace WindBot.Game.AI.Decks
                     var card = pool.ElementAt(0);
                     pool.RemoveAt(0);
                     toAddTo.Add(card);
+                }
+            }
+        }
+
+        protected void MoveTo(IList<int> from, IList<int> to, IList<int> cards = null, int lastx = 0)
+        {
+            if (cards != null)
+            {
+                foreach (var card in cards)
+                {
+                    if (from.Any(x => x == card))
+                    {
+                        from.Remove(card);
+                        to.Add(card);
+                    }
+                }
+            }
+            else
+            {
+                for(var i = from.Count - 1; i >= from.Count - 1 - lastx; i --)
+                {
+                    int card = from[i];
+                    from.RemoveAt(i);
+                    to.Add(card);
                 }
             }
         }

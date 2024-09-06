@@ -89,6 +89,7 @@ namespace WindBot
                     Path.GetFullPath("cards.cdb"),
                     Path.GetFullPath("cards.delta.cdb"),
                     Path.GetFullPath("release-info.cdb"),
+                    Path.GetFullPath("prerelease-info-en.cdb"),
                 };
             }
 

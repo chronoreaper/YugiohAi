@@ -1,6 +1,10 @@
 import os
+import sqlite3
 import random, os, sys
 from typing import List
+
+
+card_pool = []
 
 class Deck:
   main = []
@@ -105,6 +109,46 @@ def _create_deck(core:Deck, variant:List[Deck], main_limit = 40) -> Deck:
         if (len(core.main) > main_limit):
             break
     return core
+
+
+def GetCardPool():
+	dbfile = './cardData.cdb'
+	con = sqlite3.connect(dbfile)
+	cur = con.cursor()
+	cur.execute('SELECT distinct CardId from GameStats')
+	result = cur.fetchone()
+
+	ForbiddenLimitedUpdate()
+
+# Updates the Card Pool based on Limited list
+# Assumes that the card pool contains 3 of each card
+def ForbiddenLimitedUpdate():
+	file_path = os.getcwd() + "/edopro_bin/repositories/lflists/0TCG.lflist.conf"
+	
+	limited = -1
+
+	f = open(file_path,"r")
+	for line in f.readlines():
+
+		if "#Forbidden" in line:
+			limited = 0
+			continue
+		elif "#Limited" in line:
+			limited = 1
+			continue
+		elif "#Semi-limited" in line:
+			limited = 2
+			continue
+		elif "#" == line[0] or "!" == line[0]:
+			continue
+
+		card = line.split(' ')[0]
+		if card in card_pool:
+			for _ in range(3 - limited):
+				card_pool.remove(card)
+
+	f.close()
+     
 
 def intersect(lst1, lst2):
     return len(list(set(lst1) & set(lst2))) > 0

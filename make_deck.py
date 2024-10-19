@@ -252,6 +252,7 @@ def ForbiddenLimitedUpdate():
 			# 	card_pool.pop(card_id)
 			# else:
 			card_pool[card_id].quant = limited
+			print(f"{card_pool[card_id].card_name} -> {limited}")
 
 	f.close()
 
@@ -407,9 +408,10 @@ def UpdateCardStatsPyTorch(random_cards = 1):
 	con.close()
 	clf = TrainTorch(game_result)
 	cards_added = []
-	for y in range(10):
+	for y in range(5):
 		print(f"---Making Deck {y}---")
-		deck_raw, cards_added, deck_main_count,	deck_extra_count,	deck_side_count = AddRandomCards([], [], 0, 0, 0, 40, 15, random_cards)
+		deck_raw, cards_added, deck_main_count,	deck_extra_count,	deck_side_count = LoadIncompleteDeck(f'AI_Starter{y}.ydk')
+		#deck_raw, cards_added, deck_main_count,	deck_extra_count,	deck_side_count = AddRandomCards(deck_raw, cards_added, deck_main_count,	deck_extra_count,	deck_side_count, 40, 15, max(0,random_cards - len(cards_added)))
 		deck_raw, cards_added, deck_main_count,	deck_extra_count,	deck_side_count = GenerateDeckPytorch(clf, deck_raw, cards_added, deck_main_count,	deck_extra_count,	deck_side_count, 40)
 		ExportDeck(deck_raw, y)
 
@@ -429,12 +431,12 @@ def TrainTorch(game_result:Dict[int,List[int]]):
 
 	criterion = nn.BCEWithLogitsLoss().cuda()
 	#criterion = nn.CrossEntropyLoss().cuda()
-	optimizer = torch.optim.Adam(clf.parameters(), lr=0.01)
+	optimizer = torch.optim.Adam(clf.parameters(), lr=0.001)
 
 	# criterion = nn.MSELoss() 
 	# optimizer = torch.optim.SGD(clf.parameters(), lr=0.01)
 
-	epochs = 10
+	epochs = 300
 	for epoch in range(epochs):
 		y_true = []
 		y_pred = []
@@ -448,19 +450,12 @@ def TrainTorch(game_result:Dict[int,List[int]]):
 			
 			# forward propagation
 			outputs = clf(inputs)
-			#outputs = torch.sigmoid(outputs)
-			#outputs = torch.softmax(outputs, 1)
 
-			# mask = (labels.cpu() != -1).to(device)
-			# outputs2 = outputs.masked_select(mask)
-			# labels2 = labels.masked_select(mask)
-
+			#loss = criterion(outputs, labels.argmax(1)) # For CrossEntropyLoss
 			loss = criterion(outputs, labels.float())
-			#loss = criterion(outputs, torch.sigmoid(labels.float()))
-			#loss = criterion(outputs, labels.unsqueeze(1).float())
 
-			# set optimizer to zero grad to remove previous epoch gradients
-			#optimizer.zero_grad()
+			# # set optimizer to zero grad to remove previous epoch gradients
+			# optimizer.zero_grad()
 			# backward propagation
 			loss.backward()
 			# optimize
@@ -477,11 +472,12 @@ def TrainTorch(game_result:Dict[int,List[int]]):
 				# y_true = labels.tolist()
 				y_pred.extend(pred.tolist())
 				y_true.extend(labels.tolist())
-			
-		y_pred = [np.argmax(i) for i in y_pred]
-		y_true = [np.argmax(i) for i in y_true]
-		print(f"[{epoch + 1}, {i + 1:5d}]Accuracy on training set is " + str(accuracy_score(np.array(y_true),np.array(y_pred))))
-		print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / (i + 1):.5f}')
+		
+		if epoch % 10 == 9:
+			y_pred = [np.argmax(i) for i in y_pred]
+			y_true = [np.argmax(i) for i in y_true]
+			print(f"[{epoch + 1}, {i + 1:5d}]Accuracy on training set is " + str(accuracy_score(np.array(y_true),np.array(y_pred))))
+			print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / (i + 1):.5f}')
 	return clf
 
 def GenerateDeckPytorch(clf:Network, deck_raw:List[CardInfo], cards_added:List[int], deck_main_count,	deck_extra_count,	deck_side_count, deckSize = 40):
@@ -513,8 +509,11 @@ def GenerateDeckPytorch(clf:Network, deck_raw:List[CardInfo], cards_added:List[i
 			quant = (index[i] % 3) + 1
 			for card_info in card_list:
 				if card_info.id == id:
-					card_selected = card_info
-					break
+					if card_info.quant >= quant:
+						card_selected = card_info
+						break
+					else:
+						a = 1
 			i += 1
 
 			if card_selected == None:
@@ -572,7 +571,7 @@ def AddRandomCards(deck_raw:List[CardInfo], cards_added:List[int], deck_main_cou
 	card_pool_copy = card_pool.copy()
 	
 	cardAdded = 0
-	while ((deck_main_count < deckSize or deck_extra_count < extraSize) and (cardAdded < cardCount or cardCount <= 0)):
+	while ((deck_main_count < deckSize or deck_extra_count < extraSize) and (cardAdded < cardCount or cardCount < 0)):
 		card_id = random.choice(list(card_pool_copy.keys()))
 		if cardAdded == 0 and len(card_ranking[0]) > 0:
 			card_id = random.choice(card_ranking[0][:math.ceil(len(card_ranking[0])/2)]).card_ids[0][0]
@@ -640,7 +639,7 @@ def AddRandomCards(deck_raw:List[CardInfo], cards_added:List[int], deck_main_cou
 		print(f"added [{deck_main_count}][{deck_extra_count}][{deck_side_count}] ({quant}): {card.card_id} ")
 		cardAdded += 1
 
-	return deck_raw, newly_added_cards, deck_main_count,	deck_extra_count,	deck_side_count
+	return deck_raw, cards_added, deck_main_count,	deck_extra_count,	deck_side_count
 	
 
 def LoadInitialDeck():
@@ -651,8 +650,10 @@ def LoadInitialDeck():
 	deck_side_count = 0
 
 	file_path = os.getcwd() + "/edopro_bin/deck/card_pool.ydk"
+
+	print("Get file " + file_path)
+
 	
-	print("Get Card pool file")
 	# Get from file after
 	location = 0
 	f = open(file_path,"r")
@@ -675,6 +676,72 @@ def LoadInitialDeck():
 
 	f.close()
 	return deck_raw, cards_added, deck_main_count,	deck_extra_count,	deck_side_count
+
+def LoadIncompleteDeck(file):
+	deck_raw:List[CardInfo] = []
+	cards_added:List[int] = []
+	deck_main_count = 0	
+	deck_extra_count = 0
+	deck_side_count = 0
+
+	file_path = os.getcwd() + "/edopro_bin/deck/" + file
+	
+	print("Get Card pool file")
+
+	if not Path.exists(Path(file_path)):
+		print("path doesnt exist " + file_path)
+		return deck_raw, cards_added, deck_main_count,	deck_extra_count,	deck_side_count
+
+	# Get from file after
+	location = 0
+	lines = []
+	f = open(file_path,"r")
+	for line in f.readlines():
+		lines.append(line.strip("\n"))
+	
+	for line in lines:
+		if "#main" in line:
+			location = 0
+			continue
+		elif "#extra" in line:
+			location = 1
+			continue
+		elif "!side" in line:
+			location = 2
+			continue
+		elif '#' in line:
+			continue
+
+		print(f"Add Initial cards")
+
+		card_id = line
+
+		if card_id in cards_added:
+			continue
+
+		quant = lines.count(card_id)
+
+		deck_raw.append(CardInfo(
+													card_id=card_id, 
+													card_name=card_pool[card_id].card_name, 
+													quant=quant,
+													location=location,
+													id=card_pool[card_id].id
+													)
+		)
+		cards_added.append(card_id)
+		if location == 0:
+			deck_main_count += quant
+		elif location == 1:
+			deck_extra_count += quant
+		else:
+			deck_side_count += quant
+
+		print(f"added [{deck_main_count}][{deck_extra_count}][{deck_side_count}] ({quant}): {card_id} ")
+
+	f.close()
+	return deck_raw, cards_added, deck_main_count,	deck_extra_count,	deck_side_count
+
 
 def ExportDeck(deck_raw:List[CardInfo], deck_index):
 

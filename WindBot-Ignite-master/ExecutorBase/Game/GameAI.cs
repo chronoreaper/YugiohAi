@@ -218,14 +218,16 @@ namespace WindBot.Game
             Executor.SetBattle(battle);
             foreach (CardExecutor exec in Executor.Executors)
             {
+                Executor.SetCard(ExecutorType.GoToMainPhase2, null, 0);
                 if (exec.Type == ExecutorType.GoToMainPhase2 && battle.CanMainPhaseTwo && exec.Func()) // check if should enter main phase 2 directly
                 {
                     return ToMainPhase2();
                 }
+                /*Executor.SetCard(ExecutorType.GoToEndPhase, null, 0);
                 if (exec.Type == ExecutorType.GoToEndPhase && battle.CanEndPhase && exec.Func()) // check if should enter end phase directly
                 {
                     return ToEndPhase();
-                }
+                }*/
                 for (int i = 0; i < battle.ActivableCards.Count; ++i)
                 {
                     ClientCard card = battle.ActivableCards[i];
@@ -267,7 +269,7 @@ namespace WindBot.Game
 
             if (defenders.Count == 0)
             {
-                ClientCard attacker = attackers[attackers.Count - 1];
+                ClientCard attacker = attackers[0];
                 return Attack(attacker, null);
             }
             else
@@ -389,6 +391,8 @@ namespace WindBot.Game
                     }
                 }
             }
+            if (Duel.CurrentChain.Count == 0)
+                Executor.OnChainEnd();
             // If we're forced to chain, we chain the first card. However don't do anything.
             return forced ? 0 : -1;
         }
@@ -465,11 +469,13 @@ namespace WindBot.Game
             Executor.SetMain(main);
             foreach (CardExecutor exec in Executor.Executors)
             {
+                Executor.SetCard(ExecutorType.GoToEndPhase, null, -1);
                 if (exec.Type == ExecutorType.GoToEndPhase && main.CanEndPhase && exec.Func()) // check if should enter end phase directly
                 {
                     _dialogs.SendEndTurn();
                     return new MainPhaseAction(MainPhaseAction.MainAction.ToEndPhase);
                 }
+                Executor.SetCard(ExecutorType.GoToBattlePhase, null, -1);
                 if (exec.Type==ExecutorType.GoToBattlePhase && main.CanBattlePhase && exec.Func()) // check if should enter battle phase directly
                 {
                     return new MainPhaseAction(MainPhaseAction.MainAction.ToBattlePhase);
@@ -1121,7 +1127,7 @@ namespace WindBot.Game
         }
 
         /// <summary>
-        /// Called when the AI has to declare a number.
+        /// Called when the AI has to declare a number. TODO
         /// </summary>
         /// <param name="numbers">List of available numbers.</param>
         /// <returns>Index of the selected number.</returns>

@@ -68,28 +68,32 @@ def get_predictions(data: typing.List[int], actions: typing.List[int], key_name:
     return []
 
   if key_name not in action_data.keys():
-     return []
+    if "master" in action_data.keys():
+      key_name = "master"
+    else:
+      return []
   
   final_result = {}
   
-  input_length = 1 + compare_count #+ 1 + action_count
+  input_length = 1 + compare_count + 1 + action_count + 1
   input_list = [0] * (input_length)
 
-  for id in data:
-    index = int(id)
-    if (index < len(input_list) and index >= 0):
-      input_list[index - 1] = 1
+  if data[0] != '': # Some fail safe since a 0 data entry is ['']
+    for id in data:
+      index = int(id)
+      if (index < len(input_list) and index >= 0):
+        input_list[index] = 1
 
-  # for id in actions:
-  #   index = int(id) + 1 + compare_count
-  #   if (index < len(input_list) and index >= 0):
-  #     input_list[index - 1] = 1
+  for id in actions:
+    index = compare_count + 1 + 1 + int(id) 
+    if (index < len(input_list) and index >= 0):
+      input_list[index] = 1
 
   # for id in actions:
   #     if int(id) > action_count:
   #       continue
 
-  #     input_list[int(id) - 1 + compare_count] = -1
+  #     input_list[compare_count + 1 + int(id)] = -1
 
   # for id in actions:
   #     if int(id) > action_count:
@@ -109,7 +113,6 @@ def get_predictions(data: typing.List[int], actions: typing.List[int], key_name:
   final_result = getTorchPrediction(action_data, [input_list])
       
 
-  text = key_name + ":"
   # ind = np.argpartition(final_result[key_name], -4)[-4:]
   # index = ind[np.argsort(final_result[key_name][ind])]
   # index = index[::-1]
@@ -132,10 +135,21 @@ def get_predictions(data: typing.List[int], actions: typing.List[int], key_name:
 
     result.append(str(avg))
 
-  # Use master
   result = []
+  text = "master:"
   for i in range(1 + action_count):
-    #result.append(str(final_result["master"][i]))
+    result.append(str(final_result["master"][i]))
+
+  for i in actions:
+    if int(i) > action_count:
+      continue
+    text += "[" + str(i) + "]" + ":" + str(round(float(result[int(i)])*100)) + ","
+  print(text)
+
+
+  result = []
+  text = key_name + ":"
+  for i in range(1 + action_count):
     result.append(str(final_result[key_name][i]))
 
   for i in actions:
@@ -195,7 +209,8 @@ if __name__ == "__main__":
   global input_length
   input_length = 1
   torch.multiprocessing.set_start_method('spawn')
-  fetchDatabaseData()
+  fetchDatabaseData(True)
   load_data()
+  print("ready")
   #run_command_line()
   run_server()

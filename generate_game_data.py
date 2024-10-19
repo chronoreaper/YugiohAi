@@ -37,8 +37,8 @@ AI2Deck =  'Tenpai'
 # deck2 = os.getcwd() +'/edopro_bin/deck/AI_Tenpai.ydk'
 
 reset = False
-generations = 10
-totalGames = 1
+generations = 1
+totalGames = 3
 parallelGames = 3
 
 def isrespondingPID(PID):
@@ -100,7 +100,7 @@ def parseArg():
   if "--games" in sys.argv:
     totalGames = int(sys.argv[sys.argv.index("--games")+1])
 
-def runAi(Deck = "Random1",
+def runAi(Deck = "AIBase",
           DeckFile = "",
           Name = "Random1",
           Hand = 0,
@@ -117,7 +117,8 @@ def runAi(Deck = "Random1",
   if platform == "linux" or platform == "linux2":
     file_name = os.getcwd() + "/WindBot.exe"
 
-  p = subprocess.Popen([file_name,"Deck="+Deck,
+  p = subprocess.Popen([file_name,
+                        "Deck=" + "AIBase",#+Deck,
                         "DeckFile="+DeckFile,
                         "Name="+str(Name),
                         "Hand="+str(Hand),
@@ -262,16 +263,16 @@ def main():
   proc = multiprocessing.Process(target=get_action_weights.run_server, args=())
   proc.start()
 
-  decks = ["SnakeEyes", "Tenpai", "Labrynth", "Labrynth2", "Branded", "Runick", "Runick2", "Runick3", "Yubel" ]
-  decks1 = ["SnakeEyes","SnakeEyes2", "Labrynth", "Labrynth2"] #["Labrynth", "Labrynth2",
-  decks2 = decks1
+  decks1 = ["AI_SnakeEyes", "AI_Tenpai", "AI_Yubel", "AI_FireKing"] #["Labrynth", "Labrynth2",
+  # decks2 = decks1
+  decks2 = ["AI_Labrynth"]
   #decks1 = ["SnakeEyes", "Tenpai", "Labrynth", "Labrynth2", "Branded", "Runick", "Runick2", "Runick3", "Yubel" ]
   #decks2 = ["SnakeEyes", "Tenpai", "Labrynth", "Labrynth2", "Branded", "Runick", "Runick2", "Runick3", "Yubel" ]
 
   if reset:
     resetDB()
     resetYgoPro()
-    MakeDeckRandom()
+    #MakeDeckRandom()
   for g in range(generations):
     print("running generation " + str(g))
 
@@ -290,8 +291,8 @@ def main():
 
         if not (deck1index > 0 and name2 in decks1[:deck1index - 1] and deck1 == deck2):
           
-          deck1 = os.getcwd() +'/edopro_bin/deck/AI_' + name1 + '.ydk'
-          deck2 = os.getcwd() +'/edopro_bin/deck/AI_' + name2 + '.ydk'
+          deck1 = os.getcwd() +'/edopro_bin/deck/' + name1 + '.ydk'
+          deck2 = os.getcwd() +'/edopro_bin/deck/' + name2 + '.ydk'
 
           print("running game:" + str(name1) + "vs" + str(name2) + ": Total games " + str(totalGames))
           bot1 = name1.rstrip(string.digits)
@@ -320,7 +321,7 @@ def main():
     print("Total Time Past:" + str(datetime.timedelta(seconds=int(end - start))))
     print("Total Average Game Time:"+str(datetime.timedelta(seconds=int((end - start)/(len(decks1) * len(deck2) * totalGames)))))
 
-    MakeDeckRandom()
+    #MakeDeckRandom()
     #MakeDeckPytorch(5)
 
 if __name__ == "__main__":

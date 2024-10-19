@@ -12,6 +12,8 @@ namespace WindBot.Game.AI
         GoToBattlePhase,
         GoToMainPhase2,
         GoToEndPhase,
-        Select
+        Select,
+        SelectAttacker,
+        SelectDefender
     }
 }

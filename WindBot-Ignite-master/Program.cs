@@ -88,8 +88,7 @@ namespace WindBot
                 dbPaths = new string[]{
                     Path.GetFullPath("cards.cdb"),
                     Path.GetFullPath("cards.delta.cdb"),
-                    Path.GetFullPath("release-info.cdb"),
-                    Path.GetFullPath("prerelease-info-en.cdb"),
+                    Path.GetFullPath("release-rota.cdb"),
                 };
             }
 
@@ -143,9 +142,18 @@ namespace WindBot
                 SQLComm.ShouldUpdate = Config.GetBool("ShouldUpdate", SQLComm.ShouldUpdate);
                 SQLComm.WinsThreshold = Config.GetInt("WinsThreshold", SQLComm.WinsThreshold);
                 SQLComm.PastWinsLimit = Config.GetInt("PastWinsLimit", SQLComm.PastWinsLimit);
+                //D:\Users\Crispy\Projects\YugiohAi\WindBot-Ignite-master\bin\Debug\Decks\AI_Yubel.ydk
+                if (Info.DeckFile != null)
+                {
+                    var path = Info.DeckFile.Split('\\');
+                    SQLComm.Name = path[path.Length - 1];
+                    SQLComm.Name = SQLComm.Name.Split('.')[0];
+                }
                 SQLComm.Name = Config.GetString("Name", SQLComm.Name);
                 SQLComm.Id = Config.GetInt("Id", SQLComm.Id);
                 SQLComm.IsManual = Config.GetBool("IsManual", SQLComm.IsManual);
+
+                Info.Name = SQLComm.Name;
 
                 //@"URI=file:\windbot_master\windbot_master\bin\Debug\cards.cdb";
                 string dir = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);

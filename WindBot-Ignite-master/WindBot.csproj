@@ -63,8 +63,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AIEngines\NeuralNet.cs" />
+    <Compile Include="AIEngines\AbstractAIEngine.cs" />
     <Compile Include="CSVReader.cs" />
     <Compile Include="Game\AI\Decks\AIBranded.cs" />
+    <Compile Include="Game\AI\Decks\AIBase.cs" />
     <Compile Include="Game\AI\Decks\AILabrynth.cs" />
     <Compile Include="Game\AI\Decks\AIRunick.cs" />
     <Compile Include="Game\AI\Decks\AISnakeEyes.cs" />
@@ -76,9 +79,6 @@
     <Compile Include="Game\AI\Decks\AIYubel.cs" />
     <Compile Include="HttpComm.cs" />
     <Compile Include="Config.cs" />
-    <Compile Include="Game\AI\Decks\AIExecutor1.cs" />
-    <Compile Include="Game\AI\Decks\AIExecutor2.cs" />
-    <Compile Include="Game\AI\Decks\AIExecutorBase.cs" />
     <Compile Include="Game\AI\Decks\AIExecutorMaster.cs" />
     <Compile Include="Game\AI\Decks\Util\MLUtil.cs" />
     <Compile Include="Game\AI\Decks\[HealingJAMExecutor].cs" />
@@ -136,9 +136,8 @@
     <Compile Include="Game\GamePacketFactory.cs" />
     <Compile Include="Game\Room.cs" />
     <Compile Include="Logger.cs" />
-    <Compile Include="MCST.cs" />
-    <Compile Include="PlayHistory.cs" />
-    <Compile Include="NEAT.cs" />
+    <Compile Include="AIEngines\MCST.cs" />
+    <Compile Include="AIEngines\NEAT.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SQLComm.cs" />
@@ -192,6 +191,7 @@
       <Name>ExecutorBase</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

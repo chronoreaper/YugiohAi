@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static WindBot.PlayHistory;
+using static WindBot.AbstractAIEngine;
 using System.Net.Http;
 using Newtonsoft.Json;
 using System.IO;
 using WindBot.Game.AI;
+using static WindBot.NeuralNet;
 
 namespace WindBot
 {
@@ -15,7 +16,7 @@ namespace WindBot
     {
         public static string csvPath = $@"../../../baseaction.csv";
 
-        public static Dictionary<ActionInfo, List<CompareTo>> BaseActions = new Dictionary<ActionInfo, List<CompareTo>>();
+        public static Dictionary<ActionInfo, List<FieldStateValues>> BaseActions = new Dictionary<ActionInfo, List<FieldStateValues>>();
 
         public static void Init()
         {
@@ -41,8 +42,8 @@ namespace WindBot
                         continue;
                     }
 
-                    ActionInfo actionInfo = new ActionInfo() { Name = name, Action = action };
-                    var c = new CompareTo() { Location = location, Compare = compare, Value = value };
+                    ActionInfo actionInfo = new ActionInfo( name, action.ToString(), null );
+                    var c = new FieldStateValues(){ Location = location, Compare = compare, Value = value };
 
                     var sequence = BaseActions.Keys.Where(x => x.Name == actionInfo.Name && x.Action == actionInfo.Action);
                     ActionInfo key = null;
@@ -55,7 +56,7 @@ namespace WindBot
                     if (key == null)
                     {
                         key = actionInfo;
-                        BaseActions.Add(key, new List<CompareTo>());
+                        BaseActions.Add(key, new List<FieldStateValues>());
                     }
 
                     BaseActions[key].Add(c);
@@ -63,7 +64,7 @@ namespace WindBot
             }
         }
 
-        public static List<double> GetBaseActionValues(int length, List<ActionInfo> actions, List<CompareTo> comparisons)
+        public static List<double> GetBaseActionValues(int length, List<ActionInfo> actions, List<FieldStateValues> comparisons)
         {
             double bonus = 0.5;
             List<double> bonusWeight = new List<double>(new double[length]);
@@ -92,7 +93,7 @@ namespace WindBot
             return bonusWeight;
         }
 
-        public static bool InBaseActions(string name, string action, List<CompareTo> comparisons)
+        public static bool InBaseActions(string name, string action, List<FieldStateValues> comparisons)
         {
             var sequence = BaseActions.Keys.Where(x => x.Name == name && x.Action.ToString() == action);
             if (sequence.Any())

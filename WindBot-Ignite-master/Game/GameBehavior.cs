@@ -268,7 +268,7 @@ namespace WindBot.Game
         private void OnRematch(BinaryReader packet)
         {
             double winRate = (double)SQLComm.PastXWins / (double)SQLComm.PreviousWins.Count * 100;
-            Logger.WriteLine($"{SQLComm.Name}:{SQLComm.IsTraining}:First={SQLComm.IsFirst},Update={SQLComm.ShouldUpdate}| Total Games Played: {++SQLComm.GamesPlayed} / {SQLComm.TotalGames} | Win Rate: {Math.Round((double)SQLComm.Wins / Math.Min(1,SQLComm.GamesPlayed * 1000)) / 10}% Past {SQLComm.PastWinsLimit} Games: {Math.Round(winRate * 10) / 10}%");
+            Logger.WriteLine($"{SQLComm.Name}:{SQLComm.IsTraining}:First={SQLComm.IsFirst},Update={SQLComm.ShouldUpdate}| Total Games Played: {++SQLComm.GamesPlayed} / {SQLComm.TotalGames} | Win Rate: {Math.Round((double)SQLComm.Wins / Math.Max(1,SQLComm.GamesPlayed) * 1000 / 10)}% Past {SQLComm.PastWinsLimit} Games: {Math.Round(winRate * 10) / 10}%");
 
             try
             {
@@ -517,6 +517,12 @@ namespace WindBot.Game
             if (SQLComm.Opp == "Enemy")
                 SQLComm.Opp = SQLComm.Name;
 
+            _ai.Deck.Clear();
+            _ai.Extra.Clear();
+            _ai.Side.Clear();
+            _ai.Deck.AddRange(Deck.Cards);
+            _ai.Extra.AddRange(Deck.ExtraCards);
+            _ai.Side.AddRange(Deck.SideCards);
             _ai.OnWin(result);
         }
 
@@ -695,8 +701,25 @@ namespace WindBot.Game
             _duel.Turn++;
             _duel.Player = GetLocalPlayer(packet.ReadByte());
             _ai.OnNewTurn();
-            //if (_duel.Turn > 25)
-            //    Connection.Send(CtosMessage.Surrender);
+            // Start asking to surrender 
+            if (_duel.Turn >= 5 && SQLComm.IsManual)
+            {
+                Console.WriteLine("Press 1 to surrender");
+                int choice = -1;
+                while (choice == -1)
+                {
+                    int result;
+                    if (int.TryParse(Console.ReadLine(), out result))
+                    {
+                        if (result >= 0 && result <= 1)
+                        {
+                            choice = result;
+                        }
+                    }
+                }
+                if (choice == 1)
+                    Connection.Send(CtosMessage.Surrender);
+            }
         }
 
         private void OnNewPhase(BinaryReader packet)

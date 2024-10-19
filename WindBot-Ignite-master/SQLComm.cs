@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using WindBot.Game.AI;
 using static System.Net.Mime.MediaTypeNames;
+using static WindBot.AbstractAIEngine;
 using static WindBot.MCST;
 using static WindBot.NEAT;
-using static WindBot.PlayHistory;
+using static WindBot.NeuralNet;
 
 namespace WindBot
 {
@@ -15,9 +17,9 @@ namespace WindBot
     {
         public static bool HasParameters = false;
         public static bool IsFirst = true;
-        public static bool IsTraining = true;
+        public static bool IsTraining = false;
         public static bool IsManual = false;
-        public static bool ShouldUpdate = true;
+        public static bool ShouldUpdate = false;
         public static bool IsMCTS = false;
         public static bool IsRollout = false;
         public static bool IsHardCoded = false;
@@ -631,7 +633,7 @@ namespace WindBot
         {
             //if (!IsTraining && !IsManual)
             //    return;
-            if (!ShouldUpdate)
+            if (!ShouldUpdate && !IsManual)
                 return;
 
             //if (result != 0)
@@ -644,9 +646,6 @@ namespace WindBot
             else
                 reward = 0f;
 
-            if (IsManual)
-                reward = 1;
-
             using (SqliteConnection conn = ConnectToDatabase())
             {
                 conn.Open();
@@ -658,7 +657,7 @@ namespace WindBot
 
                 long gameId = 0;
 
-                sql = $"INSERT INTO L_GameResult (Name, Result) VALUES (\"{Name}\", \"{reward}\")";
+                sql = $"INSERT INTO L_GameResult (Name, Result, IsManual, ShouldUpdate, Date) VALUES (\"{Name}\", \"{reward}\", \"{IsManual}\", \"{ShouldUpdate}\", \"{DateTime.Now}\")";
                 using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                 {
                     cmd2.ExecuteNonQuery();
@@ -697,7 +696,7 @@ namespace WindBot
                     }
 
 
-                    foreach (var compare in record.Compares)
+                    foreach (var compare in record.FieldState)
                     {
                         sql = $"INSERT INTO L_FieldState (CompareId, HistoryId) VALUES (\"{compare.Id}\", \"{id}\")";
                         using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
@@ -712,7 +711,7 @@ namespace WindBot
             }
         }
 
-        public static long GetComparisonId(CompareTo compare)
+        public static long GetComparisonId(FieldStateValues compare)
         {
             long id = -4;
 
@@ -737,7 +736,7 @@ namespace WindBot
             return id;
         }
 
-        private static long NewComparisonId(CompareTo compare)
+        private static long NewComparisonId(FieldStateValues compare)
         {
             long id = 0;
             using (SqliteConnection conn = ConnectToDatabase())
@@ -773,7 +772,7 @@ namespace WindBot
             {
                 conn.Open();
                 string sql = $"SELECT rowid FROM L_ActionList WHERE " +
-                    $"Name = \"{action.Name}\" AND Action = \"{action.Action}\"";
+                    $"Name = \"{action.Name + ";" + action.Desc.ToString()}\" AND Action = \"{action.Action}\"";
                 using (SqliteCommand cmd = new SqliteCommand(sql, conn))
                 {
                     using (SqliteDataReader rdr = cmd.ExecuteReader())
@@ -799,7 +798,7 @@ namespace WindBot
 
                 SqliteTransaction transaction = conn.BeginTransaction();
 
-                string sql = $"INSERT INTO L_ActionList (Name, Action) VALUES (\"{action.Name}\", \"{action.Action}\")";
+                string sql = $"INSERT INTO L_ActionList (Name, Action) VALUES (\"{action.Name + ";" + action.Desc.ToString()}\", \"{action.Action}\")";
                 using (SqliteCommand cmd2 = new SqliteCommand(sql, conn, transaction))
                 {
                     cmd2.ExecuteNonQuery();
@@ -841,6 +840,34 @@ namespace WindBot
             return weight;
         }
 
-#endregion
+        #endregion
+
+        #region Util
+
+        public static List<ActionInfo> GetAllActions()
+        {
+            List<ActionInfo> selectActions = new List<ActionInfo>();
+
+            using (SqliteConnection conn = ConnectToDatabase())
+            {
+                conn.Open();
+                string sql = $"SELECT rowid, name, action FROM L_ActionList";
+                using (SqliteCommand cmd = new SqliteCommand(sql, conn))
+                {
+                    using (SqliteDataReader rdr = cmd.ExecuteReader())
+                        while (rdr.Read())
+                        {
+                            long id = rdr.GetInt64(0);
+                            string name = rdr.GetString(1);
+                            string action = rdr.GetString(2);
+                            selectActions.Add(new ActionInfo(id, name, action));
+                        }
+                }
+                conn.Close();
+            }
+
+            return selectActions;
+        }
+        #endregion
     }
 }

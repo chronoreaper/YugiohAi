@@ -51,7 +51,7 @@ namespace YGOSharp.OCGWrapper
             }
         }
 
-        internal static NamedCard GetCard(int id)
+        public static NamedCard GetCard(int id)
         {
             if (_cards.ContainsKey(id))
                 return _cards[id];
